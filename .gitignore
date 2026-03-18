@@ -1,0 +1,26 @@
+# Dependencies
+**/node_modules/
+
+# Builds
+web/dist/
+api/dist/
+
+# Azure Functions local settings (may contain secrets)
+api/local.settings.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / tooling
+.DS_Store
+Thumbs.db
+.env
+.env.*
+
+# QR output
+tools/*.png
+tools/*.svg
+

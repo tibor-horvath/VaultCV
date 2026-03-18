@@ -1,1 +1,123 @@
-# cv
+# Private QR CV SPA (Azure Static Web Apps)
+
+A modern React CV SPA where **personal CV data is never bundled into the public site**.
+
+- The static site (`web/`) is a “locked by default” shell.
+- The private CV JSON is returned by an API (`/api/cv`) **only** when a valid token is provided (typically via your QR code URL).
+
+## Repo structure
+
+- `web/`: React + TypeScript SPA (Vite)
+- `api/`: Azure Functions (TypeScript) for token-gated CV JSON
+- `staticwebapp.config.json`: SPA routing + security headers
+
+## Security model (important)
+
+This is **real server-side enforcement**: without the token, the API returns 401 and the SPA cannot access your CV JSON.
+
+However, **anyone you share the tokenized URL with can share it onward**. If you need identity-based, non-shareable access later, switch to Azure AD / Azure AD B2C authentication.
+
+## Public home page
+
+The default route (`/`) intentionally shows only:
+
+- Your **name** and **title** (configured via `web/.env.local` or your build pipeline)
+- An **access code** input to unlock the full CV
+
+Set these **public** (safe-to-ship) variables for the web app:
+
+- `VITE_PUBLIC_NAME`
+- `VITE_PUBLIC_TITLE`
+
+## CV JSON schema (overview)
+
+You control the CV content via the `CV_JSON` environment variable (server-side). Key fields:
+
+- `basics`: `{ name, headline, location?, summary?, photoDataUrl?, photoAlt? }`
+  - `photoDataUrl` should be a `data:` URL (works with the current CSP), e.g. `data:image/jpeg;base64,...`
+- `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
+- `credentials`: array of `{ issuer, label, url }` where `issuer` is one of `microsoft | aws | google | other`
+- `languages`: string array, shown as chips
+- `experience`: supports `companyUrl?` to link the company name
+- `projects` and `hobbyProjects`: project grids
+
+## Local development
+
+### Web only
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+### API only
+
+```bash
+cd api
+npm install
+npm run build
+```
+
+To run the API locally with secrets, create `api/local.settings.json` (this repo ignores it) and add:
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "CV_ACCESS_TOKEN": "CHANGE_ME_TO_A_LONG_RANDOM_STRING",
+    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"photoDataUrl\":\"data:image/jpeg;base64,REPLACE_ME\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}"
+  }
+}
+```
+
+You can also start from the committed example file:
+- Copy `api/local.settings.example.json` to `api/local.settings.json`
+- Edit `CV_ACCESS_TOKEN` and `CV_JSON`
+
+## Deployment (Azure Static Web Apps)
+
+Create an Azure Static Web App and set:
+
+- **App location**: `web`
+- **Api location**: `api`
+- **Output location**: `dist`
+
+Then configure **Application settings** (in the SWA resource):
+
+- `CV_ACCESS_TOKEN`: a long random secret (this is what your QR carries)
+- `CV_JSON`: your private CV JSON payload (keep it out of git)
+
+## QR code URL format
+
+Your access link should be:
+
+- `https://<your-site>/?t=<TOKEN>`
+
+The SPA forwards the token to:
+
+- `/api/cv?t=<TOKEN>`
+
+## 6‑month access code rotation (manual)
+
+This repo uses a single server-side token (`CV_ACCESS_TOKEN`). To make the access code expire every ~6 months, rotate it twice a year.
+
+- **1) Generate a new token** (use a long random string)
+  - Example (PowerShell):
+
+```powershell
+[guid]::NewGuid().ToString("N")
+```
+
+- **2) Update your Azure Static Web App Application setting** `CV_ACCESS_TOKEN` to the new value.
+- **3) Update your printed/digital CV** with the new `/?t=<NEW_TOKEN>` link (and QR, if you generate one externally).
+
+## Mock data for local UI testing (no API required)
+
+If you want to see a filled CV UI locally without running the Functions API, use the web mock mode:
+
+- Copy `web/.env.example` to `web/.env.local`
+- Ensure it contains `VITE_USE_MOCK_CV=1`
+- Run `npm run dev` in `web/`

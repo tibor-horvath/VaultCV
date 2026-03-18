@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "CV_ACCESS_TOKEN": "CHANGE_ME_TO_A_LONG_RANDOM_STRING",
+    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Full‑stack Developer · React · Azure\",\"location\":\"City, Country\",\"summary\":\"This is mock data for local development. Configure CV_JSON in Azure app settings for real data.\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"},{\"issuer\":\"microsoft\",\"label\":\"Certification transcript\",\"url\":\"https://learn.microsoft.com/\"},{\"issuer\":\"aws\",\"label\":\"AWS Certified Developer – Associate\",\"url\":\"https://aws.amazon.com/certification/\"}],\"skills\":[\"React\",\"TypeScript\",\"Azure\",\"Node.js\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Built a token-gated CV SPA.\",\"Kept personal data out of the public build.\"]}],\"projects\":[{\"name\":\"Private CV SPA\",\"description\":\"React SPA + Azure Functions API protected by token.\",\"links\":[{\"label\":\"Source\",\"url\":\"https://github.com/your-handle/cv\"}],\"tags\":[\"React\",\"Azure\"]}]}"
+  }
+}
+
