@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Github, Linkedin } from 'lucide-react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { applyTheme, getStoredTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
 
@@ -9,6 +10,7 @@ function resolveInitialTheme(): ThemePreference {
 }
 
 export function AppShell() {
+  const currentYear = new Date().getFullYear()
   const [theme] = useState<ThemePreference>(() => {
     const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
     if (isMock) return Math.random() < 0.5 ? 'light' : 'dark'
@@ -21,12 +23,41 @@ export function AppShell() {
   }, [theme])
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-[radial-gradient(90rem_55rem_at_15%_-10%,rgba(56,189,248,0.12),transparent),radial-gradient(70rem_42rem_at_95%_5%,rgba(139,92,246,0.14),transparent),linear-gradient(to_bottom_right,#f8fbff,#f2f6fd_45%,#eef3ff)] dark:bg-[radial-gradient(80rem_48rem_at_10%_-5%,rgba(56,189,248,0.08),transparent),radial-gradient(70rem_44rem_at_100%_0%,rgba(139,92,246,0.09),transparent),linear-gradient(to_bottom_right,#020617,#060b16_45%,#090f1f)]">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[radial-gradient(90rem_55rem_at_15%_-10%,rgba(56,189,248,0.12),transparent),radial-gradient(70rem_42rem_at_95%_5%,rgba(139,92,246,0.14),transparent),linear-gradient(to_bottom_right,#f8fbff,#f2f6fd_45%,#eef3ff)] dark:bg-[radial-gradient(80rem_48rem_at_10%_-5%,rgba(56,189,248,0.08),transparent),radial-gradient(70rem_44rem_at_100%_0%,rgba(139,92,246,0.09),transparent),linear-gradient(to_bottom_right,#020617,#060b16_45%,#090f1f)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(100,116,139,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(100,116,139,0.07)_1px,transparent_1px)] bg-[size:26px_26px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_80%)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)]" />
 
-      <main className="relative mx-auto flex w-full max-w-6xl flex-col px-4 pb-14 pt-6 sm:px-6 lg:px-8">
+      <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-14 pt-6 sm:px-6 lg:px-8">
         <Outlet />
       </main>
+
+      <footer className="relative mx-auto w-full max-w-6xl px-4 pb-6 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-4 text-center text-sm text-slate-600 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 dark:text-slate-300">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <a
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"
+              href="https://github.com/tibor-horvath/VaultCV"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Github className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>VaultCV</span>
+            </a>
+            <a
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"
+              href="https://www.linkedin.com/in/htibor/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Linkedin className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>LinkedIn</span>
+            </a>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            &copy; {currentYear} Tibor Horváth. All rights reserved.
+          </p>
+        </div>
+      </footer>
+
       <ScrollRestoration />
     </div>
   )
