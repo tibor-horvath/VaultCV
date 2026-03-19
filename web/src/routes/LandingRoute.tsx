@@ -114,6 +114,7 @@ export function LandingRoute() {
   const urlToken = params.get('t') ?? ''
   const [tokenInput, setTokenInput] = useState('')
   const [publicData, setPublicData] = useState<PublicData>(defaultPublicData)
+  const [publicLoading, setPublicLoading] = useState(true)
   const [theme, setTheme] = useState<ThemePreference>(() => {
     const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
     if (isMock) return Math.random() < 0.5 ? 'light' : 'dark'
@@ -129,6 +130,8 @@ export function LandingRoute() {
     let cancelled = false
 
     async function loadPublicData() {
+      let loaded = false
+
       // Preferred source (Azure Function):
       // - lets you configure public profile via SWA Application settings
       // - works even when `web/public/public-profile.json` isn't shipped
@@ -147,7 +150,7 @@ export function LandingRoute() {
             links: payload.links ?? current.links,
             tags: payload.tags ?? current.tags,
           }))
-          return
+          loaded = true
         }
       } catch {
         // Fall back to file-based mock below.
@@ -155,24 +158,28 @@ export function LandingRoute() {
 
       // Backward compatible fallback (file):
       // - enables "web-only" dev without the Functions API running
-      try {
-        const res = await fetch('/public-profile.json', {
-          method: 'GET',
-          headers: { accept: 'application/json' },
-        })
-        if (!res.ok || cancelled) return
-        const payload = normalizePublicData((await res.json()) as unknown)
-        if (cancelled) return
+      if (!loaded) {
+        try {
+          const res = await fetch('/public-profile.json', {
+            method: 'GET',
+            headers: { accept: 'application/json' },
+          })
+          if (!res.ok || cancelled) return
+          const payload = normalizePublicData((await res.json()) as unknown)
+          if (cancelled) return
 
-        setPublicData((current) => ({
-          ...current,
-          ...payload,
-          links: payload.links ?? current.links,
-          tags: payload.tags ?? current.tags,
-        }))
-      } catch {
-        // Keep defaults when no public profile source is present.
+          setPublicData((current) => ({
+            ...current,
+            ...payload,
+            links: payload.links ?? current.links,
+            tags: payload.tags ?? current.tags,
+          }))
+        } catch {
+          // Keep defaults when no public profile source is present.
+        }
       }
+
+      if (!cancelled) setPublicLoading(false)
     }
 
     loadPublicData()
@@ -217,10 +224,10 @@ export function LandingRoute() {
         </div>
 
         <div className="mt-4 text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-          {publicName}
+          {publicLoading ? 'Loading...' : publicName}
         </div>
         <div className="mt-2 text-pretty text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-          {publicTitle}
+          {publicLoading ? '' : publicTitle}
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -229,7 +236,9 @@ export function LandingRoute() {
               <MapPin className="h-3.5 w-3.5" />
               Location
             </div>
-            <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">{publicData.location}</p>
+            <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+              {publicLoading ? 'Loading...' : publicData.location}
+            </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45">
@@ -237,46 +246,54 @@ export function LandingRoute() {
               <Target className="h-3.5 w-3.5" />
               Focus
             </div>
-            <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">{publicData.focus}</p>
+            <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+              {publicLoading ? 'Loading...' : publicData.focus}
+            </p>
           </div>
         </div>
 
-        <p className="mt-4 text-pretty text-sm text-slate-700 dark:text-slate-300">{publicData.bio}</p>
+        <p className="mt-4 text-pretty text-sm text-slate-700 dark:text-slate-300">
+          {publicLoading ? '' : publicData.bio}
+        </p>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {publicData.links.map((item) => (
-            <a
-              key={`${item.label}:${item.url}`}
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200/85 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200 dark:hover:bg-slate-900"
-            >
-              {(() => {
-                const kind = inferPublicLinkKind(item)
-                const Icon = kind === 'github' ? Github : kind === 'linkedin' ? Linkedin : ExternalLink
-                return <Icon className="h-3.5 w-3.5 opacity-80" />
-              })()}
-              {item.label}
-            </a>
-          ))}
-        </div>
+        {!publicLoading ? (
+          <>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {publicData.links.map((item) => (
+                <a
+                  key={`${item.label}:${item.url}`}
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200/85 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200 dark:hover:bg-slate-900"
+                >
+                  {(() => {
+                    const kind = inferPublicLinkKind(item)
+                    const Icon = kind === 'github' ? Github : kind === 'linkedin' ? Linkedin : ExternalLink
+                    return <Icon className="h-3.5 w-3.5 opacity-80" />
+                  })()}
+                  {item.label}
+                </a>
+              ))}
+            </div>
 
-        {publicData.tags.length ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-              <Tag className="h-3.5 w-3.5" />
-              Tags
-            </span>
-            {publicData.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-slate-200/85 bg-white px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+            {publicData.tags.length ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <Tag className="h-3.5 w-3.5" />
+                  Tags
+                </span>
+                {publicData.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-slate-200/85 bg-white px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         <div className="mt-7 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45 sm:p-5">
