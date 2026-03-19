@@ -2,6 +2,37 @@ import type { CvBasics, CvLink } from '../../types/cv'
 import type { ReactNode } from 'react'
 import { ExternalLink, Github, Linkedin, MapPin, Sparkles } from 'lucide-react'
 
+function getInitials(name: string) {
+  const trimmed = name.trim()
+  if (!trimmed) return 'CV'
+  // Grab the first alphanumeric character to keep the output stable.
+  const match = trimmed.match(/[A-Za-z0-9]/)
+  return (match?.[0] ?? trimmed[0] ?? 'C').toUpperCase()
+}
+
+function getFallbackPhotoDataUrl(name: string) {
+  const initial = getInitials(name)
+  // CSP allows `img-src 'self' data:` so a data-url SVG is a safe default.
+  return (
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#a855f7"/>
+            <stop offset="0.5" stop-color="#6366f1"/>
+            <stop offset="1" stop-color="#0ea5e9"/>
+          </linearGradient>
+        </defs>
+        <rect width="256" height="256" rx="64" fill="url(#g)"/>
+        <circle cx="128" cy="108" r="48" fill="rgba(255,255,255,0.92)"/>
+        <text x="128" y="128" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700" fill="#0f172a">${initial}</text>
+        <path d="M56 220c10-44 44-68 72-68s62 24 72 68" fill="rgba(255,255,255,0.92)"/>
+      </svg>`,
+    )
+  )
+}
+
 function inferLinkKind(link: CvLink): 'github' | 'linkedin' | 'other' {
   const label = link.label.toLowerCase()
   if (label.includes('github')) return 'github'
@@ -32,15 +63,13 @@ export function BasicsCard({
     <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex-shrink-0">
-          {basics.photoDataUrl ? (
-            <img
-              src={basics.photoDataUrl}
-              alt={basics.photoAlt ?? `${basics.name} profile photo`}
-              className="h-48 w-48 rounded-3xl object-cover shadow-none ring-0 sm:h-56 sm:w-56"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : null}
+          <img
+            src={basics.photoDataUrl ?? getFallbackPhotoDataUrl(basics.name)}
+            alt={basics.photoAlt ?? `${basics.name} profile photo`}
+            className="h-48 w-48 rounded-3xl object-cover shadow-none ring-0 sm:h-56 sm:w-56"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
 
         <div className="min-w-0 flex-1">
