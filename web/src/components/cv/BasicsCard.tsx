@@ -1,4 +1,5 @@
 import type { CvBasics, CvLink } from '../../types/cv'
+import type { ReactNode } from 'react'
 import { ExternalLink, Github, Linkedin, MapPin, Sparkles } from 'lucide-react'
 
 function inferLinkKind(link: CvLink): 'github' | 'linkedin' | 'other' {
@@ -19,74 +20,82 @@ function inferLinkKind(link: CvLink): 'github' | 'linkedin' | 'other' {
 export function BasicsCard({
   basics,
   links,
+  headerRight,
 }: {
   basics: CvBasics
   links?: CvLink[]
+  headerRight?: ReactNode
 }) {
   const visibleLinks = (links ?? []).filter((l) => inferLinkKind(l) !== 'other')
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-4">
-            {basics.photoDataUrl ? (
-              <img
-                src={basics.photoDataUrl}
-                alt={basics.photoAlt ?? `${basics.name} profile photo`}
-                className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-1 ring-slate-200/70 dark:ring-slate-800/60"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : null}
-            <div>
-              <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+    <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        <div className="flex-shrink-0">
+          {basics.photoDataUrl ? (
+            <img
+              src={basics.photoDataUrl}
+              alt={basics.photoAlt ?? `${basics.name} profile photo`}
+              className="h-48 w-48 rounded-3xl object-cover shadow-none ring-0 sm:h-56 sm:w-56"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : null}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
                 {basics.name}
               </div>
-              <div className="mt-1 inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/75 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-300">
                 <Sparkles className="h-4 w-4" />
                 {basics.headline}
               </div>
             </div>
+
+            {headerRight ? <div className="pt-1">{headerRight}</div> : null}
           </div>
+
+          {basics.location ? (
+            <div className="mt-2 inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <MapPin className="h-4 w-4" />
+              {basics.location}
+            </div>
+          ) : null}
+
+          {basics.summary ? (
+            <p className="mt-4 max-w-3xl text-pretty text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+              {basics.summary}
+            </p>
+          ) : null}
+
+          {visibleLinks.length ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {visibleLinks.map((l) => {
+                const kind = inferLinkKind(l)
+                const Icon = kind === 'github' ? Github : kind === 'linkedin' ? Linkedin : ExternalLink
+                const text = kind === 'github' ? 'GitHub' : kind === 'linkedin' ? 'LinkedIn' : l.label
+
+                return (
+                  <a
+                    key={`${l.label}:${l.url}`}
+                    className="group inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900"
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Icon className="h-3.5 w-3.5 opacity-80 transition-opacity group-hover:opacity-100" />
+                    {text}
+                    <ExternalLink className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100" />
+                  </a>
+                )
+              })}
+            </div>
+          ) : null}
         </div>
-        {basics.location ? (
-          <div className="mt-2 inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <MapPin className="h-4 w-4" />
-            {basics.location}
-          </div>
-        ) : null}
       </div>
-
-      {basics.summary ? (
-        <p className="mt-4 max-w-prose text-pretty text-sm text-slate-700 dark:text-slate-300">
-          {basics.summary}
-        </p>
-      ) : null}
-
-      {visibleLinks.length ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {visibleLinks.map((l) => {
-            const kind = inferLinkKind(l)
-            const Icon = kind === 'github' ? Github : kind === 'linkedin' ? Linkedin : ExternalLink
-            const text = kind === 'github' ? 'GitHub' : kind === 'linkedin' ? 'LinkedIn' : l.label
-
-            return (
-              <a
-                key={`${l.label}:${l.url}`}
-                className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/40"
-                href={l.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Icon className="h-3.5 w-3.5 opacity-80 transition-opacity group-hover:opacity-100" />
-                {text}
-                <ExternalLink className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100" />
-              </a>
-            )
-          })}
-        </div>
-      ) : null}
     </div>
   )
 }

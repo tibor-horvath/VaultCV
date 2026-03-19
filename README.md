@@ -29,6 +29,8 @@ Set these **public** (safe-to-ship) variables for the web app:
 - `VITE_PUBLIC_NAME`
 - `VITE_PUBLIC_TITLE`
 
+For the rest of the public profile (location/focus/bio/links/tags), configure `PUBLIC_PROFILE_JSON` (used by `/api/public-profile`).
+
 ## CV JSON schema (overview)
 
 You control the CV content via the `CV_JSON` environment variable (server-side). Key fields:
@@ -89,6 +91,7 @@ Then configure **Application settings** (in the SWA resource):
 
 - `CV_ACCESS_TOKEN`: a long random secret (this is what your QR carries)
 - `CV_JSON`: your private CV JSON payload (keep it out of git)
+- `PUBLIC_PROFILE_JSON`: your public profile JSON payload (used for `/api/public-profile`)
 
 ## QR code URL format
 

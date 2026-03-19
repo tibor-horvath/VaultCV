@@ -20,5 +20,17 @@
   body {
     margin: 0;
     @apply bg-white text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100;
+    font-feature-settings:
+      'cv11' 1,
+      'ss01' 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    @apply border-slate-200 dark:border-slate-800;
+  }
+
+  ::selection {
+    @apply bg-sky-200/70 text-slate-900 dark:bg-sky-400/35 dark:text-slate-50;
   }
 }

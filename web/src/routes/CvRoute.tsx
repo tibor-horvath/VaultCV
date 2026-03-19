@@ -10,6 +10,8 @@ import {
   LayoutGrid,
   Lock,
   Languages,
+  Moon,
+  Sun,
   Wrench,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
@@ -20,6 +22,13 @@ import { Section } from '../components/cv/Section'
 import { SkillsChips } from '../components/cv/SkillsChips'
 import { fetchCv } from '../lib/api'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
+import { applyTheme, getStoredTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
+
+function resolveInitialTheme(): ThemePreference {
+  const stored = getStoredTheme()
+  const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
+  return stored ?? (systemPrefersDark ? 'dark' : 'light')
+}
 
 function MicrosoftMark({ className }: { className?: string }) {
   return (
@@ -100,12 +109,54 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
 export function CvRoute() {
   const [params] = useSearchParams()
   const token = params.get('t') ?? ''
+  const [theme, setTheme] = useState<ThemePreference>(() => {
+    const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
+    if (isMock) return Math.random() < 0.5 ? 'light' : 'dark'
+    return resolveInitialTheme()
+  })
   const [state, setState] = useState<
     | { kind: 'locked' }
     | { kind: 'loading' }
     | { kind: 'error'; message: string }
     | { kind: 'ready'; cv: CvData }
   >(token ? { kind: 'loading' } : { kind: 'locked' })
+
+  const [publicName, setPublicName] = useState(() => {
+    const envName = (import.meta.env.VITE_PUBLIC_NAME as string | undefined)?.trim()
+    return envName || 'CV'
+  })
+
+  useEffect(() => {
+    // Browser tab title derived from public profile name.
+    document.title = publicName === 'CV' ? 'CV' : `${publicName} + CV`
+  }, [publicName])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadPublicProfileName() {
+      try {
+        const res = await fetch('/api/public-profile', {
+          method: 'GET',
+          headers: { accept: 'application/json' },
+        })
+        if (!res.ok || cancelled) return
+
+        const payload = (await res.json()) as unknown
+        const name = typeof (payload as { name?: unknown } | null)?.name === 'string' ? (payload as { name?: string }).name?.trim() : ''
+        if (!name || cancelled) return
+
+        setPublicName(name)
+      } catch {
+        // Ignore; we can still fall back to VITE_PUBLIC_NAME.
+      }
+    }
+
+    loadPublicProfileName()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -133,11 +184,28 @@ export function CvRoute() {
     }
   }, [token])
 
+  useEffect(() => {
+    applyTheme(theme)
+    setStoredTheme(theme)
+  }, [theme])
+
+  const themeToggle = (
+    <button
+      type="button"
+      onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+      className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
+      aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+    >
+      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {theme === 'dark' ? 'Light' : 'Dark'}
+    </button>
+  )
+
   return (
     <div className="space-y-6">
       {state.kind === 'locked' ? (
         <Section title="Locked" icon={<Lock className="h-4 w-4" />}>
-          <div className="text-sm text-slate-700 dark:text-slate-300">
+          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             Scan your QR code to open this page with a token parameter:{' '}
             <span className="font-mono">/cv?t=TOKEN</span>
           </div>
@@ -146,7 +214,7 @@ export function CvRoute() {
 
       {state.kind === 'loading' ? (
         <Section title="Loading" icon={<Hourglass className="h-4 w-4" />}>
-          <div className="text-sm text-slate-700 dark:text-slate-300">
+          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             Verifying token and loading CV…
           </div>
         </Section>
@@ -154,7 +222,7 @@ export function CvRoute() {
 
       {state.kind === 'error' ? (
         <Section title="Unable to load" icon={<CircleAlert className="h-4 w-4" />}>
-          <div className="text-sm text-slate-700 dark:text-slate-300">{state.message}</div>
+          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{state.message}</div>
           <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             If you expected access, confirm your token is correct and that the server has
             <span className="font-mono"> CV_ACCESS_TOKEN</span> and <span className="font-mono">CV_JSON</span>{' '}
@@ -165,7 +233,7 @@ export function CvRoute() {
 
       {state.kind === 'ready' ? (
         <div className="space-y-6">
-          <BasicsCard basics={state.cv.basics} links={state.cv.links} />
+          <BasicsCard basics={state.cv.basics} links={state.cv.links} headerRight={themeToggle} />
 
           {state.cv.credentials?.length ? (
             <Section title="Credentials" icon={<BadgeCheck className="h-4 w-4" />}>
@@ -184,7 +252,7 @@ export function CvRoute() {
                           {items.map((c) => (
                             <a
                               key={`${c.issuer}:${c.label}:${c.url}`}
-                              className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/40"
+                              className="inline-flex items-center rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"
                               href={c.url}
                               target="_blank"
                               rel="noreferrer"

@@ -7,7 +7,7 @@ export type ApiResult<T> =
 function getMockCv(): CvData {
   return {
     basics: {
-      name: 'Your Name',
+      name: 'John Doe',
       headline: 'Full‑stack Developer · React · Azure',
       photoDataUrl:
         'data:image/svg+xml;utf8,' +

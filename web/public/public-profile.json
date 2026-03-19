@@ -1,0 +1,18 @@
+{
+  "name": "John Doe",
+  "title": "Cloud Engineer",
+  "location": "Prague, Czechia",
+  "focus": "Cloud Engineer, Azure/AWS",
+  "bio": "Building reliable cloud-native products with clean UX, strong security, and fast delivery.",
+  "links": [
+    {
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/your-handle/"
+    },
+    {
+      "label": "GitHub",
+      "url": "https://github.com/your-handle"
+    }
+  ],
+  "tags": ["Cloud", "Azure", "AWS", "TypeScript", "React"]
+}
