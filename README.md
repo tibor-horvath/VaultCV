@@ -1,4 +1,4 @@
-# Private QR CV SPA (Azure Static Web Apps)
+# VaultCV 
 
 A modern React CV SPA where **personal CV data is never bundled into the public site**.
 
@@ -29,7 +29,14 @@ Set these **public** (safe-to-ship) variables for the web app:
 - `VITE_PUBLIC_NAME`
 - `VITE_PUBLIC_TITLE`
 
-For the rest of the public profile (location/focus/bio/links/tags), configure `PUBLIC_PROFILE_JSON` (used by `/api/public-profile`).
+For the rest of the public profile (location/focus/bio/links/tags), you can use either:
+
+- `PUBLIC_PROFILE_JSON` (served by `/api/public-profile`, preferred in deployed environments)
+- `web/public/public-profile.json` (fallback file, useful for web-only local dev)
+
+At runtime, the landing page loads public profile data in this order:
+1. `GET /api/public-profile`
+2. If unavailable, `GET /public-profile.json`
 
 ## CV JSON schema (overview)
 
@@ -52,6 +59,10 @@ cd web
 npm install
 npm run dev
 ```
+
+In `web-only` mode, the app can still show rich landing-page details from:
+- `web/public/public-profile.json` (already included in this repo), or
+- `VITE_PUBLIC_NAME` and `VITE_PUBLIC_TITLE` as minimal fallback text.
 
 ### API only
 
@@ -92,6 +103,8 @@ Then configure **Application settings** (in the SWA resource):
 - `CV_ACCESS_TOKEN`: a long random secret (this is what your QR carries)
 - `CV_JSON`: your private CV JSON payload (keep it out of git)
 - `PUBLIC_PROFILE_JSON`: your public profile JSON payload (used for `/api/public-profile`)
+
+If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-profile.json` when that file is shipped with the web app.
 
 ## QR code URL format
 
