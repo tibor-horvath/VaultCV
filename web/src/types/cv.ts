@@ -23,10 +23,12 @@ export type CvCredential = {
 export type CvExperience = {
   company: string
   companyUrl?: string
+  companyLinkedInUrl?: string
   role: string
   start: string
   end?: string
   location?: string
+  skills?: string[]
   highlights: string[]
 }
 

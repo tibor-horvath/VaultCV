@@ -58,6 +58,8 @@ function getMockCv(): CvData {
       {
         company: 'Example Co.',
         companyUrl: 'https://example.com',
+        companyLinkedInUrl: 'https://www.linkedin.com/company/example-co/',
+        skills: ['React', 'TypeScript', 'Azure'],
         role: 'Software Engineer',
         start: '2023',
         end: '2026',
@@ -70,6 +72,8 @@ function getMockCv(): CvData {
       {
         company: 'Contoso',
         companyUrl: 'https://www.microsoft.com/',
+        companyLinkedInUrl: 'https://www.linkedin.com/company/microsoft/',
+        skills: ['Node.js', 'React', 'AWS'],
         role: 'Full-stack Developer',
         start: '2021',
         end: '2023',

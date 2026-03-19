@@ -1,5 +1,6 @@
 import type { CvExperience } from '../../types/cv'
-import { Calendar, MapPin } from 'lucide-react'
+import { Calendar, Linkedin, MapPin } from 'lucide-react'
+import { SkillsChips } from './SkillsChips'
 
 export function ExperienceList({ items }: { items: CvExperience[] }) {
   return (
@@ -25,6 +26,18 @@ export function ExperienceList({ items }: { items: CvExperience[] }) {
                 ) : (
                   x.company
                 )}
+                {x.companyLinkedInUrl ? (
+                  <a
+                    className="ml-2 inline-flex align-middle text-slate-500 transition hover:text-[#0a66c2] dark:text-slate-400 dark:hover:text-[#0a66c2]"
+                    href={x.companyLinkedInUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${x.company} on LinkedIn`}
+                    title={`${x.company} on LinkedIn`}
+                  >
+                    <Linkedin className="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
+                ) : null}
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
                 {x.location ? (
@@ -46,6 +59,14 @@ export function ExperienceList({ items }: { items: CvExperience[] }) {
                 <li key={i}>{h}</li>
               ))}
             </ul>
+          ) : null}
+          {x.skills?.length ? (
+            <div className="mt-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                Skills
+              </div>
+              <SkillsChips items={x.skills} />
+            </div>
           ) : null}
         </article>
       ))}

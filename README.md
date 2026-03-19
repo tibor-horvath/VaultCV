@@ -47,7 +47,7 @@ You control the CV content via the `CV_JSON` environment variable (server-side).
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
 - `credentials`: array of `{ issuer, label, url }` where `issuer` is one of `microsoft | aws | google | other`
 - `languages`: string array, shown as chips
-- `experience`: supports `companyUrl?` to link the company name
+- `experience`: supports `companyUrl?` to link the company name, `companyLinkedInUrl?` to show a LinkedIn icon link, and `skills?` to show per-job skill chips
 - `projects` and `hobbyProjects`: project grids
 
 ## Local development
@@ -81,7 +81,7 @@ To run the API locally with secrets, create `api/local.settings.json` (this repo
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "CV_ACCESS_TOKEN": "CHANGE_ME_TO_A_LONG_RANDOM_STRING",
-    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"photoDataUrl\":\"data:image/jpeg;base64,REPLACE_ME\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}"
+    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"photoDataUrl\":\"data:image/jpeg;base64,REPLACE_ME\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"companyLinkedInUrl\":\"https://www.linkedin.com/company/example-co/\",\"skills\":[\"React\",\"TypeScript\",\"Azure\"],\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}"
   }
 }
 ```
