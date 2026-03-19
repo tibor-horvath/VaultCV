@@ -5,9 +5,9 @@ import { SkillsChips } from './SkillsChips'
 export function ExperienceList({ items }: { items: CvExperience[] }) {
   return (
     <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60">
-      {items.map((x) => (
+      {items.map((x, idx) => (
         <article
-          key={`${x.company}:${x.role}:${x.start}`}
+          key={`${idx}:${x.company}:${x.role}:${x.start}`}
           className="py-3.5"
         >
           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
