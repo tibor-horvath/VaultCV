@@ -88,7 +88,7 @@ export function BasicsCard({
           </div>
 
           {basics.location ? (
-            <div className="mt-2 inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <div className="mt-2 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
               <MapPin className="h-4 w-4" />
               {basics.location}
             </div>
@@ -97,7 +97,7 @@ export function BasicsCard({
           {basics.email ? (
             <a
               href={`mailto:${basics.email}`}
-              className="mt-2 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              className="mt-2 flex w-fit items-center gap-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
             >
               <Mail className="h-4 w-4" />
               {basics.email}
