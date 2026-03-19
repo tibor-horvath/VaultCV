@@ -42,7 +42,7 @@ At runtime, the landing page loads public profile data in this order:
 
 You control the CV content via the `CV_JSON` environment variable (server-side). Key fields:
 
-- `basics`: `{ name, headline, location?, summary?, photoDataUrl?, photoAlt? }`
+- `basics`: `{ name, headline, email?, location?, summary?, photoDataUrl?, photoAlt? }`
   - `photoDataUrl` should be a `data:` URL (works with the current CSP), e.g. `data:image/jpeg;base64,...`
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
 - `credentials`: array of `{ issuer, label, url }` where `issuer` is one of `microsoft | aws | google | other`
@@ -81,7 +81,7 @@ To run the API locally with secrets, create `api/local.settings.json` (this repo
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "CV_ACCESS_TOKEN": "CHANGE_ME_TO_A_LONG_RANDOM_STRING",
-    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"photoDataUrl\":\"data:image/jpeg;base64,REPLACE_ME\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"companyLinkedInUrl\":\"https://www.linkedin.com/company/example-co/\",\"skills\":[\"React\",\"TypeScript\",\"Azure\"],\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}"
+    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"email\":\"you@example.com\",\"photoDataUrl\":\"data:image/jpeg;base64,REPLACE_ME\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"companyLinkedInUrl\":\"https://www.linkedin.com/company/example-co/\",\"skills\":[\"React\",\"TypeScript\",\"Azure\"],\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}"
   }
 }
 ```

@@ -9,6 +9,7 @@ function getMockCv(): CvData {
     basics: {
       name: 'John Doe',
       headline: 'Full‑stack Developer · React · Azure',
+      email: 'john.doe@example.com',
       photoDataUrl:
         'data:image/svg+xml;utf8,' +
         encodeURIComponent(

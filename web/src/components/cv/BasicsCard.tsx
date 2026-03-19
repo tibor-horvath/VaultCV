@@ -1,6 +1,6 @@
 import type { CvBasics, CvLink } from '../../types/cv'
 import type { ReactNode } from 'react'
-import { ExternalLink, Github, Linkedin, MapPin, Sparkles } from 'lucide-react'
+import { ExternalLink, Github, Linkedin, Mail, MapPin, Sparkles } from 'lucide-react'
 
 function getInitials(name: string) {
   const trimmed = name.trim()
@@ -92,6 +92,16 @@ export function BasicsCard({
               <MapPin className="h-4 w-4" />
               {basics.location}
             </div>
+          ) : null}
+
+          {basics.email ? (
+            <a
+              href={`mailto:${basics.email}`}
+              className="mt-2 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+            >
+              <Mail className="h-4 w-4" />
+              {basics.email}
+            </a>
           ) : null}
 
           {basics.summary ? (

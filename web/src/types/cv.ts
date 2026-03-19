@@ -1,6 +1,7 @@
 export type CvBasics = {
   name: string
   headline: string
+  email?: string
   photoDataUrl?: string
   photoAlt?: string
   location?: string
