@@ -2,7 +2,9 @@ export type CvBasics = {
   name: string
   headline: string
   email?: string
-  photoDataUrl?: string
+  // Stored as raw base64 to keep CV_JSON env vars small.
+  photoBase64?: string
+  photoMimeType?: string
   photoAlt?: string
   location?: string
   summary?: string

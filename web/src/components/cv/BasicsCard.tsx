@@ -33,6 +33,16 @@ function getFallbackPhotoDataUrl(name: string) {
   )
 }
 
+function buildPhotoSrc(basics: CvBasics) {
+  // Preferred: raw base64 coming from the API (`PROFILE_PHOTO_BASE64`).
+  if (basics.photoBase64) {
+    const mimeType = basics.photoMimeType ?? 'image/jpeg'
+    return `data:${mimeType};base64,${basics.photoBase64}`
+  }
+
+  return getFallbackPhotoDataUrl(basics.name)
+}
+
 function inferLinkKind(link: CvLink): 'github' | 'linkedin' | 'other' {
   const label = link.label.toLowerCase()
   if (label.includes('github')) return 'github'
@@ -64,7 +74,7 @@ export function BasicsCard({
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex-shrink-0">
           <img
-            src={basics.photoDataUrl ?? getFallbackPhotoDataUrl(basics.name)}
+            src={buildPhotoSrc(basics)}
             alt={basics.photoAlt ?? `${basics.name} profile photo`}
             className="h-48 w-48 rounded-3xl object-cover shadow-none ring-0 sm:h-56 sm:w-56"
             loading="lazy"

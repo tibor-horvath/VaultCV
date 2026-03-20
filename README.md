@@ -42,8 +42,9 @@ At runtime, the landing page loads public profile data in this order:
 
 You control the CV content via the `CV_JSON` environment variable (server-side). Key fields:
 
-- `basics`: `{ name, headline, email?, location?, summary?, photoDataUrl?, photoAlt? }`
-  - `photoDataUrl` should be a `data:` URL (works with the current CSP), e.g. `data:image/jpeg;base64,...`
+- `basics`: `{ name, headline, email?, location?, summary?, photoAlt? }`
+  - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
+  - Keep photo bytes out of `CV_JSON`. The API injects `basics.photoBase64` (and `basics.photoMimeType`) from `PROFILE_PHOTO_BASE64` at request time.
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
 - `credentials`: array of `{ issuer, label, url }` where `issuer` is one of `microsoft | aws | google | other`
 - `languages`: string array, shown as chips
@@ -81,7 +82,8 @@ To run the API locally with secrets, create `api/local.settings.json` (this repo
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "CV_ACCESS_TOKEN": "CHANGE_ME_TO_A_LONG_RANDOM_STRING",
-    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"email\":\"you@example.com\",\"photoDataUrl\":\"data:image/jpeg;base64,REPLACE_ME\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"companyLinkedInUrl\":\"https://www.linkedin.com/company/example-co/\",\"skills\":[\"React\",\"TypeScript\",\"Azure\"],\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}"
+    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"email\":\"you@example.com\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"companyLinkedInUrl\":\"https://www.linkedin.com/company/example-co/\",\"skills\":[\"React\",\"TypeScript\",\"Azure\"],\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}",
+    "PROFILE_PHOTO_BASE64": "REPLACE_ME_BASE64"
   }
 }
 ```
@@ -102,6 +104,7 @@ Then configure **Application settings** (in the SWA resource):
 
 - `CV_ACCESS_TOKEN`: a long random secret (this is what your QR carries)
 - `CV_JSON`: your private CV JSON payload (keep it out of git)
+- `PROFILE_PHOTO_BASE64`: base64 content of your profile photo (the API turns it into a `data:image/jpeg;base64,...` URL; if you need a different mime type, set `PROFILE_PHOTO_MIME_TYPE`)
 - `PUBLIC_PROFILE_JSON`: your public profile JSON payload (used for `/api/public-profile`)
 
 If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-profile.json` when that file is shipped with the web app.
