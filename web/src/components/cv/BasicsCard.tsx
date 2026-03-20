@@ -2,16 +2,7 @@ import type { CvBasics, CvLink } from '../../types/cv'
 import type { ReactNode } from 'react'
 import { ExternalLink, Github, Linkedin, Mail, MapPin, Sparkles } from 'lucide-react'
 
-function getInitials(name: string) {
-  const trimmed = name.trim()
-  if (!trimmed) return 'CV'
-  // Grab the first alphanumeric character to keep the output stable.
-  const match = trimmed.match(/[A-Za-z0-9]/)
-  return (match?.[0] ?? trimmed[0] ?? 'C').toUpperCase()
-}
-
-function getFallbackPhotoDataUrl(name: string) {
-  const initial = getInitials(name)
+function getFallbackPhotoDataUrl() {
   // CSP allows `img-src 'self' data:` so a data-url SVG is a safe default.
   return (
     'data:image/svg+xml;utf8,' +
@@ -26,7 +17,6 @@ function getFallbackPhotoDataUrl(name: string) {
         </defs>
         <rect width="256" height="256" rx="64" fill="url(#g)"/>
         <circle cx="128" cy="108" r="48" fill="rgba(255,255,255,0.92)"/>
-        <text x="128" y="128" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700" fill="#0f172a">${initial}</text>
         <path d="M56 220c10-44 44-68 72-68s62 24 72 68" fill="rgba(255,255,255,0.92)"/>
       </svg>`,
     )
@@ -40,7 +30,7 @@ function buildPhotoSrc(basics: CvBasics) {
     return `data:${mimeType};base64,${basics.photoBase64}`
   }
 
-  return getFallbackPhotoDataUrl(basics.name)
+  return getFallbackPhotoDataUrl()
 }
 
 function inferLinkKind(link: CvLink): 'github' | 'linkedin' | 'other' {
