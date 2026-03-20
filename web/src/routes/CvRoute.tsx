@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   CircleAlert,
+  Calendar,
   GraduationCap,
   Hourglass,
   LayoutGrid,
@@ -265,17 +266,42 @@ export function CvRoute() {
                           <CredentialIssuerIcon issuer={issuer} />
                           {credentialIssuerLabel[issuer]}
                         </div>
-                        <div className="mt-2 flex flex-wrap gap-2">
+                        <div className="mt-2 divide-y divide-slate-200/60 dark:divide-slate-800/60">
                           {items.map((c) => (
-                            <a
-                              key={`${c.issuer}:${c.label}:${c.url}`}
-                              className="inline-flex items-center rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"
-                              href={c.url}
-                              target="_blank"
-                              rel="noreferrer"
+                            <article
+                              key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`}
+                              className="py-3.5"
                             >
-                              {c.label}
-                            </a>
+                              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                                <div className="min-w-0">
+                                  <a
+                                    className="font-semibold text-slate-900 underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500 dark:text-slate-100 dark:decoration-slate-700 dark:hover:decoration-slate-500"
+                                    href={c.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {c.label}
+                                  </a>
+
+                                  {c.dateEarned || c.dateExpires ? (
+                                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+                                      {c.dateEarned ? (
+                                        <span className="inline-flex items-center gap-1.5">
+                                          <Calendar className="h-3.5 w-3.5 opacity-80" />
+                                          Earned {c.dateEarned}
+                                        </span>
+                                      ) : null}
+                                      {c.dateExpires ? (
+                                        <span className="inline-flex items-center gap-1.5">
+                                          <Calendar className="h-3.5 w-3.5 opacity-80" />
+                                          Expires {c.dateExpires}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </article>
                           ))}
                         </div>
                       </div>

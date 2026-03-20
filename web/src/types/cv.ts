@@ -20,6 +20,16 @@ export type CvCredential = {
   issuer: CvCredentialIssuer
   label: string
   url: string
+  /**
+   * When the certificate/credential was earned (e.g. "2024", "2024-05").
+   * Optional to keep existing CV_JSON payloads working.
+   */
+  dateEarned?: string
+  /**
+   * When the credential expires / needs renewal (e.g. "2026", "2026-11").
+   * Optional; if omitted, the UI won't show expiration info.
+   */
+  dateExpires?: string
 }
 
 export type CvExperience = {
