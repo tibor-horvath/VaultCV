@@ -21,7 +21,7 @@ export function BasicsCard({
           <img
             src={buildPhotoSrc(basics)}
             alt={basics.photoAlt ?? `${basics.name} profile photo`}
-            className="h-48 w-48 rounded-3xl object-cover shadow-none ring-0 sm:h-56 sm:w-56"
+            className="h-48 w-48 rounded-full object-cover shadow-none ring-0 sm:h-56 sm:w-56"
             loading="lazy"
             decoding="async"
           />
