@@ -4,7 +4,6 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   CircleAlert,
-  Gamepad2,
   GraduationCap,
   Hourglass,
   LayoutGrid,
@@ -290,12 +289,6 @@ export function CvRoute() {
           {state.cv.projects?.length ? (
             <Section title="Projects" icon={<LayoutGrid className="h-4 w-4" />}>
               <ProjectsGrid items={state.cv.projects} />
-            </Section>
-          ) : null}
-
-          {state.cv.hobbyProjects?.length ? (
-            <Section title="Hobby projects" icon={<Gamepad2 className="h-4 w-4" />}>
-              <ProjectsGrid items={state.cv.hobbyProjects} />
             </Section>
           ) : null}
 

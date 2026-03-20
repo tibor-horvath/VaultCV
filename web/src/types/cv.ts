@@ -58,7 +58,6 @@ export type CvData = {
   languages?: string[]
   experience?: CvExperience[]
   projects?: CvProject[]
-  hobbyProjects?: CvProject[]
   education?: CvEducation[]
 }
 

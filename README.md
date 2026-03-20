@@ -49,7 +49,7 @@ You control the CV content via the `CV_JSON` environment variable (server-side).
 - `credentials`: array of `{ issuer, label, url }` where `issuer` is one of `microsoft | aws | google | other`
 - `languages`: string array, shown as chips
 - `experience`: supports `companyUrl?` to link the company name, `companyLinkedInUrl?` to show a LinkedIn icon link, and `skills?` to show per-job skill chips
-- `projects` and `hobbyProjects`: project grids
+- `projects`: project grid
 
 ## Local development
 

@@ -96,14 +96,6 @@ function getMockCv(): CvData {
         tags: ['React', 'Azure', 'Functions'],
       },
     ],
-    hobbyProjects: [
-      {
-        name: 'Weekend Builder',
-        description: 'Small hobby builds exploring UI polish, DX, and automation.',
-        links: [{ label: 'Repo', url: 'https://github.com/your-handle/weekend-builder' }],
-        tags: ['TypeScript', 'Vite'],
-      },
-    ],
     education: [
       {
         school: 'Example University',
