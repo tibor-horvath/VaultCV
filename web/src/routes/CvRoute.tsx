@@ -129,7 +129,7 @@ export function CvRoute() {
 
   useEffect(() => {
     // Browser tab title derived from public profile name.
-    document.title = publicName === 'CV' ? 'CV' : `${publicName} + CV`
+    document.title = publicName === 'CV' ? 'CV' : `${publicName} CV`
   }, [publicName])
 
   useEffect(() => {

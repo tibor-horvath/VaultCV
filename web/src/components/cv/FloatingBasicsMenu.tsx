@@ -8,9 +8,12 @@ export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?
   const linkedin = visibleLinks.find((l) => inferLinkKind(l) === 'linkedin')
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
+    <div
+      className="pointer-events-none fixed inset-x-0 z-50"
+      style={{ top: 'max(env(safe-area-inset-top), 0.5rem)' }}
+    >
       {/* Match AppShell footer outer padding/sizing */}
-      <div className="pointer-events-auto mx-auto w-full max-w-sm px-1 pb-1.5 sm:px-1 lg:px-1">
+      <div className="pointer-events-auto mx-auto w-full max-w-sm px-2 pb-1.5 sm:px-2 lg:px-1">
         <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-200/80 bg-white/75 px-2 py-1.5 text-sm text-slate-600 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 dark:text-slate-300">
           <div className="flex min-w-0 items-center gap-2">
             <img

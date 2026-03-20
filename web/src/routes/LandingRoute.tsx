@@ -61,7 +61,7 @@ export function LandingRoute() {
   const publicTitle = getPublicText(import.meta.env.VITE_PUBLIC_TITLE as string | undefined, publicData.title)
 
   useEffect(() => {
-    document.title = `${publicName} + CV`
+    document.title = publicName === 'CV' ? 'CV' : `${publicName} CV`
   }, [publicName])
 
   const effectiveToken = useMemo(() => {
