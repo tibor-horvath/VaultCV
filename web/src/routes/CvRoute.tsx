@@ -85,12 +85,13 @@ function GoogleMark({ className }: { className?: string }) {
   )
 }
 
-const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'other']
+const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
 
 const credentialIssuerLabel: Record<CvCredentialIssuer, string> = {
   microsoft: 'Microsoft',
   aws: 'AWS',
   google: 'Google',
+  language: 'Language Exams',
   other: 'Other',
 }
 
@@ -99,6 +100,7 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
   if (issuer === 'microsoft') return <MicrosoftMark className={cls} />
   if (issuer === 'aws') return <AwsMark className={cls} />
   if (issuer === 'google') return <GoogleMark className={cls} />
+  if (issuer === 'language') return <Languages className={cls} />
   return <BadgeCheck className={cls} />
 }
 

@@ -40,6 +40,11 @@ function getMockCv(): CvData {
         label: 'Google Cloud Skills Boost profile',
         url: 'https://www.cloudskillsboost.google/',
       },
+      {
+        issuer: 'language',
+        label: 'Cambridge English C1 Advanced (CAE)',
+        url: 'https://www.cambridgeenglish.org/exams-and-tests/advanced/',
+      },
     ],
     skills: ['React', 'TypeScript', 'Azure', 'Node.js', 'CI/CD'],
     languages: ['English (C1)', 'Czech (Native)'],

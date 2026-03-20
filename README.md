@@ -48,7 +48,7 @@ You control the CV content via the `CV_JSON` environment variable (server-side).
   - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
   - Keep photo bytes out of `CV_JSON`. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
-- `credentials`: array of `{ issuer, label, url }` where `issuer` is one of `microsoft | aws | google | other`
+- `credentials`: array of `{ issuer, label, url }` where `issuer` is one of `microsoft | aws | google | language | other`
 - `languages`: string array, shown as chips
 - `experience`: supports `companyUrl?` to link the company name, `companyLinkedInUrl?` to show a LinkedIn icon link, and `skills?` to show per-job skill chips
 - `projects`: project grid
