@@ -21,14 +21,10 @@ import { ProjectsGrid } from '../components/cv/ProjectsGrid'
 import { Section } from '../components/cv/Section'
 import { SkillsChips } from '../components/cv/SkillsChips'
 import { fetchCv } from '../lib/api'
+import { fetchPublicProfile } from '../lib/publicProfile'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
-import { applyTheme, getStoredTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
-
-function resolveInitialTheme(): ThemePreference {
-  const stored = getStoredTheme()
-  const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  return stored ?? (systemPrefersDark ? 'dark' : 'light')
-}
+import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
+import { resolveInitialThemeForMode } from '../lib/themePreference'
 
 function MicrosoftMark({ className }: { className?: string }) {
   return (
@@ -111,8 +107,7 @@ export function CvRoute() {
   const token = params.get('t') ?? ''
   const [theme, setTheme] = useState<ThemePreference>(() => {
     const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
-    if (isMock) return Math.random() < 0.5 ? 'light' : 'dark'
-    return resolveInitialTheme()
+    return resolveInitialThemeForMode(isMock)
   })
   const [state, setState] = useState<
     | { kind: 'locked' }
@@ -139,14 +134,8 @@ export function CvRoute() {
 
     async function loadPublicProfileName() {
       try {
-        const res = await fetch('/api/public-profile', {
-          method: 'GET',
-          headers: { accept: 'application/json' },
-        })
-        if (!res.ok || cancelled) return
-
-        const payload = (await res.json()) as unknown
-        const name = typeof (payload as { name?: unknown } | null)?.name === 'string' ? (payload as { name?: string }).name?.trim() : ''
+        const payload = await fetchPublicProfile()
+        const name = payload.name?.trim() ?? ''
         if (!name || cancelled) return
 
         setPublicName(name)
@@ -194,7 +183,6 @@ export function CvRoute() {
 
   useEffect(() => {
     if (state.kind !== 'ready') {
-      setIsBasicsInView(true)
       return
     }
 

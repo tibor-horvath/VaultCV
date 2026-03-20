@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Github, Linkedin } from 'lucide-react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
-import { applyTheme, getStoredTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
-
-function resolveInitialTheme(): ThemePreference {
-  const stored = getStoredTheme()
-  const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  return stored ?? (systemPrefersDark ? 'dark' : 'light')
-}
+import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
+import { resolveInitialThemeForMode } from '../lib/themePreference'
 
 export function AppShell() {
   const currentYear = new Date().getFullYear()
   const [theme] = useState<ThemePreference>(() => {
     const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
-    if (isMock) return Math.random() < 0.5 ? 'light' : 'dark'
-    return resolveInitialTheme()
+    return resolveInitialThemeForMode(isMock)
   })
 
   useEffect(() => {

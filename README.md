@@ -11,6 +11,8 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 - `api/`: Azure Functions (TypeScript) for token-gated CV JSON
 - `staticwebapp.config.json`: SPA routing + security headers
 
+`staticwebapp.config.json` at the repo root is the canonical config. Before web builds, `npm run build` in `web/` syncs this file into `web/staticwebapp.config.json` and `web/public/staticwebapp.config.json` to avoid config drift.
+
 ## Security model (important)
 
 This is **real server-side enforcement**: without the token, the API returns 401 and the SPA cannot access your CV JSON.

@@ -22,26 +22,13 @@ function jsonResponse(status: number, body: unknown) {
   }
 }
 
-const mockPublicProfile = {
-  name: 'John Doe',
-  title: 'Cloud Engineer',
-  location: 'Prague, Czechia',
-  focus: 'Cloud Engineer, Azure/AWS',
-  bio: 'Building reliable cloud-native products with clean UX, strong security, and fast delivery.',
-  links: [
-    { label: 'LinkedIn', url: 'https://www.linkedin.com/in/your-handle/' },
-    { label: 'GitHub', url: 'https://github.com/your-handle' },
-  ],
-  tags: ['Cloud', 'Azure', 'AWS', 'TypeScript', 'React'],
-}
-
 export default async function (context: Context, _req: HttpRequest) {
   const raw = process.env.PUBLIC_PROFILE_JSON ?? ''
 
   if (!raw) {
-    // Default to mock so the landing page still works in dev environments
-    // even when you haven't configured the SWA Application settings yet.
-    context.res = jsonResponse(200, mockPublicProfile)
+    // Keep API and web fallback data separate to avoid drift.
+    // The web app can still use `/public-profile.json` if this env var is unset.
+    context.res = jsonResponse(404, { error: 'PUBLIC_PROFILE_JSON is not configured.' })
     return
   }
 

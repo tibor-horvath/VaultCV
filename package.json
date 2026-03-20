@@ -2,6 +2,8 @@
   "name": "cv-root",
   "private": true,
   "version": "0.0.0",
-  "scripts": {}
+  "scripts": {
+    "sync:swa-config": "node scripts/sync-swa-config.mjs"
+  }
 }
 
