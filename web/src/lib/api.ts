@@ -10,21 +10,6 @@ function getMockCv(): CvData {
       name: 'John Doe',
       headline: 'Full‑stack Developer · React · Azure',
       email: 'john.doe@example.com',
-      photoBase64: (() => {
-        const svg =
-          '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">' +
-          '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0" stop-color="#a855f7"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#0ea5e9"/>' +
-          '</linearGradient></defs>' +
-          '<rect width="256" height="256" rx="64" fill="url(#g)"/>' +
-          '<circle cx="128" cy="104" r="44" fill="rgba(255,255,255,0.92)"/>' +
-          '<path d="M56 220c10-44 44-68 72-68s62 24 72 68" fill="rgba(255,255,255,0.92)"/>' +
-          '</svg>'
-
-        // Mock SVG is ASCII-only; `btoa` is enough here.
-        return btoa(svg)
-      })(),
-      photoMimeType: 'image/svg+xml',
       photoAlt: 'Profile photo',
       location: 'City, Country',
       summary:

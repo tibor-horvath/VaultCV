@@ -5,8 +5,7 @@ type LinkLike = {
 
 type BasicsLike = {
   name: string
-  photoBase64?: string
-  photoMimeType?: string
+  photoUrl?: string
 }
 
 function getFallbackPhotoDataUrl() {
@@ -31,10 +30,7 @@ function getFallbackPhotoDataUrl() {
 }
 
 export function buildPhotoSrc(basics: BasicsLike) {
-  if (basics.photoBase64) {
-    const mimeType = basics.photoMimeType ?? 'image/jpeg'
-    return `data:${mimeType};base64,${basics.photoBase64}`
-  }
+  if (basics.photoUrl) return basics.photoUrl
 
   return getFallbackPhotoDataUrl()
 }
