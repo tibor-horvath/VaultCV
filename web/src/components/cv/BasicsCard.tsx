@@ -16,7 +16,7 @@ export function BasicsCard({
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <div className="mx-auto flex-shrink-0 sm:mx-0">
           <img
             src={buildPhotoSrc(basics)}
