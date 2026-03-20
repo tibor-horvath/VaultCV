@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   BadgeCheck,
@@ -14,6 +14,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
+import { FloatingBasicsMenu } from '../components/cv/FloatingBasicsMenu'
 import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
 import { ProjectsGrid } from '../components/cv/ProjectsGrid'
@@ -125,6 +126,9 @@ export function CvRoute() {
     return envName || 'CV'
   })
 
+  const basicsSentinelRef = useRef<HTMLDivElement | null>(null)
+  const [isBasicsInView, setIsBasicsInView] = useState(true)
+
   useEffect(() => {
     // Browser tab title derived from public profile name.
     document.title = publicName === 'CV' ? 'CV' : `${publicName} + CV`
@@ -188,6 +192,26 @@ export function CvRoute() {
     setStoredTheme(theme)
   }, [theme])
 
+  useEffect(() => {
+    if (state.kind !== 'ready') {
+      setIsBasicsInView(true)
+      return
+    }
+
+    const el = basicsSentinelRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsBasicsInView(entry.isIntersecting)
+      },
+      { threshold: 0.01 },
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [state.kind])
+
   const themeToggle = (
     <button
       type="button"
@@ -201,7 +225,7 @@ export function CvRoute() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:pt-20">
       {state.kind === 'locked' ? (
         <Section title="Locked" icon={<Lock className="h-4 w-4" />}>
           <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
@@ -232,7 +256,11 @@ export function CvRoute() {
 
       {state.kind === 'ready' ? (
         <div className="space-y-6">
-          <BasicsCard basics={state.cv.basics} links={state.cv.links} headerRight={themeToggle} />
+          <div ref={basicsSentinelRef}>
+            <BasicsCard basics={state.cv.basics} links={state.cv.links} headerRight={themeToggle} />
+          </div>
+
+          {!isBasicsInView ? <FloatingBasicsMenu basics={state.cv.basics} links={state.cv.links} /> : null}
 
           {state.cv.credentials?.length ? (
             <Section title="Credentials" icon={<BadgeCheck className="h-4 w-4" />}>
