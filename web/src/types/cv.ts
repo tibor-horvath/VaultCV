@@ -47,6 +47,7 @@ export type CvEducation = {
   program: string
   start?: string
   end?: string
+  location?: string
   highlights?: string[]
 }
 

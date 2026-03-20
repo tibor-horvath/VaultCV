@@ -102,6 +102,7 @@ function getMockCv(): CvData {
         program: 'BSc Computer Science',
         start: '2019',
         end: '2023',
+        location: 'City, Country',
       },
     ],
   }
