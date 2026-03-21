@@ -25,14 +25,15 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
                 return (
                   <a
                     key={`${p.name}:${kind}:${l.url}`}
-                    className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900"
+                    className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus:ring-offset-slate-950"
                     href={l.url}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
+                    aria-label={`${p.name}: ${text} (opens in new tab)`}
                   >
-                    <Icon className="h-3.5 w-3.5 opacity-80 transition-opacity group-hover:opacity-100" aria-hidden="true" />
-                    {text}
-                    <ExternalLink className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                    <Icon className="h-3.5 w-3.5 shrink-0 opacity-80 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                    <span>{text}</span>
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100" aria-hidden="true" />
                   </a>
                 )
               })}
@@ -55,10 +56,11 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
                 {textLinks.map((l) => (
                   <a
                     key={`${p.name}:${l.url}`}
-                    className="text-xs font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    className="text-xs font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:text-slate-300 dark:hover:text-white dark:focus:ring-offset-slate-950"
                     href={l.url}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
+                    aria-label={`${p.name}: ${l.label} (opens in new tab)`}
                   >
                     {l.label}
                   </a>

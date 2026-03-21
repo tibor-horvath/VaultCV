@@ -56,6 +56,7 @@ function getMockCv(): CvData {
     languages: ['English (C1)', 'Czech (Native)'],
     experience: [
       {
+        id: 'exp-example-co',
         company: 'Example Co.',
         companyUrl: 'https://example.com',
         companyLinkedInUrl: 'https://www.linkedin.com/company/example-co/',
@@ -70,6 +71,7 @@ function getMockCv(): CvData {
         ],
       },
       {
+        id: 'exp-contoso',
         company: 'Contoso',
         companyUrl: 'https://www.microsoft.com/',
         companyLinkedInUrl: 'https://www.linkedin.com/company/microsoft/',
@@ -97,6 +99,7 @@ function getMockCv(): CvData {
     ],
     education: [
       {
+        id: 'edu-example-uni-bsc',
         school: 'Example University',
         program: 'BSc Computer Science',
         start: '2019',

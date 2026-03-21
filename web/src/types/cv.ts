@@ -33,6 +33,8 @@ export type CvCredential = {
 }
 
 export type CvExperience = {
+  /** Stable key for list rendering; optional when composite fields uniquely identify the row. */
+  id?: string
   company: string
   companyUrl?: string
   companyLinkedInUrl?: string
@@ -52,6 +54,8 @@ export type CvProject = {
 }
 
 export type CvEducation = {
+  /** Stable key for list rendering; optional when composite fields uniquely identify the row. */
+  id?: string
   school: string
   program: string
   start?: string
