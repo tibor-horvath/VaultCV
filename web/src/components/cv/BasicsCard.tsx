@@ -1,6 +1,7 @@
 import type { CvBasics, CvLink } from '../../types/cv'
 import type { ReactNode } from 'react'
-import { ExternalLink, Github, Linkedin, Mail, MapPin, Sparkles } from 'lucide-react'
+import { ExternalLink, Mail, MapPin, Sparkles } from 'lucide-react'
+import { SiGithubIcon, SiLinkedinIcon } from '../icons/SimpleBrandIcons'
 import { buildPhotoSrc, inferLinkKind } from '../../lib/cvPresentation'
 
 export function BasicsCard({
@@ -69,7 +70,7 @@ export function BasicsCard({
             <div className="mt-4 flex flex-wrap gap-2">
               {visibleLinks.map((l) => {
                 const kind = inferLinkKind(l)
-                const Icon = kind === 'github' ? Github : kind === 'linkedin' ? Linkedin : ExternalLink
+                const Icon = kind === 'github' ? SiGithubIcon : kind === 'linkedin' ? SiLinkedinIcon : ExternalLink
                 const text = kind === 'github' ? 'GitHub' : kind === 'linkedin' ? 'LinkedIn' : l.label
 
                 return (

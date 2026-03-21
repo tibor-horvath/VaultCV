@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Github, Linkedin } from 'lucide-react'
+import { SiGithubIcon, SiLinkedinIcon } from '../components/icons/SimpleBrandIcons'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
 import { resolveInitialThemeForMode } from '../lib/themePreference'
@@ -33,7 +33,7 @@ export function AppShell() {
               target="_blank"
               rel="noreferrer"
             >
-              <Github className="h-3.5 w-3.5" aria-hidden="true" />
+              <SiGithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
               <span>VaultCV</span>
             </a>
             <a
@@ -42,7 +42,7 @@ export function AppShell() {
               target="_blank"
               rel="noreferrer"
             >
-              <Linkedin className="h-3.5 w-3.5" aria-hidden="true" />
+              <SiLinkedinIcon className="h-3.5 w-3.5" aria-hidden="true" />
               <span>LinkedIn</span>
             </a>
           </div>

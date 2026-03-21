@@ -1,19 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import {
-  ArrowRight,
-  KeyRound,
-  Github,
-  Linkedin,
-  MapPin,
-  Moon,
-  ShieldCheck,
-  Sparkles,
-  ExternalLink,
-  Sun,
-  Tag,
-  Target,
-} from 'lucide-react'
+import { ArrowRight, KeyRound, MapPin, Moon, ShieldCheck, Sparkles, ExternalLink, Sun, Tag, Target } from 'lucide-react'
+import { SiGithubIcon, SiLinkedinIcon } from '../components/icons/SimpleBrandIcons'
 import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
 import { inferLinkKind } from '../lib/cvPresentation'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
@@ -138,7 +126,7 @@ export function LandingRoute() {
                 >
                   {(() => {
                     const kind = inferLinkKind(item)
-                    const Icon = kind === 'github' ? Github : kind === 'linkedin' ? Linkedin : ExternalLink
+                    const Icon = kind === 'github' ? SiGithubIcon : kind === 'linkedin' ? SiLinkedinIcon : ExternalLink
                     return <Icon className="h-3.5 w-3.5 opacity-80" />
                   })()}
                   {item.label}

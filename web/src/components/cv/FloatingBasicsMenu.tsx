@@ -1,5 +1,6 @@
 import type { CvBasics, CvLink } from '../../types/cv'
-import { Github, Linkedin, Mail } from 'lucide-react'
+import { Mail } from 'lucide-react'
+import { SiGithubIcon, SiLinkedinIcon } from '../icons/SimpleBrandIcons'
 import { buildPhotoSrc, inferLinkKind } from '../../lib/cvPresentation'
 
 export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?: CvLink[] }) {
@@ -42,7 +43,7 @@ export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?
                 target="_blank"
                 rel="noreferrer"
               >
-                <Github className="h-3.5 w-3.5 opacity-80" />
+                <SiGithubIcon className="h-3.5 w-3.5 opacity-80" />
               </a>
             ) : null}
 
@@ -53,7 +54,7 @@ export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?
                 target="_blank"
                 rel="noreferrer"
               >
-                <Linkedin className="h-3.5 w-3.5 opacity-80" />
+                <SiLinkedinIcon className="h-3.5 w-3.5 opacity-80" />
               </a>
             ) : null}
 

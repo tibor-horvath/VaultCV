@@ -1,5 +1,6 @@
 import type { CvExperience } from '../../types/cv'
-import { Calendar, Linkedin, MapPin } from 'lucide-react'
+import { Calendar, MapPin } from 'lucide-react'
+import { SiLinkedinIcon } from '../icons/SimpleBrandIcons'
 import { SkillsChips } from './SkillsChips'
 
 export function ExperienceList({ items }: { items: CvExperience[] }) {
@@ -35,7 +36,7 @@ export function ExperienceList({ items }: { items: CvExperience[] }) {
                     aria-label={`${x.company} on LinkedIn`}
                     title={`${x.company} on LinkedIn`}
                   >
-                    <Linkedin className="h-3.5 w-3.5" aria-hidden="true" />
+                    <SiLinkedinIcon className="h-3.5 w-3.5" aria-hidden="true" />
                   </a>
                 ) : null}
               </div>

@@ -21,6 +21,7 @@ import { ExperienceList } from '../components/cv/ExperienceList'
 import { ProjectsGrid } from '../components/cv/ProjectsGrid'
 import { Section } from '../components/cv/Section'
 import { SkillsChips } from '../components/cv/SkillsChips'
+import { SiGoogleIcon } from '../components/icons/SimpleBrandIcons'
 import { fetchCv } from '../lib/api'
 import { fetchPublicProfile } from '../lib/publicProfile'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
@@ -59,33 +60,6 @@ function AwsMark({ className }: { className?: string }) {
   )
 }
 
-function GoogleMark({ className }: { className?: string }) {
-  // Simple mono mark to avoid heavy multi-color SVGs; still recognizable as "G".
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className={className}>
-      <path
-        fill="currentColor"
-        d="M12 5.6c1.5 0 2.87.52 3.96 1.54l1.55-1.55C16.1 4.28 14.18 3.5 12 3.5 8.09 3.5 4.78 5.74 3.16 9.0l1.98 1.53C6.23 7.58 8.86 5.6 12 5.6Z"
-        opacity="0.85"
-      />
-      <path
-        fill="currentColor"
-        d="M21 12.2c0-.62-.06-1.08-.18-1.55H12v2.86h5.14c-.1.72-.66 1.8-1.9 2.53l1.84 1.43C19.03 16.23 21 14.12 21 12.2Z"
-      />
-      <path
-        fill="currentColor"
-        d="M5.14 13.0c-.18-.54-.28-1.12-.28-1.72 0-.6.1-1.18.28-1.72L3.16 8.03A8.56 8.56 0 0 0 2.5 11.3c0 1.43.35 2.79.66 3.27L5.14 13Z"
-        opacity="0.75"
-      />
-      <path
-        fill="currentColor"
-        d="M12 20.1c2.18 0 4.01-.72 5.34-1.96l-1.84-1.43c-.49.35-1.44.74-3.5.74-3.1 0-5.73-1.97-6.86-4.93L3.16 14.57C4.79 17.86 8.09 20.1 12 20.1Z"
-        opacity="0.85"
-      />
-    </svg>
-  )
-}
-
 const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
 
 const credentialIssuerLabel: Record<CvCredentialIssuer, string> = {
@@ -100,7 +74,7 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
   const cls = 'h-4 w-4 opacity-80'
   if (issuer === 'microsoft') return <MicrosoftMark className={cls} />
   if (issuer === 'aws') return <AwsMark className={cls} />
-  if (issuer === 'google') return <GoogleMark className={cls} />
+  if (issuer === 'google') return <SiGoogleIcon className={cls} aria-hidden="true" focusable="false" />
   if (issuer === 'language') return <Languages className={cls} />
   return <BadgeCheck className={cls} />
 }
