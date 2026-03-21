@@ -6,6 +6,7 @@ import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
 import { inferLinkKind } from '../lib/cvPresentation'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
 import { resolveInitialThemeForMode } from '../lib/themePreference'
+import { useDocumentFavicon } from '../lib/favicon'
 
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -51,6 +52,8 @@ export function LandingRoute() {
   useEffect(() => {
     document.title = publicName === 'CV' ? 'CV' : `${publicName} CV`
   }, [publicName])
+
+  useDocumentFavicon(publicName)
 
   const effectiveToken = useMemo(() => {
     const fromUrl = urlToken.trim()

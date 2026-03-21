@@ -27,6 +27,7 @@ import { fetchPublicProfile } from '../lib/publicProfile'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
 import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
 import { resolveInitialThemeForMode } from '../lib/themePreference'
+import { useDocumentFavicon } from '../lib/favicon'
 
 function MicrosoftMark({ className }: { className?: string }) {
   return (
@@ -176,6 +177,10 @@ export function CvRoute() {
     observer.observe(el)
     return () => observer.disconnect()
   }, [state.kind])
+
+  const faviconName =
+    state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
+  useDocumentFavicon(faviconName)
 
   const themeToggle = (
     <button
