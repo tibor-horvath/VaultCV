@@ -88,7 +88,10 @@ function getMockCv(): CvData {
       {
         name: 'Private CV SPA',
         description: 'React SPA + Azure Functions API protected by a QR-carried token.',
-        links: [{ label: 'Source', url: 'https://github.com/your-handle/cv' }],
+        links: [
+          { label: 'github', url: 'https://github.com/your-handle/cv' },
+          { label: 'web', url: 'https://example.com' },
+        ],
         tags: ['React', 'Azure', 'Functions'],
       },
     ],

@@ -1,44 +1,73 @@
+import { ExternalLink, Globe } from 'lucide-react'
+import { inferProjectLinkLabelKind } from '../../lib/cvPresentation'
 import type { CvProject } from '../../types/cv'
+import { SiGithubIcon } from '../icons/SimpleBrandIcons'
 
 export function ProjectsGrid({ items }: { items: CvProject[] }) {
   return (
     <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60">
-      {items.map((p) => (
-        <article
-          key={p.name}
-          className="py-3.5"
-        >
-          <div className="font-semibold text-slate-900 dark:text-slate-100">{p.name}</div>
-          <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{p.description}</p>
-          {p.tags?.length ? (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {p.tags.map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-slate-200/90 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200"
-                >
-                  {t}
-                </span>
-              ))}
+      {items.map((p) => {
+        const links = p.links ?? []
+        const iconLinks = links.filter((l) => inferProjectLinkLabelKind(l) !== 'other')
+        const textLinks = links.filter((l) => inferProjectLinkLabelKind(l) === 'other')
+
+        return (
+          <article
+            key={p.name}
+            className="py-3.5"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+              <div className="min-w-0 font-semibold text-slate-900 dark:text-slate-100">{p.name}</div>
+              {iconLinks.map((l) => {
+                const kind = inferProjectLinkLabelKind(l)
+                const Icon = kind === 'github' ? SiGithubIcon : Globe
+                const text = kind === 'github' ? 'GitHub' : 'Web'
+                return (
+                  <a
+                    key={`${p.name}:${kind}:${l.url}`}
+                    className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900"
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Icon className="h-3.5 w-3.5 opacity-80 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                    {text}
+                    <ExternalLink className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                  </a>
+                )
+              })}
             </div>
-          ) : null}
-          {p.links?.length ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {p.links.map((l) => (
-                <a
-                  key={`${p.name}:${l.url}`}
-                  className="text-xs font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-                  href={l.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {l.label}
-                </a>
-              ))}
-            </div>
-          ) : null}
-        </article>
-      ))}
+            <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{p.description}</p>
+            {p.tags?.length ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {p.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-slate-200/90 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            {textLinks.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {textLinks.map((l) => (
+                  <a
+                    key={`${p.name}:${l.url}`}
+                    className="text-xs font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </article>
+        )
+      })}
     </div>
   )
 }

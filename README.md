@@ -51,7 +51,9 @@ You control the CV content via the `CV_JSON` environment variable (server-side).
 - `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | language | other`
 - `languages`: string array, shown as chips
 - `experience`: supports `companyUrl?` to link the company name, `companyLinkedInUrl?` to show a LinkedIn icon link, and `skills?` to show per-job skill chips
-- `projects`: project grid
+- `projects`: array of `{ name, description, links?, tags? }`. In each `links` entry, `label` + `url`:
+  - Labels **`github`** and **`web`** (case-insensitive) render as a **GitHub** or **globe** icon next to the project name (icon links to `url`).
+  - Any other label is shown as a text link under the project (with tags).
 
 ## Local development
 

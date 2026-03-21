@@ -69,3 +69,13 @@ export function inferLinkKind(link: LinkLike): 'github' | 'linkedin' | 'other' {
 
   return 'other'
 }
+
+/**
+ * Project links with labels `github` or `web` (case-insensitive) render as icons next to the project name.
+ */
+export function inferProjectLinkLabelKind(link: LinkLike): 'github' | 'web' | 'other' {
+  const label = link.label.trim().toLowerCase()
+  if (label === 'github') return 'github'
+  if (label === 'web') return 'web'
+  return 'other'
+}
