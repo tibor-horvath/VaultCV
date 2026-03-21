@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowRight, KeyRound, MapPin, Moon, ShieldCheck, Sparkles, ExternalLink, Sun, Tag, Target } from 'lucide-react'
+import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, ShieldCheck, ExternalLink, Sun, Target } from 'lucide-react'
 import { SiGithubIcon, SiLinkedinIcon } from '../components/icons/SimpleBrandIcons'
 import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
 import { inferLinkKind } from '../lib/cvPresentation'
@@ -63,12 +63,7 @@ export function LandingRoute() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-[0_30px_70px_-35px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/45 sm:p-8">
-        <div className="flex items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-600 dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-300">
-            <Sparkles className="h-3.5 w-3.5" />
-            Private Profile Access
-          </div>
-
+        <div className="flex items-center justify-end gap-4">
           <button
             type="button"
             onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
@@ -134,18 +129,18 @@ export function LandingRoute() {
               ))}
             </div>
 
-            {publicData.tags.length ? (
+            {publicData.skills.length ? (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  <Tag className="h-3.5 w-3.5" />
-                  Tags
+                  <LibraryBig className="h-3.5 w-3.5" />
+                  Skills
                 </span>
-                {publicData.tags.map((tag) => (
+                {publicData.skills.map((skill) => (
                   <span
-                    key={tag}
+                    key={skill}
                     className="rounded-full border border-slate-200/85 bg-white px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200"
                   >
-                    {tag}
+                    {skill}
                   </span>
                 ))}
               </div>

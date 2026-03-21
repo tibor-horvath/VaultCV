@@ -10,7 +10,7 @@ export type PublicData = {
   focus: string
   bio: string
   links: PublicLink[]
-  tags: string[]
+  skills: string[]
 }
 
 export const defaultPublicData: PublicData = {
@@ -23,7 +23,7 @@ export const defaultPublicData: PublicData = {
     { label: 'LinkedIn', url: 'https://www.linkedin.com/in/your-handle/' },
     { label: 'GitHub', url: 'https://github.com/your-handle' },
   ],
-  tags: ['Cloud', 'Azure', 'AWS', 'TypeScript', 'React'],
+  skills: ['Cloud', 'Azure', 'AWS', 'TypeScript', 'React'],
 }
 
 function isHttpUrl(value: string) {
@@ -49,8 +49,9 @@ export function normalizePublicData(input: unknown): Partial<PublicData> {
         .filter((x) => x.label && isHttpUrl(x.url))
     : undefined
 
-  const tags = Array.isArray(obj.tags)
-    ? obj.tags.filter((x): x is string => typeof x === 'string').map((x) => x.trim()).filter(Boolean)
+  const rawSkills = obj.skills ?? obj.tags
+  const skills = Array.isArray(rawSkills)
+    ? rawSkills.filter((x): x is string => typeof x === 'string').map((x) => x.trim()).filter(Boolean)
     : undefined
 
   return {
@@ -60,7 +61,7 @@ export function normalizePublicData(input: unknown): Partial<PublicData> {
     focus: typeof obj.focus === 'string' ? obj.focus.trim() : undefined,
     bio: typeof obj.bio === 'string' ? obj.bio.trim() : undefined,
     links,
-    tags,
+    skills,
   }
 }
 
@@ -69,7 +70,7 @@ export function mergePublicData(base: PublicData, incoming: Partial<PublicData>)
     ...base,
     ...incoming,
     links: incoming.links ?? base.links,
-    tags: incoming.tags ?? base.tags,
+    skills: incoming.skills ?? base.skills,
   }
 }
 

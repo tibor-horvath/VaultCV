@@ -35,6 +35,25 @@ export function buildPhotoSrc(basics: BasicsLike) {
   return getFallbackPhotoDataUrl()
 }
 
+/**
+ * Headlines like "Role · React · Azure" are split: the role is shown as plain text;
+ * the rest stays in the skills chip. A single segment (no middle dot) is only the role.
+ */
+export function parseBasicsHeadline(headline: string): { role: string; chip: string | null } {
+  const trimmed = headline.trim()
+  if (!trimmed) return { role: '', chip: null }
+
+  const parts = trimmed
+    .split(/\s*·\s*/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+  if (parts.length <= 1) {
+    return { role: trimmed, chip: null }
+  }
+
+  return { role: parts[0]!, chip: parts.slice(1).join(' · ') }
+}
+
 export function inferLinkKind(link: LinkLike): 'github' | 'linkedin' | 'other' {
   const label = link.label.toLowerCase()
   if (label.includes('github')) return 'github'

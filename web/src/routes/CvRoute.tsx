@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  BadgeCheck,
   BriefcaseBusiness,
-  CircleAlert,
   Calendar,
+  CircleAlert,
   GraduationCap,
   Hourglass,
-  LayoutGrid,
-  Lock,
   Languages,
+  LayoutGrid,
+  LibraryBig,
+  Lock,
   Moon,
+  ShieldCheck,
   Sun,
-  Wrench,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { FloatingBasicsMenu } from '../components/cv/FloatingBasicsMenu'
@@ -76,7 +76,7 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
   if (issuer === 'aws') return <AwsMark className={cls} />
   if (issuer === 'google') return <SiGoogleIcon className={cls} aria-hidden="true" focusable="false" />
   if (issuer === 'language') return <Languages className={cls} />
-  return <BadgeCheck className={cls} />
+  return <ShieldCheck className={cls} />
 }
 
 export function CvRoute() {
@@ -228,7 +228,7 @@ export function CvRoute() {
           {!isBasicsInView ? <FloatingBasicsMenu basics={state.cv.basics} links={state.cv.links} /> : null}
 
           {state.cv.credentials?.length ? (
-            <Section title="Credentials" icon={<BadgeCheck className="h-4 w-4" />}>
+            <Section title="Credentials" icon={<ShieldCheck className="h-4 w-4" />}>
               <div className="space-y-4">
                 {credentialIssuerOrder
                   .map((issuer) => {
@@ -287,7 +287,7 @@ export function CvRoute() {
           ) : null}
 
           {state.cv.skills?.length ? (
-            <Section title="Skills" icon={<Wrench className="h-4 w-4" />}>
+            <Section title="Skills" icon={<LibraryBig className="h-4 w-4" />}>
               <SkillsChips items={state.cv.skills} />
             </Section>
           ) : null}

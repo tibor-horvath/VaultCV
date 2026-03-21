@@ -2,7 +2,7 @@ import type { CvBasics, CvLink } from '../../types/cv'
 import type { ReactNode } from 'react'
 import { ExternalLink, Mail, MapPin, Sparkles } from 'lucide-react'
 import { SiGithubIcon, SiLinkedinIcon } from '../icons/SimpleBrandIcons'
-import { buildPhotoSrc, inferLinkKind } from '../../lib/cvPresentation'
+import { buildPhotoSrc, inferLinkKind, parseBasicsHeadline } from '../../lib/cvPresentation'
 
 export function BasicsCard({
   basics,
@@ -14,6 +14,7 @@ export function BasicsCard({
   headerRight?: ReactNode
 }) {
   const visibleLinks = (links ?? []).filter((l) => inferLinkKind(l) !== 'other')
+  const { role, chip } = parseBasicsHeadline(basics.headline)
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
@@ -34,10 +35,15 @@ export function BasicsCard({
               <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
                 {basics.name}
               </div>
-              <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/75 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-300">
-                <Sparkles className="h-4 w-4" />
-                {basics.headline}
-              </div>
+              {role ? (
+                <div className="mt-1 text-sm font-medium text-slate-600 dark:text-slate-300">{role}</div>
+              ) : null}
+              {chip ? (
+                <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/75 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-300">
+                  <Sparkles className="h-4 w-4" />
+                  {chip}
+                </div>
+              ) : null}
             </div>
 
             {headerRight ? <div className="pt-1">{headerRight}</div> : null}
