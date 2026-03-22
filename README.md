@@ -2,20 +2,29 @@
 
 A modern React CV SPA where **personal CV data is never bundled into the public site**.
 
-- The static site (`web/`) is a “locked by default” shell.
+**New to this? Start here:** VaultCV is a personal CV website you self-host on Azure. Your CV content stays private on the server — visitors only see your name and a prompt to enter an access code. You share a private link (or QR code) that contains the code, so only people you choose can read your full CV.
+
+- The static site (`web/`) is a "locked by default" shell.
 - The private CV JSON is returned by an API (`/api/cv`) **only** when a valid token is provided (typically via your QR code URL).
+
+## How it works (plain English)
+
+1. You write your CV data as a JSON string and store it as a secret setting in Azure — it never lives in this repo.
+2. You deploy this app to Azure Static Web Apps (free tier). It hosts the website and the API together.
+3. You generate a random secret token and store it in Azure too.
+4. Your shareable link looks like `https://your-site.azurestaticapps.net/?t=YOUR_TOKEN`. Anyone with that link can read your CV; everyone else sees a locked landing page.
 
 ## Repo structure
 
-- `web/`: React + TypeScript SPA (Vite)
-- `api/`: Azure Functions (TypeScript) for token-gated CV JSON
-- `staticwebapp.config.json`: SPA routing + security headers
+- `web/`: React + TypeScript SPA (Vite) — the website visitors see
+- `api/`: Azure Functions (TypeScript) — the server-side API that guards your CV data
+- `staticwebapp.config.json`: routing and security headers config
 
 `staticwebapp.config.json` at the repo root is the canonical config. Before web builds, `npm run build` in `web/` syncs this file into `web/staticwebapp.config.json` and `web/public/staticwebapp.config.json` to avoid config drift.
 
 ## Security model (important)
 
-This is **real server-side enforcement**: without the token, the API returns 401 and the SPA cannot access your CV JSON.
+This is **real server-side enforcement**: without the token, the API returns 401 (access denied) and the website cannot load your CV data at all.
 
 However, **anyone you share the tokenized URL with can share it onward**. If you need identity-based, non-shareable access later, switch to Azure AD / Azure AD B2C authentication.
 
@@ -26,15 +35,17 @@ The default route (`/`) intentionally shows only:
 - Your **name** and **title** (configured via `web/.env.local` or your build pipeline)
 - An **access code** input to unlock the full CV
 
+These two values are the only things baked into the deployed website. Everything else — your full profile details, bio, links — is loaded at runtime from the API or a fallback file.
+
 Set these **public** (safe-to-ship) variables for the web app:
 
-- `VITE_PUBLIC_NAME`
-- `VITE_PUBLIC_TITLE`
+- `VITE_PUBLIC_NAME` — your display name (e.g. `Jane Smith`)
+- `VITE_PUBLIC_TITLE` — your job title or headline (e.g. `Senior Software Engineer`)
 
 For the rest of the public profile (location/focus/bio/links/tags), you can use either:
 
 - `PUBLIC_PROFILE_JSON` (served by `/api/public-profile`, preferred in deployed environments)
-- `web/public/public-profile.json` (fallback file, useful for web-only local dev)
+- `web/public/public-profile.json` (fallback file, useful for web-only local dev — edit this file to customise the landing page when running locally)
 
 At runtime, the landing page loads public profile data in this order:
 1. `GET /api/public-profile`
@@ -42,7 +53,11 @@ At runtime, the landing page loads public profile data in this order:
 
 ## CV JSON schema (overview)
 
-You control the CV content via the `CV_JSON` environment variable (server-side). Key fields:
+You control the CV content via the `CV_JSON` environment variable (server-side). This is a JSON string you write once and store as a secret in Azure — it never goes into this repo.
+
+> **Not familiar with JSON?** JSON is a plain-text data format that looks like `{"key": "value"}`. You can write it in any text editor. Use [jsonlint.com](https://jsonlint.com) to check your JSON for errors before pasting it into Azure.
+
+Key fields:
 
 - `basics`: `{ name, headline, email?, location?, summary?, photoAlt? }`
   - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
@@ -55,21 +70,29 @@ You control the CV content via the `CV_JSON` environment variable (server-side).
   - Labels **`github`** and **`web`** (case-insensitive) render as a **GitHub** or **globe** icon next to the project name (icon links to `url`).
   - Any other label is shown as a text link under the project (with tags).
 
+The local settings example file (`api/local.settings.example.json`) contains a complete sample `CV_JSON` value you can start from.
+
 ## Local development
+
+> **What you need installed:** [Node.js 20+](https://nodejs.org/) (includes `npm`). Confirm with `node -v` in a terminal. You don't need Azure tools just to run the site locally.
 
 ### Web only
 
+This is the fastest way to see the site running. It shows the landing page with data from `web/public/public-profile.json`.
+
 ```bash
 cd web
-npm install
-npm run dev
+npm install   # downloads dependencies (only needed once)
+npm run dev   # starts a local dev server at http://localhost:5173
 ```
 
 In `web-only` mode, the app can still show rich landing-page details from:
-- `web/public/public-profile.json` (already included in this repo), or
+- `web/public/public-profile.json` (already included in this repo — edit this to customise the landing page), or
 - `VITE_PUBLIC_NAME` and `VITE_PUBLIC_TITLE` as minimal fallback text.
 
 ### API only
+
+Run this if you want to test the server-side token and CV data locally:
 
 ```bash
 cd api
@@ -77,7 +100,7 @@ npm install
 npm run build
 ```
 
-To run the API locally with secrets, create `api/local.settings.json` (this repo ignores it) and add:
+To run the API locally with secrets, create `api/local.settings.json` (this repo ignores it — it will never be committed) and add:
 
 ```json
 {
@@ -99,27 +122,128 @@ You can also start from the committed example file:
 
 ## Deployment (Azure Static Web Apps)
 
-Create an Azure Static Web App and set:
+> **Cost:** Azure Static Web Apps has a **free tier** that is sufficient for this project. You only need a paid plan if you require custom authentication providers. A free Azure account includes enough credit to get started — sign up at [azure.microsoft.com/free](https://azure.microsoft.com/free).
 
-- **App location**: `web`
-- **Api location**: `api`
-- **Output location**: `dist`
+### Prerequisites
 
-Then configure **Application settings** (in the SWA resource):
+Before deploying, make sure you have:
 
-- `CV_ACCESS_TOKEN`: a long random secret (this is what your QR carries)
-- `CV_JSON`: your private CV JSON payload (keep it out of git)
-- `PROFILE_PHOTO_URL`: Azure Blob URL of your profile image
-- `PROFILE_PHOTO_SAS_TOKEN`: SAS token string (with or without leading `?`); appended by the API to `PROFILE_PHOTO_URL`
-- `PUBLIC_PROFILE_JSON`: your public profile JSON payload (used for `/api/public-profile`)
+- **An Azure account** — [Create one free](https://azure.microsoft.com/free) if you don't have one. You'll need a credit card to verify identity, but you won't be charged for the free tier.
+- **A GitHub account** — Azure SWA deploys from GitHub automatically via GitHub Actions (a built-in CI/CD pipeline). [Sign up free](https://github.com/join).
+- **This repository on GitHub** — Either fork it or push your own copy. If you're new to this, see [GitHub's guide to creating a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+- **Azure CLI** *(optional)* — Only needed if you prefer the command-line approach (Option B below). [Install guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
+- **Node.js 20+** *(local only)* — The build runs in GitHub Actions in the cloud, so you only need this if you want to test locally first.
+
+### Step 1 — Fork or push the repo to GitHub
+
+Azure Static Web Apps deploys directly from a GitHub repository. Every time you push a commit to your main branch, Azure automatically rebuilds and redeploys the site.
+
+If you cloned this repo locally, push it to your own GitHub account before continuing.
+
+### Step 2 — Create the Static Web App resource
+
+An **Azure Static Web App** is the cloud resource that hosts your website and API together. A **Resource Group** is just a folder in Azure to keep related resources organised.
+
+#### Option A — Azure Portal (recommended for beginners)
+
+1. Go to the [Azure Portal](https://portal.azure.com) and sign in.
+2. In the search bar at the top, type **Static Web Apps** and select it.
+3. Click **+ Create**.
+4. Fill in the form:
+   - **Subscription**: select your subscription (usually just one)
+   - **Resource Group**: click **Create new** and give it a name like `cv-rg`
+   - **Name**: any unique name, e.g. `my-cv` (this becomes part of your URL)
+   - **Plan type**: select **Free**
+   - **Region**: choose a region near you (e.g. `West Europe`)
+5. Under **Deployment details**, choose **GitHub** as the source and click **Sign in with GitHub** to authorize Azure.
+6. Select your **Organization**, **Repository**, and **Branch** (e.g. `main`).
+7. Under **Build Details**, set:
+   - **Build preset**: `Custom`
+   - **App location**: `web`
+   - **Api location**: `api`
+   - **Output location**: `dist`
+8. Click **Review + create**, then **Create**.
+
+Azure will open a pull request against your GitHub repo adding a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml`. **Merge that pull request** to trigger your first deployment. You can watch the progress under the **Actions** tab in your GitHub repo.
+
+#### Option B — Azure CLI
+
+```bash
+az staticwebapp create \
+  --name <your-app-name> \
+  --resource-group <your-rg> \
+  --location "westeurope" \
+  --source https://github.com/<you>/<repo> \
+  --branch main \
+  --app-location "web" \
+  --api-location "api" \
+  --output-location "dist" \
+  --login-with-github
+```
+
+### Step 3 — Upload a profile photo (optional)
+
+The API can serve your photo from Azure Blob Storage without embedding it in `CV_JSON`. Skip this step if you don't want a profile photo.
+
+> **What is Azure Blob Storage?** It's a file hosting service — like a private folder in the cloud. A **SAS token** (Shared Access Signature) is a special string you attach to a file URL that proves you have permission to access it, without needing a password.
+
+1. In the [Azure Portal](https://portal.azure.com), search for **Storage accounts** and click **+ Create**.
+2. Choose the same Resource Group you created earlier, give the account a name, and click **Review + create**.
+3. Once created, go to the storage account → **Containers** → **+ Container**. Give it a name (e.g. `photos`) and set access to **Private**.
+4. Open the container and click **Upload** to upload your photo.
+5. Click on the uploaded file, then click **Generate SAS**. Set:
+   - **Permissions**: Read
+   - **Expiry**: set a date a year or more away (you can regenerate it later)
+   - Click **Generate SAS token and URL**
+6. Copy the **Blob SAS URL** — split it at the `?`: the part before is `PROFILE_PHOTO_URL`, the part from `?` onward (including the `?`) is `PROFILE_PHOTO_SAS_TOKEN`.
+
+### Step 4 — Configure Application settings
+
+Application settings are the secure, server-side environment variables Azure injects into your API at runtime. **These never appear in your code or git history.**
+
+In the Azure Portal, open your Static Web App → **Settings** → **Environment variables**, and add:
+
+| Setting | Value |
+|---|---|
+| `CV_ACCESS_TOKEN` | A long random secret — the code in your shareable link. Generate one: `[guid]::NewGuid().ToString("N")` (PowerShell) or `openssl rand -hex 32` (bash). |
+| `CV_JSON` | Your full private CV as a JSON string. Use the example in `api/local.settings.example.json` as a starting point. Validate your JSON at [jsonlint.com](https://jsonlint.com) before pasting. |
+| `PUBLIC_PROFILE_JSON` | Your public profile JSON string (shown on the landing page). |
+| `PROFILE_PHOTO_URL` | Azure Blob URL of your profile photo (the part before `?` from Step 3). |
+| `PROFILE_PHOTO_SAS_TOKEN` | SAS token string from Step 3 (starting with `?` or without — both work). |
+
+> **Tip:** `CV_JSON` and `PUBLIC_PROFILE_JSON` are long strings. You can paste them directly into the value field in the portal. Alternatively, use the Azure CLI:
+> ```bash
+> az staticwebapp appsettings set \
+>   --name <your-app-name> \
+>   --resource-group <your-rg> \
+>   --setting-names CV_ACCESS_TOKEN="<token>" CV_JSON='<json>'
+> ```
 
 If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-profile.json` when that file is shipped with the web app.
 
+### Step 5 — Verify the deployment
+
+1. In the Azure Portal, open your Static Web App and copy the **URL** from the overview page (e.g. `https://nice-river-abc123.azurestaticapps.net`).
+2. Open the URL in your browser — you should see the landing page with your name and title.
+3. Open `https://<your-site>/?t=<CV_ACCESS_TOKEN>` to confirm the full CV unlocks correctly.
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
+| API returns 401 for every request | Token mismatch | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your URL exactly. |
+| Landing page shows no profile details | Missing public profile | Check that `PUBLIC_PROFILE_JSON` is set in Azure settings, or that `web/public/public-profile.json` is present. |
+| Profile photo not loading | Invalid URL or expired SAS token | Regenerate a SAS token in Azure Storage and update `PROFILE_PHOTO_SAS_TOKEN`. |
+| Site shows "page not found" for routes | Routing config missing | Ensure `staticwebapp.config.json` was deployed — it should be in the `web/public/` folder. |
+
 ## QR code URL format
 
-Your access link should be:
+Your shareable access link should look like:
 
 - `https://<your-site>/?t=<TOKEN>`
+
+You can turn this into a QR code using any free QR generator (search "free QR code generator"). Print it on a business card or add it to your paper CV.
 
 The SPA forwards the token to:
 
@@ -127,22 +251,30 @@ The SPA forwards the token to:
 
 ## 6‑month access code rotation (manual)
 
-This repo uses a single server-side token (`CV_ACCESS_TOKEN`). To make the access code expire every ~6 months, rotate it twice a year.
+This repo uses a single server-side token (`CV_ACCESS_TOKEN`). To make the access code expire every ~6 months, rotate it twice a year. This is optional but recommended if you want to limit how long a shared link stays valid.
 
 - **1) Generate a new token** (use a long random string)
-  - Example (PowerShell):
+  - PowerShell:
 
 ```powershell
 [guid]::NewGuid().ToString("N")
 ```
 
-- **2) Update your Azure Static Web App Application setting** `CV_ACCESS_TOKEN` to the new value.
-- **3) Update your printed/digital CV** with the new `/?t=<NEW_TOKEN>` link (and QR, if you generate one externally).
+  - Bash / macOS Terminal:
+
+```bash
+openssl rand -hex 32
+```
+
+- **2) Update `CV_ACCESS_TOKEN`** in your Azure Static Web App's **Settings → Environment variables**.
+- **3) Update your shareable link** — your old `/?t=<OLD_TOKEN>` links will stop working. Update any printed CVs, emails, or QR codes with the new `/?t=<NEW_TOKEN>` value.
 
 ## Mock data for local UI testing (no API required)
 
-If you want to see a filled CV UI locally without running the Functions API, use the web mock mode:
+If you want to see a fully populated CV UI locally without setting up Azure Functions, use the web mock mode. This is the easiest way to preview your CV design quickly.
 
 - Copy `web/.env.example` to `web/.env.local`
 - Ensure it contains `VITE_USE_MOCK_CV=1`
 - Run `npm run dev` in `web/`
+
+The mock data is defined in the web source and is only active when `VITE_USE_MOCK_CV=1` is set — it is never used in production.
