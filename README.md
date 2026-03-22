@@ -166,6 +166,8 @@ An **Azure Static Web App** is the cloud resource that hosts your website and AP
 
 Azure will open a pull request against your GitHub repo adding a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml`. **Merge that pull request** to trigger your first deployment. You can watch the progress under the **Actions** tab in your GitHub repo.
 
+> **Forking this repo?** Delete the existing `.github/workflows/azure-static-web-apps.yml` file before or after creating your SWA resource. Azure will create a correctly configured replacement workflow file (with your own secret name and app name) via that pull request.
+
 #### Option B — Azure CLI
 
 ```bash
