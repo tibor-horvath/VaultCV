@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, ShieldCheck, ExternalLink, Sun, Target } from 'lucide-react'
-import { SiGithubIcon, SiLinkedinIcon } from '../components/icons/SimpleBrandIcons'
+import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, ShieldCheck, Sun, Target } from 'lucide-react'
+import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
 import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
-import { inferLinkKind } from '../lib/cvPresentation'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
 import { resolveInitialThemeForMode } from '../lib/themePreference'
 import { useDocumentFavicon } from '../lib/favicon'
@@ -113,24 +112,7 @@ export function LandingRoute() {
 
         {!publicLoading ? (
           <>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {publicData.links.map((item) => (
-                <a
-                  key={`${item.label}:${item.url}`}
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200/85 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200 dark:hover:bg-slate-900"
-                >
-                  {(() => {
-                    const kind = inferLinkKind(item)
-                    const Icon = kind === 'github' ? SiGithubIcon : kind === 'linkedin' ? SiLinkedinIcon : ExternalLink
-                    return <Icon className="h-3.5 w-3.5 opacity-80" />
-                  })()}
-                  {item.label}
-                </a>
-              ))}
-            </div>
+            <BasicsLinksRow links={publicData.links} />
 
             {publicData.skills.length ? (
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -141,7 +123,7 @@ export function LandingRoute() {
                 {publicData.skills.map((skill) => (
                   <span
                     key={skill}
-                    className="rounded-full border border-slate-200/85 bg-white px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200"
+                    className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
                   >
                     {skill}
                   </span>

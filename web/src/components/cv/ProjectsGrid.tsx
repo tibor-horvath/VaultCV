@@ -2,6 +2,7 @@ import { ExternalLink, Globe } from 'lucide-react'
 import { inferProjectLinkLabelKind } from '../../lib/cvPresentation'
 import type { CvProject } from '../../types/cv'
 import { SiGithubIcon } from '../icons/SimpleBrandIcons'
+import { SkillsChips } from './SkillsChips'
 
 export function ProjectsGrid({ items }: { items: CvProject[] }) {
   return (
@@ -40,15 +41,8 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
             </div>
             <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{p.description}</p>
             {p.tags?.length ? (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {p.tags.map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-slate-200/90 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200"
-                  >
-                    {t}
-                  </span>
-                ))}
+              <div className="mt-3">
+                <SkillsChips items={p.tags} />
               </div>
             ) : null}
             {textLinks.length ? (

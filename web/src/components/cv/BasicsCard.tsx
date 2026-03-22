@@ -1,8 +1,8 @@
 import type { CvBasics, CvLink } from '../../types/cv'
 import type { ReactNode } from 'react'
-import { ExternalLink, Mail, MapPin, Sparkles } from 'lucide-react'
-import { SiGithubIcon, SiLinkedinIcon } from '../icons/SimpleBrandIcons'
-import { buildPhotoSrc, inferLinkKind, parseBasicsHeadline } from '../../lib/cvPresentation'
+import { Mail, MapPin, Sparkles } from 'lucide-react'
+import { buildPhotoSrc, parseBasicsHeadline } from '../../lib/cvPresentation'
+import { BasicsLinksRow } from './BasicsLinksRow'
 
 export function BasicsCard({
   basics,
@@ -13,7 +13,6 @@ export function BasicsCard({
   links?: CvLink[]
   headerRight?: ReactNode
 }) {
-  const visibleLinks = (links ?? []).filter((l) => inferLinkKind(l) !== 'other')
   const { role, chip } = parseBasicsHeadline(basics.headline)
 
   return (
@@ -72,36 +71,7 @@ export function BasicsCard({
             </p>
           ) : null}
 
-          {visibleLinks.length ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {visibleLinks.map((l) => {
-                const kind = inferLinkKind(l)
-                const Icon = kind === 'github' ? SiGithubIcon : kind === 'linkedin' ? SiLinkedinIcon : ExternalLink
-                const text = kind === 'github' ? 'GitHub' : kind === 'linkedin' ? 'LinkedIn' : l.label
-
-                return (
-                  <a
-                    key={`${l.label}:${l.url}`}
-                    className="group inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus:ring-offset-slate-950"
-                    href={l.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${l.label} (opens in new tab)`}
-                  >
-                    <Icon
-                      className="h-3.5 w-3.5 shrink-0 opacity-80 transition-opacity group-hover:opacity-100"
-                      aria-hidden="true"
-                    />
-                    <span>{text}</span>
-                    <ExternalLink
-                      className="h-3.5 w-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
-                      aria-hidden="true"
-                    />
-                  </a>
-                )
-              })}
-            </div>
-          ) : null}
+          <BasicsLinksRow links={links} />
         </div>
       </div>
     </div>
