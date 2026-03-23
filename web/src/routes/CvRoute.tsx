@@ -217,7 +217,7 @@ export function CvRoute() {
           <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{state.message}</div>
           <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             If you expected access, confirm your token is correct and that the server has
-            <span className="font-mono"> CV_ACCESS_TOKEN</span> and <span className="font-mono">CV_JSON</span>{' '}
+            <span className="font-mono"> CV_ACCESS_TOKEN</span> and <span className="font-mono">PRIVATE_PROFILE_JSON</span>{' '}
             configured.
           </div>
         </Section>

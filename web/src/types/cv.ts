@@ -22,7 +22,7 @@ export type CvCredential = {
   url: string
   /**
    * When the certificate/credential was earned (e.g. "2024", "2024-05").
-   * Optional to keep existing CV_JSON payloads working.
+   * Optional to keep existing PRIVATE_PROFILE_JSON payloads working.
    */
   dateEarned?: string
   /**

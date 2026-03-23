@@ -70,7 +70,7 @@ export default async function (context: Context, req: HttpRequest) {
     return
   }
 
-  const raw = process.env.CV_JSON ?? ''
+  const raw = process.env.PRIVATE_PROFILE_JSON ?? ''
   if (!raw) {
     context.res = jsonResponse(500, { error: 'CV data is not configured.' })
     return
@@ -79,7 +79,7 @@ export default async function (context: Context, req: HttpRequest) {
   try {
     const data = JSON.parse(raw) as unknown
 
-    // Allow moving photo URL out of `CV_JSON`.
+    // Allow moving photo URL out of `PRIVATE_PROFILE_JSON`.
     // Inject a direct URL from `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`).
     if (data && typeof data === 'object') {
       const dataObj = data as Record<string, unknown>
@@ -95,7 +95,7 @@ export default async function (context: Context, req: HttpRequest) {
 
     context.res = jsonResponse(200, data)
   } catch (err) {
-    context.log('Failed parsing CV_JSON', err)
+    context.log('Failed parsing PRIVATE_PROFILE_JSON', err)
     context.res = jsonResponse(500, { error: 'CV data is invalid JSON.' })
   }
 }

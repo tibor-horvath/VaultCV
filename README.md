@@ -53,7 +53,7 @@ At runtime, the landing page loads public profile data in this order:
 
 ## CV JSON schema (overview)
 
-You control the CV content via the `CV_JSON` environment variable (server-side). This is a JSON string you write once and store as a secret in Azure — it never goes into this repo.
+You control the CV content via the `PRIVATE_PROFILE_JSON` environment variable (server-side). This is a JSON string you write once and store as a secret in Azure — it never goes into this repo.
 
 > **Not familiar with JSON?** JSON is a plain-text data format that looks like `{"key": "value"}`. You can write it in any text editor. Use [jsonlint.com](https://jsonlint.com) to check your JSON for errors before pasting it into Azure.
 
@@ -61,7 +61,7 @@ Key fields:
 
 - `basics`: `{ name, headline, email?, location?, summary?, photoAlt? }`
   - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
-  - Keep photo bytes out of `CV_JSON`. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
+  - Keep photo bytes out of `PRIVATE_PROFILE_JSON`. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
 - `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | language | other`
 - `languages`: string array, shown as chips
@@ -70,7 +70,7 @@ Key fields:
   - Labels **`github`** and **`web`** (case-insensitive) render as a **GitHub** or **globe** icon next to the project name (icon links to `url`).
   - Any other label is shown as a text link under the project (with tags).
 
-The local settings example file (`api/local.settings.example.json`) contains a complete sample `CV_JSON` value you can start from.
+The local settings example file (`api/local.settings.example.json`) contains a complete sample `PRIVATE_PROFILE_JSON` value you can start from.
 
 ## Local development
 
@@ -109,7 +109,7 @@ To run the API locally with secrets, create `api/local.settings.json` (this repo
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "CV_ACCESS_TOKEN": "CHANGE_ME_TO_A_LONG_RANDOM_STRING",
-    "CV_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"email\":\"you@example.com\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\",\"dateEarned\":\"2024-01\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"companyLinkedInUrl\":\"https://www.linkedin.com/company/example-co/\",\"skills\":[\"React\",\"TypeScript\",\"Azure\"],\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}",
+    "PRIVATE_PROFILE_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"email\":\"you@example.com\"},\"links\":[{\"label\":\"GitHub\",\"url\":\"https://github.com/your-handle\"},{\"label\":\"LinkedIn\",\"url\":\"https://www.linkedin.com/in/your-handle/\"}],\"credentials\":[{\"issuer\":\"microsoft\",\"label\":\"Microsoft Learn profile\",\"url\":\"https://learn.microsoft.com/\",\"dateEarned\":\"2024-01\"}],\"languages\":[\"English\"],\"experience\":[{\"company\":\"Example Co.\",\"companyUrl\":\"https://example.com\",\"companyLinkedInUrl\":\"https://www.linkedin.com/company/example-co/\",\"skills\":[\"React\",\"TypeScript\",\"Azure\"],\"role\":\"Software Engineer\",\"start\":\"2023\",\"end\":\"2026\",\"location\":\"Remote\",\"highlights\":[\"Did a thing.\"]}]}",
     "PROFILE_PHOTO_URL": "https://<account>.blob.core.windows.net/<container>/<blob>",
     "PROFILE_PHOTO_SAS_TOKEN": "sp=...&st=...&se=...&spr=https&sv=...&sr=b&sig=..."
   }
@@ -118,7 +118,7 @@ To run the API locally with secrets, create `api/local.settings.json` (this repo
 
 You can also start from the committed example file:
 - Copy `api/local.settings.example.json` to `api/local.settings.json`
-- Edit `CV_ACCESS_TOKEN` and `CV_JSON`
+- Edit `CV_ACCESS_TOKEN` and `PRIVATE_PROFILE_JSON`
 
 ## Deployment (Azure Static Web Apps)
 
@@ -185,7 +185,7 @@ az staticwebapp create \
 
 ### Step 3 — Upload a profile photo (optional)
 
-The API can serve your photo from Azure Blob Storage without embedding it in `CV_JSON`. Skip this step if you don't want a profile photo.
+The API can serve your photo from Azure Blob Storage without embedding it in `PRIVATE_PROFILE_JSON`. Skip this step if you don't want a profile photo.
 
 > **What is Azure Blob Storage?** It's a file hosting service — like a private folder in the cloud. A **SAS token** (Shared Access Signature) is a special string you attach to a file URL that proves you have permission to access it, without needing a password.
 
@@ -208,17 +208,17 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | Setting | Value |
 |---|---|
 | `CV_ACCESS_TOKEN` | A long random secret — the code in your shareable link. Generate one: `[guid]::NewGuid().ToString("N")` (PowerShell) or `openssl rand -hex 32` (bash). |
-| `CV_JSON` | Your full private CV as a JSON string. Use the example in `api/local.settings.example.json` as a starting point. Validate your JSON at [jsonlint.com](https://jsonlint.com) before pasting. |
+| `PRIVATE_PROFILE_JSON` | Your full private CV as a JSON string. Use the example in `api/local.settings.example.json` as a starting point. Validate your JSON at [jsonlint.com](https://jsonlint.com) before pasting. |
 | `PUBLIC_PROFILE_JSON` | Your public profile JSON string (shown on the landing page). |
 | `PROFILE_PHOTO_URL` | Azure Blob URL of your profile photo (the part before `?` from Step 3). |
 | `PROFILE_PHOTO_SAS_TOKEN` | SAS token string from Step 3 (starting with `?` or without — both work). |
 
-> **Tip:** `CV_JSON` and `PUBLIC_PROFILE_JSON` are long strings. You can paste them directly into the value field in the portal. Alternatively, use the Azure CLI:
+> **Tip:** `PRIVATE_PROFILE_JSON` and `PUBLIC_PROFILE_JSON` are long strings. You can paste them directly into the value field in the portal. Alternatively, use the Azure CLI:
 > ```bash
 > az staticwebapp appsettings set \
 >   --name <your-app-name> \
 >   --resource-group <your-rg> \
->   --setting-names CV_ACCESS_TOKEN="<token>" CV_JSON='<json>'
+>   --setting-names CV_ACCESS_TOKEN="<token>" PRIVATE_PROFILE_JSON='<json>'
 > ```
 
 If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-profile.json` when that file is shipped with the web app.

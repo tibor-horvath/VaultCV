@@ -9,7 +9,7 @@ export function getMockCv(): CvData {
       photoAlt: 'Profile photo',
       location: 'City, Country',
       summary:
-        'This is mock data used for local development. Replace it by configuring CV_JSON in Azure Static Web Apps app settings (or api/local.settings.json locally).',
+        'This is mock data used for local development. Replace it by configuring PRIVATE_PROFILE_JSON in Azure Static Web Apps app settings (or api/local.settings.json locally).',
     },
     links: [
       { label: 'GitHub', url: 'https://github.com/your-handle' },
