@@ -5,14 +5,15 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 **New to this? Start here:** VaultCV is a personal CV website you self-host on Azure. Your CV content stays private on the server — visitors only see your name and a prompt to enter an access code. You share a private link (or QR code) that contains the code, so only people you choose can read your full CV.
 
 - The static site (`web/`) is a "locked by default" shell.
-- The private CV JSON is returned by an API (`/api/cv`) **only** when a valid token is provided (typically via your QR code URL).
+- The private CV JSON is returned by an API (`/api/cv`) **only** when a valid short-lived bearer token is provided.
 
 ## How it works (plain English)
 
 1. You write your CV data as a JSON string and store it as a secret setting in Azure — it never lives in this repo.
 2. You deploy this app to Azure Static Web Apps (free tier). It hosts the website and the API together.
 3. You generate a random secret token and store it in Azure too.
-4. Your shareable link looks like `https://your-site.azurestaticapps.net/?t=YOUR_TOKEN`. Anyone with that link can read your CV; everyone else sees a locked landing page.
+4. Your shareable link looks like `https://your-site.azurestaticapps.net/cv?t=YOUR_TOKEN`.
+5. The app exchanges that access code using `POST /api/auth` (JSON body) for a short-lived bearer token, then loads CV data from `/api/cv` using the `Authorization` header.
 
 ## Repo structure
 
@@ -24,9 +25,9 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 
 ## Security model (important)
 
-This is **real server-side enforcement**: without the token, the API returns 401 (access denied) and the website cannot load your CV data at all.
+This is **real server-side enforcement**: without a valid bearer token, the CV API returns 401 (access denied) and the website cannot load your CV data at all.
 
-However, **anyone you share the tokenized URL with can share it onward**. If you need identity-based, non-shareable access later, switch to Azure AD / Azure AD B2C authentication.
+The shared `?t=` access code still behaves like a bearer secret: anyone you share it with can forward it. If you need identity-based, non-shareable access later, switch to Azure AD / Azure AD B2C authentication.
 
 ## Public home page
 
@@ -50,6 +51,56 @@ For the rest of the public profile (location/focus/bio/links/tags), you can use 
 At runtime, the landing page loads public profile data in this order:
 1. `GET /api/public-profile`
 2. If unavailable, `GET /public-profile.json`
+
+## Localization
+
+VaultCV supports two localization layers:
+
+- **UI localization**: labels, buttons, status/error text in the React app.
+- **Content localization**: CV/public profile payloads selected by locale.
+
+### Locale selection and fallback
+
+- Active locale comes from this order: URL `lang` query -> `localStorage` -> browser language.
+- Supported locales are configured by `VITE_SUPPORTED_LOCALES` (comma-separated, e.g. `en,hu,de`).
+- Locale fallback follows `exact -> base -> en` (example: `de-AT -> de -> en`).
+
+### UI message catalogs
+
+- Message catalogs live in `web/src/i18n/messages/` (`en.ts`, `hu.ts`, `de.ts`, ...).
+- Locale governance is centralized in `web/src/i18n/localeRegistry.ts`.
+- Startup validation ensures every configured locale has message coverage (direct or base locale), with `en` as required fallback.
+
+### Localized content payloads (API)
+
+The API endpoints support locale-specific environment variables:
+
+- CV endpoint (`/api/cv`)
+  - `PRIVATE_PROFILE_JSON_<LOCALE>` (example: `PRIVATE_PROFILE_JSON_DE`, `PRIVATE_PROFILE_JSON_HU`)
+  - fallback to `PRIVATE_PROFILE_JSON`
+- Public profile endpoint (`/api/public-profile`)
+  - `PUBLIC_PROFILE_JSON_<LOCALE>` (example: `PUBLIC_PROFILE_JSON_DE`)
+  - fallback to `PUBLIC_PROFILE_JSON`
+
+API locale resolution is centralized in `api/lib/localeRegistry.ts` and follows the same `exact -> base -> en` behavior.
+
+### Localized fallback files (web-only dev)
+
+When API/local env vars are not available, web can use static fallback files in `web/public/`:
+
+- `public-profile.en.json`
+- `public-profile.hu.json`
+- `public-profile.de.json`
+- and generic fallback `public-profile.json`
+
+### Add a new locale
+
+1. Add the locale to `VITE_SUPPORTED_LOCALES` (web env).
+2. Add a UI message catalog in `web/src/i18n/messages/`.
+3. Add localized content payloads:
+   - `PRIVATE_PROFILE_JSON_<LOCALE>`
+   - `PUBLIC_PROFILE_JSON_<LOCALE>`
+4. Optionally add `web/public/public-profile.<locale>.json` for web-only fallback/local testing.
 
 ## CV JSON schema (overview)
 
@@ -208,6 +259,8 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | Setting | Value |
 |---|---|
 | `CV_ACCESS_TOKEN` | A long random secret — the code in your shareable link. Generate one: `[guid]::NewGuid().ToString("N")` (PowerShell) or `openssl rand -hex 32` (bash). |
+| `CV_SESSION_SIGNING_KEY` | Required signing secret for short-lived session tokens. Use a different random value than `CV_ACCESS_TOKEN` (do not reuse). |
+| `CV_SESSION_TTL_SECONDS` | Optional session token lifetime in seconds. Default: `3600` (1 hour). Allowed range: `60` to `86400`. |
 | `PRIVATE_PROFILE_JSON` | Your full private CV as a JSON string. Use the example in `api/local.settings.example.json` as a starting point. Validate your JSON at [jsonlint.com](https://jsonlint.com) before pasting. |
 | `PUBLIC_PROFILE_JSON` | Your public profile JSON string (shown on the landing page). |
 | `PROFILE_PHOTO_URL` | Azure Blob URL of your profile photo (the part before `?` from Step 3). |
@@ -227,14 +280,15 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 
 1. In the Azure Portal, open your Static Web App and copy the **URL** from the overview page (e.g. `https://nice-river-abc123.azurestaticapps.net`).
 2. Open the URL in your browser — you should see the landing page with your name and title.
-3. Open `https://<your-site>/?t=<CV_ACCESS_TOKEN>` to confirm the full CV unlocks correctly.
+3. Open `https://<your-site>/cv?t=<CV_ACCESS_TOKEN>` to confirm the full CV unlocks correctly.
 
 ### Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
-| API returns 401 for every request | Token mismatch | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your URL exactly. |
+| API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your `/cv?t=...` URL exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
+| API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
 | Landing page shows no profile details | Missing public profile | Check that `PUBLIC_PROFILE_JSON` is set in Azure settings, or that `web/public/public-profile.json` is present. |
 | Profile photo not loading | Invalid URL or expired SAS token | Regenerate a SAS token in Azure Storage and update `PROFILE_PHOTO_SAS_TOKEN`. |
 | Site shows "page not found" for routes | Routing config missing | Ensure `staticwebapp.config.json` was deployed — it should be in the `web/public/` folder. |
@@ -243,13 +297,14 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 
 Your shareable access link should look like:
 
-- `https://<your-site>/?t=<TOKEN>`
+- `https://<your-site>/cv?t=<TOKEN>`
 
 You can turn this into a QR code using any free QR generator (search "free QR code generator"). Print it on a business card or add it to your paper CV.
 
-The SPA forwards the token to:
+The SPA uses the code like this:
 
-- `/api/cv?t=<TOKEN>`
+- `POST /api/auth` with body `{"code":"<TOKEN>"}` to obtain a short-lived bearer token
+- `GET /api/cv?lang=<locale>` with `Authorization: Bearer <accessToken>`
 
 ## 6‑month access code rotation (manual)
 
@@ -269,7 +324,9 @@ openssl rand -hex 32
 ```
 
 - **2) Update `CV_ACCESS_TOKEN`** in your Azure Static Web App's **Settings → Environment variables**.
-- **3) Update your shareable link** — your old `/?t=<OLD_TOKEN>` links will stop working. Update any printed CVs, emails, or QR codes with the new `/?t=<NEW_TOKEN>` value.
+- **3) Update your shareable link** — your old `/cv?t=<OLD_TOKEN>` links will stop working. Update any printed CVs, emails, or QR codes with the new `/cv?t=<NEW_TOKEN>` value.
+- **4) Keep `CV_SESSION_SIGNING_KEY` separate** from `CV_ACCESS_TOKEN`; rotate it independently if needed.
+- **5) Optional:** set `CV_SESSION_TTL_SECONDS` (default `3600`) to tune session duration.
 
 ## Mock data for local UI testing (no API required)
 

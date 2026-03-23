@@ -3,6 +3,7 @@ import { highlightChildKey, stableExperienceKey } from '../../lib/cvKeys'
 import { AtSign, Calendar, ExternalLink, MapPin } from 'lucide-react'
 import { SiLinkedinIcon } from '../icons/SimpleBrandIcons'
 import { SkillsChips } from './SkillsChips'
+import { useI18n } from '../../lib/i18n'
 
 const linkPillClassName =
   'group inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus:ring-offset-slate-950'
@@ -11,6 +12,7 @@ const calendarIconClass = 'h-3.5 w-3.5 shrink-0 opacity-80'
 const mapPinIconClass = 'h-3.5 w-3.5 shrink-0 opacity-80'
 
 function CompanyUrlPills({ x }: { x: CvExperience }) {
+  const { t } = useI18n()
   return (
     <>
       {x.companyUrl ? (
@@ -19,13 +21,13 @@ function CompanyUrlPills({ x }: { x: CvExperience }) {
           href={x.companyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`${x.company} website (opens in new tab)`}
+          aria-label={`${x.company} ${t('website')} (${t('opensInNewTab')})`}
         >
           <ExternalLink
             className="h-3.5 w-3.5 shrink-0 opacity-80 transition-opacity group-hover:opacity-100"
             aria-hidden="true"
           />
-          <span>Website</span>
+          <span>{t('website')}</span>
         </a>
       ) : null}
       {x.companyLinkedInUrl ? (
@@ -34,13 +36,13 @@ function CompanyUrlPills({ x }: { x: CvExperience }) {
           href={x.companyLinkedInUrl}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`${x.company} on LinkedIn (opens in new tab)`}
+          aria-label={`${x.company} ${t('linkedIn')} (${t('opensInNewTab')})`}
         >
           <SiLinkedinIcon
             className="h-3.5 w-3.5 shrink-0 opacity-80 transition-opacity group-hover:opacity-100"
             aria-hidden="true"
           />
-          <span>LinkedIn</span>
+          <span>{t('linkedIn')}</span>
           <ExternalLink
             className="h-3.5 w-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
             aria-hidden="true"
@@ -52,10 +54,11 @@ function CompanyUrlPills({ x }: { x: CvExperience }) {
 }
 
 function ExperienceDateRange({ x }: { x: CvExperience }) {
+  const { t } = useI18n()
   return (
     <>
       <Calendar className={calendarIconClass} aria-hidden="true" />
-      {x.start} – {x.end ?? 'Present'}
+      {x.start} – {x.end ?? t('present')}
     </>
   )
 }
@@ -91,6 +94,7 @@ function ExperienceHeadline({ x, variant }: { x: CvExperience; variant: 'mobile'
 }
 
 function ExperienceItem({ x }: { x: CvExperience }) {
+  const { t } = useI18n()
   const rowKey = stableExperienceKey(x)
   const hasCompanyLinks = Boolean(x.companyUrl || x.companyLinkedInUrl)
 
@@ -141,7 +145,7 @@ function ExperienceItem({ x }: { x: CvExperience }) {
       {x.skills?.length ? (
         <div className="mt-3">
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-            Skills
+            {t('skills')}
           </div>
           <SkillsChips items={x.skills} />
         </div>

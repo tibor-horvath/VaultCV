@@ -22,21 +22,150 @@ import { ProjectsGrid } from '../components/cv/ProjectsGrid'
 import { Section } from '../components/cv/Section'
 import { SkillsChips } from '../components/cv/SkillsChips'
 import { SiGoogleIcon } from '../components/icons/SimpleBrandIcons'
-import { fetchCv } from '../lib/api'
+import { exchangeAccessCode, fetchCv, type ApiErrorCode } from '../lib/api'
 import { fetchPublicProfile } from '../lib/publicProfile'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
-import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
-import { resolveInitialThemeForMode } from '../lib/themePreference'
 import { useDocumentFavicon } from '../lib/favicon'
+import { useI18n } from '../lib/i18n'
+import { LanguageSelector } from '../components/LanguageSelector'
+import type { MessageKey } from '../i18n/messages'
+import { useTheme } from '../lib/themeContext'
+import {
+  clearStoredAccessCode,
+  clearStoredAccessToken,
+  getStoredAccessCode,
+  getStoredAccessToken,
+  setStoredAccessCode,
+  setStoredAccessToken,
+} from '../lib/accessSession'
+
+type CvRouteState =
+  | { kind: 'locked' }
+  | { kind: 'loading' }
+  | { kind: 'error'; messageKey: MessageKey; details?: string; status?: number }
+  | { kind: 'ready'; cv: CvData }
+
+const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
+
+function mapApiErrorToMessage(code: ApiErrorCode): MessageKey {
+  if (code === 'network_error') return 'networkError'
+  if (code === 'invalid_json_response') return 'invalidJsonResponse'
+  if (code === 'invalid_cv_payload') return 'invalidCvPayload'
+  if (code === 'invalid_token_format') return 'invalidTokenFormat'
+  if (code === 'unauthorized') return 'unauthorized'
+  if (code === 'server_not_configured') return 'serverNotConfigured'
+  if (code === 'server_token_invalid') return 'serverTokenInvalid'
+  if (code === 'cv_data_not_configured') return 'cvDataNotConfigured'
+  if (code === 'cv_data_invalid_json') return 'cvDataInvalidJson'
+  return 'requestFailed'
+}
+
+function usePublicName(locale: string) {
+  const [publicName, setPublicName] = useState(() => {
+    const envName = (import.meta.env.VITE_PUBLIC_NAME as string | undefined)?.trim()
+    return envName || 'CV'
+  })
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadPublicProfileName() {
+      try {
+        const payload = await fetchPublicProfile(locale)
+        const name = payload.name?.trim() ?? ''
+        if (!name || cancelled) return
+        setPublicName(name)
+      } catch {
+        // Ignore; we can still fall back to env name.
+      }
+    }
+    loadPublicProfileName()
+    return () => {
+      cancelled = true
+    }
+  }, [locale])
+
+  return publicName
+}
+
+function useCvState(accessCode: string, locale: string) {
+  const [state, setState] = useState<CvRouteState>(accessCode ? { kind: 'loading' } : { kind: 'locked' })
+
+  useEffect(() => {
+    let cancelled = false
+    async function run() {
+      if (!accessCode) {
+        setState({ kind: 'locked' })
+        return
+      }
+
+      setState({ kind: 'loading' })
+      let accessToken = getStoredAccessToken().trim()
+      if (!accessToken) {
+        const exchangeRes = await exchangeAccessCode(accessCode)
+        if (cancelled) return
+        if (!exchangeRes.ok) {
+          setState({
+            kind: 'error',
+            messageKey: mapApiErrorToMessage(exchangeRes.code),
+            details: exchangeRes.details,
+            status: exchangeRes.status,
+          })
+          return
+        }
+        accessToken = exchangeRes.data.accessToken
+        setStoredAccessToken(accessToken)
+      }
+
+      const res = await fetchCv(accessToken, locale)
+      if (cancelled) return
+
+      if (!res.ok) {
+        if (res.code === 'unauthorized') {
+          clearStoredAccessCode()
+          clearStoredAccessToken()
+        }
+        setState({
+          kind: 'error',
+          messageKey: mapApiErrorToMessage(res.code),
+          details: res.details,
+          status: res.status,
+        })
+        return
+      }
+      setState({ kind: 'ready', cv: res.data })
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [accessCode, locale])
+
+  return state
+}
+
+function useBasicsVisibility(stateKind: CvRouteState['kind']) {
+  const basicsSentinelRef = useRef<HTMLDivElement | null>(null)
+  const [isBasicsInView, setIsBasicsInView] = useState(true)
+
+  useEffect(() => {
+    if (stateKind !== 'ready') return
+    const el = basicsSentinelRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsBasicsInView(entry.isIntersecting)
+    }, { threshold: 0.01 })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [stateKind])
+
+  return { basicsSentinelRef, isBasicsInView }
+}
 
 function MicrosoftMark({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-    >
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className={className}>
       <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
       <rect x="13" y="3" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.9" />
       <rect x="3" y="13" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.85" />
@@ -61,16 +190,6 @@ function AwsMark({ className }: { className?: string }) {
   )
 }
 
-const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
-
-const credentialIssuerLabel: Record<CvCredentialIssuer, string> = {
-  microsoft: 'Microsoft',
-  aws: 'AWS',
-  google: 'Google',
-  language: 'Language Exams',
-  other: 'Other',
-}
-
 function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
   const cls = 'h-4 w-4 opacity-80'
   if (issuer === 'microsoft') return <MicrosoftMark className={cls} />
@@ -81,142 +200,77 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
 }
 
 export function CvRoute() {
+  const { locale, t } = useI18n()
+  const { theme, toggleTheme } = useTheme()
   const [params] = useSearchParams()
-  const token = params.get('t') ?? ''
-  const [theme, setTheme] = useState<ThemePreference>(() => {
-    const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
-    return resolveInitialThemeForMode(isMock)
-  })
-  const [state, setState] = useState<
-    | { kind: 'locked' }
-    | { kind: 'loading' }
-    | { kind: 'error'; message: string }
-    | { kind: 'ready'; cv: CvData }
-  >(token ? { kind: 'loading' } : { kind: 'locked' })
-
-  const [publicName, setPublicName] = useState(() => {
-    const envName = (import.meta.env.VITE_PUBLIC_NAME as string | undefined)?.trim()
-    return envName || 'CV'
-  })
-
-  const basicsSentinelRef = useRef<HTMLDivElement | null>(null)
-  const [isBasicsInView, setIsBasicsInView] = useState(true)
+  const urlToken = params.get('t')?.trim() ?? ''
+  const accessCode = urlToken || getStoredAccessCode()
+  const state = useCvState(accessCode, locale)
+  const publicName = usePublicName(locale)
+  const { basicsSentinelRef, isBasicsInView } = useBasicsVisibility(state.kind)
 
   useEffect(() => {
     document.title = publicName
   }, [publicName])
 
   useEffect(() => {
-    let cancelled = false
+    if (!urlToken) return
+    setStoredAccessCode(urlToken)
+    clearStoredAccessToken()
+    const nextUrl = `${window.location.pathname}${window.location.hash}`
+    window.history.replaceState(null, '', nextUrl)
+  }, [urlToken])
 
-    async function loadPublicProfileName() {
-      try {
-        const payload = await fetchPublicProfile()
-        const name = payload.name?.trim() ?? ''
-        if (!name || cancelled) return
-
-        setPublicName(name)
-      } catch {
-        // Ignore; we can still fall back to VITE_PUBLIC_NAME.
-      }
-    }
-
-    loadPublicProfileName()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    async function run() {
-      if (!token) {
-        setState({ kind: 'locked' })
-        return
-      }
-
-      setState({ kind: 'loading' })
-      const res = await fetchCv(token)
-      if (cancelled) return
-
-      if (!res.ok) {
-        setState({ kind: 'error', message: res.message })
-        return
-      }
-
-      setState({ kind: 'ready', cv: res.data })
-    }
-
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [token])
-
-  useEffect(() => {
-    applyTheme(theme)
-    setStoredTheme(theme)
-  }, [theme])
-
-  useEffect(() => {
-    if (state.kind !== 'ready') {
-      return
-    }
-
-    const el = basicsSentinelRef.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsBasicsInView(entry.isIntersecting)
-      },
-      { threshold: 0.01 },
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [state.kind])
-
-  const faviconName =
-    state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
+  const faviconName = state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
   useDocumentFavicon(faviconName)
 
   const themeToggle = (
     <button
       type="button"
-      onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+      onClick={toggleTheme}
       className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
-      aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-label={theme === 'dark' ? t('themeSwitchToLight') : t('themeSwitchToDark')}
     >
       {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      {theme === 'dark' ? 'Light' : 'Dark'}
+      {theme === 'dark' ? t('themeLight') : t('themeDark')}
     </button>
   )
 
   return (
     <div className="space-y-6 lg:pt-20">
       {state.kind === 'locked' ? (
-        <Section title="Locked" icon={<Lock className="h-4 w-4" />}>
+        <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
           <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-            Scan your QR code to open this page with a token parameter:{' '}
-            <span className="font-mono">/cv?t=TOKEN</span>
+            {t('lockedHintPrefix')} <span className="font-mono">/cv?t=TOKEN</span>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              clearStoredAccessCode()
+              clearStoredAccessToken()
+            }}
+            className="mt-3 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+          >
+            Clear stored access
+          </button>
         </Section>
       ) : null}
 
       {state.kind === 'loading' ? (
-        <Section title="Loading" icon={<Hourglass className="h-4 w-4" />}>
-          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-            Verifying token and loading CV…
-          </div>
+        <Section title={t('loading')} icon={<Hourglass className="h-4 w-4" />}>
+          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{t('loadingCv')}</div>
         </Section>
       ) : null}
 
       {state.kind === 'error' ? (
-        <Section title="Unable to load" icon={<CircleAlert className="h-4 w-4" />}>
-          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{state.message}</div>
+        <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>
+          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            {t(state.messageKey)}
+            {state.messageKey === 'requestFailed' && state.status ? ` (${state.status})` : ''}
+            {state.details ? ` ${state.details}` : ''}
+          </div>
           <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            If you expected access, confirm your token is correct and that the server has
+            {t('serverConfigHint')} The server has
             <span className="font-mono"> CV_ACCESS_TOKEN</span> and <span className="font-mono">PRIVATE_PROFILE_JSON</span>{' '}
             configured.
           </div>
@@ -226,13 +280,22 @@ export function CvRoute() {
       {state.kind === 'ready' ? (
         <div className="space-y-6">
           <div ref={basicsSentinelRef}>
-            <BasicsCard basics={state.cv.basics} links={state.cv.links} headerRight={themeToggle} />
+            <BasicsCard
+              basics={state.cv.basics}
+              links={state.cv.links}
+              headerRight={
+                <div className="inline-flex items-center gap-2">
+                  <LanguageSelector />
+                  {themeToggle}
+                </div>
+              }
+            />
           </div>
 
           {!isBasicsInView ? <FloatingBasicsMenu basics={state.cv.basics} links={state.cv.links} /> : null}
 
           {state.cv.credentials?.length ? (
-            <Section title="Credentials" icon={<ShieldCheck className="h-4 w-4" />}>
+            <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
               <div className="space-y-4">
                 {credentialIssuerOrder
                   .map((issuer) => {
@@ -242,7 +305,13 @@ export function CvRoute() {
                       <div key={issuer}>
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
                           <CredentialIssuerIcon issuer={issuer} />
-                          {credentialIssuerLabel[issuer]}
+                          {issuer === 'language'
+                            ? t('languageExams')
+                            : issuer === 'other'
+                              ? t('other')
+                              : issuer === 'aws'
+                                ? 'AWS'
+                                : issuer.charAt(0).toUpperCase() + issuer.slice(1)}
                         </div>
                         <div className="mt-2 divide-y divide-slate-200/60 dark:divide-slate-800/60">
                           {items.map((c) => (
@@ -266,13 +335,13 @@ export function CvRoute() {
                                       {c.dateEarned ? (
                                         <span className="inline-flex items-center gap-1.5">
                                           <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                          Earned {c.dateEarned}
+                                          {t('earned')} {c.dateEarned}
                                         </span>
                                       ) : null}
                                       {c.dateExpires ? (
                                         <span className="inline-flex items-center gap-1.5">
                                           <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                          Expires {c.dateExpires}
+                                          {t('expires')} {c.dateExpires}
                                         </span>
                                       ) : null}
                                     </div>
@@ -291,31 +360,31 @@ export function CvRoute() {
           ) : null}
 
           {state.cv.skills?.length ? (
-            <Section title="Skills" icon={<LibraryBig className="h-4 w-4" />}>
+            <Section title={t('skills')} icon={<LibraryBig className="h-4 w-4" />}>
               <SkillsChips items={state.cv.skills} />
             </Section>
           ) : null}
 
           {state.cv.languages?.length ? (
-            <Section title="Languages" icon={<Languages className="h-4 w-4" />}>
+            <Section title={t('languages')} icon={<Languages className="h-4 w-4" />}>
               <SkillsChips items={state.cv.languages} />
             </Section>
           ) : null}
 
           {state.cv.experience?.length ? (
-            <Section title="Experience" icon={<BriefcaseBusiness className="h-4 w-4" />}>
+            <Section title={t('experience')} icon={<BriefcaseBusiness className="h-4 w-4" />}>
               <ExperienceList items={state.cv.experience} />
             </Section>
           ) : null}
 
           {state.cv.projects?.length ? (
-            <Section title="Projects" icon={<LayoutGrid className="h-4 w-4" />}>
+            <Section title={t('projects')} icon={<LayoutGrid className="h-4 w-4" />}>
               <ProjectsGrid items={state.cv.projects} />
             </Section>
           ) : null}
 
           {state.cv.education?.length ? (
-            <Section title="Education" icon={<GraduationCap className="h-4 w-4" />}>
+            <Section title={t('education')} icon={<GraduationCap className="h-4 w-4" />}>
               <EducationList items={state.cv.education} />
             </Section>
           ) : null}
@@ -324,4 +393,3 @@ export function CvRoute() {
     </div>
   )
 }
-

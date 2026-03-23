@@ -65,6 +65,7 @@ export type CvEducation = {
 }
 
 export type CvData = {
+  locale?: string
   basics: CvBasics
   links?: CvLink[]
   credentials?: CvCredential[]

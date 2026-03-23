@@ -1,3 +1,5 @@
+import { normalizeLocale, readLocalizedEnvJson } from '../lib/localeRegistry'
+
 type Context = {
   log: (...args: unknown[]) => void
   res?: {
@@ -22,8 +24,9 @@ function jsonResponse(status: number, body: unknown) {
   }
 }
 
-export default async function (context: Context, _req: HttpRequest) {
-  const raw = process.env.PUBLIC_PROFILE_JSON ?? ''
+export default async function (context: Context, req: HttpRequest) {
+  const requestedLocale = normalizeLocale(req.query?.lang)
+  const { raw, resolvedLocale } = readLocalizedEnvJson('PUBLIC_PROFILE_JSON', requestedLocale)
 
   if (!raw) {
     // Keep API and web fallback data separate to avoid drift.
@@ -33,7 +36,8 @@ export default async function (context: Context, _req: HttpRequest) {
   }
 
   try {
-    const data = JSON.parse(raw) as unknown
+    const data = JSON.parse(raw) as Record<string, unknown>
+    if (!data.locale) data.locale = resolvedLocale
     context.res = jsonResponse(200, data)
   } catch (err) {
     context.log('Failed parsing PUBLIC_PROFILE_JSON', err)

@@ -1,20 +1,10 @@
-import { useEffect, useState } from 'react'
 import { SiGithubIcon, SiLinkedinIcon } from '../components/icons/SimpleBrandIcons'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
-import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
-import { resolveInitialThemeForMode } from '../lib/themePreference'
+import { useI18n } from '../lib/i18n'
 
 export function AppShell() {
+  const { t } = useI18n()
   const currentYear = new Date().getFullYear()
-  const [theme] = useState<ThemePreference>(() => {
-    const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
-    return resolveInitialThemeForMode(isMock)
-  })
-
-  useEffect(() => {
-    applyTheme(theme)
-    setStoredTheme(theme)
-  }, [theme])
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[radial-gradient(90rem_55rem_at_15%_-10%,rgba(56,189,248,0.12),transparent),radial-gradient(70rem_42rem_at_95%_5%,rgba(139,92,246,0.14),transparent),linear-gradient(to_bottom_right,#f8fbff,#f2f6fd_45%,#eef3ff)] dark:bg-[radial-gradient(80rem_48rem_at_10%_-5%,rgba(56,189,248,0.08),transparent),radial-gradient(70rem_44rem_at_100%_0%,rgba(139,92,246,0.09),transparent),linear-gradient(to_bottom_right,#020617,#060b16_45%,#090f1f)]">
@@ -47,7 +37,7 @@ export function AppShell() {
             </a>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            &copy; {currentYear} Tibor Horváth. All rights reserved.
+            &copy; {currentYear} Tibor Horvath. {t('footerRights')}
           </p>
         </div>
       </footer>

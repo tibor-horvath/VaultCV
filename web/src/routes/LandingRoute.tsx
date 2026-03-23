@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, ShieldCheck, Sun, Target } from 'lucide-react'
 import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
-import { applyTheme, setStoredTheme, type ThemePreference } from '../lib/theme'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
-import { resolveInitialThemeForMode } from '../lib/themePreference'
 import { useDocumentFavicon } from '../lib/favicon'
+import { buildLocalizedPath, useI18n } from '../lib/i18n'
+import { LanguageSelector } from '../components/LanguageSelector'
+import { useTheme } from '../lib/themeContext'
+import { setStoredAccessCode } from '../lib/accessSession'
 
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -13,26 +15,18 @@ function getPublicText(value: string | undefined, fallback: string) {
 }
 
 export function LandingRoute() {
+  const { locale, t } = useI18n()
+  const { theme, toggleTheme } = useTheme()
   const [params] = useSearchParams()
   const urlToken = params.get('t') ?? ''
   const [tokenInput, setTokenInput] = useState('')
   const [publicData, setPublicData] = useState<PublicData>(defaultPublicData)
   const [publicLoading, setPublicLoading] = useState(true)
-  const [theme, setTheme] = useState<ThemePreference>(() => {
-    const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1'
-    return resolveInitialThemeForMode(isMock)
-  })
-
-  useEffect(() => {
-    applyTheme(theme)
-    setStoredTheme(theme)
-  }, [theme])
-
   useEffect(() => {
     let cancelled = false
 
     async function loadPublicData() {
-      const payload = await fetchPublicProfile()
+      const payload = await fetchPublicProfile(locale)
       if (cancelled) return
       setPublicData((current) => mergePublicData(current, payload))
 
@@ -43,7 +37,7 @@ export function LandingRoute() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [locale])
 
   const publicName = getPublicText(import.meta.env.VITE_PUBLIC_NAME as string | undefined, publicData.name)
   const publicTitle = getPublicText(import.meta.env.VITE_PUBLIC_TITLE as string | undefined, publicData.title)
@@ -63,45 +57,46 @@ export function LandingRoute() {
   const isUnlocked = Boolean(effectiveToken)
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl">
       <div className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-[0_30px_70px_-35px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/45 sm:p-8">
-        <div className="flex items-center justify-end gap-4">
+        <div className="flex items-center justify-end gap-2">
+          <LanguageSelector />
           <button
             type="button"
-            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            onClick={toggleTheme}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-label={theme === 'dark' ? t('themeSwitchToLight') : t('themeSwitchToDark')}
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {theme === 'dark' ? 'Light' : 'Dark'}
+            {theme === 'dark' ? t('themeLight') : t('themeDark')}
           </button>
         </div>
 
-        <div className="mt-4 text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-          {publicLoading ? 'Loading...' : publicName}
-        </div>
-        <div className="mt-2 text-pretty text-base text-slate-700 dark:text-slate-300 sm:text-lg">
+        <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+          {publicLoading ? t('loading') : publicName}
+        </h1>
+        <p className="mt-2 text-pretty text-base text-slate-700 dark:text-slate-300 sm:text-lg">
           {publicLoading ? '' : publicTitle}
-        </div>
+        </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45">
             <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               <MapPin className="h-3.5 w-3.5" />
-              Location
+              {t('location')}
             </div>
             <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
-              {publicLoading ? 'Loading...' : publicData.location}
+              {publicLoading ? t('loading') : publicData.location}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45">
             <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               <Target className="h-3.5 w-3.5" />
-              Focus
+              {t('focus')}
             </div>
             <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
-              {publicLoading ? 'Loading...' : publicData.focus}
+              {publicLoading ? t('loading') : publicData.focus}
             </p>
           </div>
         </div>
@@ -118,7 +113,7 @@ export function LandingRoute() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                   <LibraryBig className="h-3.5 w-3.5" />
-                  Skills
+                  {t('skills')}
                 </span>
                 {publicData.skills.map((skill) => (
                   <span
@@ -136,19 +131,19 @@ export function LandingRoute() {
         <div className="mt-7 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45 sm:p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
             <KeyRound className="h-4 w-4" />
-            Access code
+            {t('accessCode')}
           </div>
 
           {!urlToken ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <label className="sr-only" htmlFor="token">
-                Access code
+                {t('accessCode')}
               </label>
               <input
                 id="token"
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value)}
-                placeholder="Paste access code"
+                placeholder={t('pasteAccessCode')}
                 inputMode="text"
                 autoComplete="off"
                 className="w-full rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-slate-600"
@@ -157,26 +152,29 @@ export function LandingRoute() {
           ) : null}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Link
-              to={isUnlocked ? `/cv?t=${encodeURIComponent(effectiveToken)}` : '/'}
-              aria-disabled={!isUnlocked}
-              className={[
-                'group inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-400 sm:w-auto',
-                isUnlocked
-                  ? 'bg-slate-900 text-white hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100'
-                  : 'cursor-not-allowed border border-slate-200/70 bg-white/60 text-slate-400 dark:border-slate-700/80 dark:bg-slate-950/30 dark:text-slate-500',
-              ].join(' ')}
-              onClick={(e) => {
-                if (!isUnlocked) e.preventDefault()
-              }}
-            >
-              Open CV
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
+            {isUnlocked ? (
+              <Link
+                to={buildLocalizedPath('/cv', '', locale)}
+                onClick={() => setStoredAccessCode(effectiveToken)}
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 sm:w-auto dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              >
+                {t('openCv')}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200/70 bg-white/60 px-4 py-2.5 text-sm font-semibold text-slate-400 shadow-sm transition focus:outline-none sm:w-auto dark:border-slate-700/80 dark:bg-slate-950/30 dark:text-slate-500"
+              >
+                {t('openCv')}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
 
             <div className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
               <ShieldCheck className="h-4 w-4 opacity-80" />
-              {isUnlocked ? <>Access detected.</> : <>Locked until code is provided.</>}
+              {isUnlocked ? <>{t('accessDetected')}</> : <>{t('lockedUntilCode')}</>}
             </div>
           </div>
         </div>

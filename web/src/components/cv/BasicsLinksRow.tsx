@@ -1,6 +1,7 @@
 import { ExternalLink } from 'lucide-react'
 import { SiGithubIcon, SiLinkedinIcon } from '../icons/SimpleBrandIcons'
 import { inferLinkKind } from '../../lib/cvPresentation'
+import { useI18n } from '../../lib/i18n'
 
 type LinkItem = { label: string; url: string }
 
@@ -11,6 +12,7 @@ export function BasicsLinksRow({
   links?: LinkItem[]
   className?: string
 }) {
+  const { t } = useI18n()
   const visibleLinks = (links ?? []).filter((l) => inferLinkKind(l) !== 'other')
   if (!visibleLinks.length) return null
 
@@ -28,7 +30,7 @@ export function BasicsLinksRow({
             href={l.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${l.label} (opens in new tab)`}
+            aria-label={`${l.label} (${t('opensInNewTab')})`}
           >
             <Icon
               className="h-3.5 w-3.5 shrink-0 opacity-80 transition-opacity group-hover:opacity-100"

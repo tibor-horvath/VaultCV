@@ -1,10 +1,10 @@
 {
-  "locale": "en",
+  "locale": "de",
   "name": "John Doe",
-  "title": "Cloud Engineer",
-  "location": "Prague, Czechia",
-  "focus": "Cloud Engineer, Azure/AWS",
-  "bio": "Building reliable cloud-native products with clean UX, strong security, and fast delivery.",
+  "title": "Cloud-Ingenieur",
+  "location": "Prag, Tschechien",
+  "focus": "Cloud-Ingenieur, Azure/AWS",
+  "bio": "Ich entwickle zuverlässige cloud-native Produkte mit sauberer UX, starker Sicherheit und schneller Lieferung.",
   "links": [
     {
       "label": "LinkedIn",

@@ -1,8 +1,10 @@
 import type { CvEducation } from '../../types/cv'
 import { highlightChildKey, stableEducationKey } from '../../lib/cvKeys'
 import { Calendar, MapPin } from 'lucide-react'
+import { useI18n } from '../../lib/i18n'
 
 export function EducationList({ items }: { items: CvEducation[] }) {
+  const { t } = useI18n()
   return (
     <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60">
       {items.map((e) => {
@@ -23,7 +25,7 @@ export function EducationList({ items }: { items: CvEducation[] }) {
                     {e.start || e.end ? (
                       <span className="inline-flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
-                        {e.start ?? ''} {e.start && e.end ? '–' : ''} {e.end ?? 'Present'}
+                        {e.start ?? ''} {e.start && e.end ? '–' : ''} {e.end ?? t('present')}
                       </span>
                     ) : null}
                   </div>

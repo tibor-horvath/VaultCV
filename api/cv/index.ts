@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { normalizeLocale, readLocalizedEnvJson } from '../lib/localeRegistry'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -11,6 +12,7 @@ type Context = {
 
 type HttpRequest = {
   query?: Record<string, string | undefined>
+  headers?: Record<string, string | undefined>
 }
 
 function constantTimeEqual(a: string, b: string) {
@@ -18,6 +20,42 @@ function constantTimeEqual(a: string, b: string) {
   const bBuf = Buffer.from(b)
   if (aBuf.length !== bBuf.length) return false
   return crypto.timingSafeEqual(aBuf, bBuf)
+}
+
+function getSigningSecret() {
+  return (process.env.CV_SESSION_SIGNING_KEY ?? '').trim()
+}
+
+function toBase64Url(input: string | Buffer) {
+  return Buffer.from(input).toString('base64url')
+}
+
+function verifySessionToken(token: string) {
+  const [encodedPayload, providedSig] = token.split('.')
+  if (!encodedPayload || !providedSig) return false
+
+  const signingSecret = getSigningSecret()
+  if (!signingSecret) return false
+
+  const expectedSig = toBase64Url(crypto.createHmac('sha256', signingSecret).update(encodedPayload).digest())
+  if (!constantTimeEqual(providedSig, expectedSig)) return false
+
+  try {
+    const payloadJson = Buffer.from(encodedPayload, 'base64url').toString('utf8')
+    const payload = JSON.parse(payloadJson) as { exp?: number }
+    const exp = payload.exp ?? 0
+    if (!Number.isFinite(exp)) return false
+    return Math.floor(Date.now() / 1000) < exp
+  } catch {
+    return false
+  }
+}
+
+function readBearerToken(authHeader: string | undefined) {
+  if (!authHeader) return ''
+  const normalized = authHeader.trim()
+  const match = /^Bearer\s+(.+)$/i.exec(normalized)
+  return match?.[1]?.trim() ?? ''
 }
 
 function jsonResponse(status: number, body: unknown) {
@@ -46,43 +84,31 @@ function appendSasToken(url: string, sasToken: string) {
 }
 
 export default async function (context: Context, req: HttpRequest) {
-  const token = req.query?.t ?? ''
-  const expected = process.env.CV_ACCESS_TOKEN ?? ''
-
-  if (!expected) {
+  const accessToken = readBearerToken(req.headers?.authorization)
+  const requestedLocale = normalizeLocale(req.query?.lang)
+  if (!getSigningSecret()) {
     context.res = jsonResponse(500, { error: 'Server is not configured.' })
     return
   }
-
-  // Enforce GUID tokens to keep access links short and predictable.
-  if (!token || !isGuidN(token)) {
-    context.res = jsonResponse(400, { error: 'Invalid token format.' })
-    return
-  }
-
-  if (!isGuidN(expected)) {
-    context.res = jsonResponse(500, { error: 'Server token is invalid.' })
-    return
-  }
-
-  if (!token || !constantTimeEqual(token, expected)) {
+  if (!accessToken || !verifySessionToken(accessToken)) {
     context.res = jsonResponse(401, { error: 'Unauthorized' })
     return
   }
 
-  const raw = process.env.PRIVATE_PROFILE_JSON ?? ''
+  const { raw, resolvedLocale } = readLocalizedEnvJson('PRIVATE_PROFILE_JSON', requestedLocale)
   if (!raw) {
     context.res = jsonResponse(500, { error: 'CV data is not configured.' })
     return
   }
 
   try {
-    const data = JSON.parse(raw) as unknown
+    const data = JSON.parse(raw) as Record<string, unknown>
 
     // Allow moving photo URL out of `PRIVATE_PROFILE_JSON`.
     // Inject a direct URL from `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`).
     if (data && typeof data === 'object') {
       const dataObj = data as Record<string, unknown>
+      if (!dataObj.locale) dataObj.locale = resolvedLocale
       const basics =
         dataObj.basics && typeof dataObj.basics === 'object' ? (dataObj.basics as Record<string, unknown>) : (dataObj.basics = {})
 

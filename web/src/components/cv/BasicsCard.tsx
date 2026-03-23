@@ -31,9 +31,9 @@ export function BasicsCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
                 {basics.name}
-              </div>
+              </h1>
               {role ? (
                 <div className="mt-1 text-sm font-medium text-slate-600 dark:text-slate-300">{role}</div>
               ) : null}

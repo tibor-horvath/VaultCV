@@ -2,8 +2,10 @@ import type { CvBasics, CvLink } from '../../types/cv'
 import { Mail } from 'lucide-react'
 import { SiGithubIcon, SiLinkedinIcon } from '../icons/SimpleBrandIcons'
 import { buildPhotoSrc, inferLinkKind } from '../../lib/cvPresentation'
+import { useI18n } from '../../lib/i18n'
 
 export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?: CvLink[] }) {
+  const { t } = useI18n()
   const visibleLinks = (links ?? []).filter((l) => inferLinkKind(l) !== 'other')
   const github = visibleLinks.find((l) => inferLinkKind(l) === 'github')
   const linkedin = visibleLinks.find((l) => inferLinkKind(l) === 'linkedin')
@@ -42,6 +44,7 @@ export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?
                 href={github.url}
                 target="_blank"
                 rel="noreferrer"
+                aria-label={`GitHub (${t('opensInNewTab')})`}
               >
                 <SiGithubIcon className="h-3.5 w-3.5 opacity-80" />
               </a>
@@ -53,6 +56,7 @@ export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?
                 href={linkedin.url}
                 target="_blank"
                 rel="noreferrer"
+                aria-label={`LinkedIn (${t('opensInNewTab')})`}
               >
                 <SiLinkedinIcon className="h-3.5 w-3.5 opacity-80" />
               </a>
@@ -62,6 +66,7 @@ export function FloatingBasicsMenu({ basics, links }: { basics: CvBasics; links?
               <a
                 className="inline-flex items-center justify-center rounded-full border border-slate-200/90 bg-white p-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"
                 href={`mailto:${basics.email}`}
+                aria-label={basics.email}
               >
                 <Mail className="h-3.5 w-3.5 opacity-80" />
               </a>

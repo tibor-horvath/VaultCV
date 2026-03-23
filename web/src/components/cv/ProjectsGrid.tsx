@@ -3,8 +3,10 @@ import { inferProjectLinkLabelKind } from '../../lib/cvPresentation'
 import type { CvProject } from '../../types/cv'
 import { SiGithubIcon } from '../icons/SimpleBrandIcons'
 import { SkillsChips } from './SkillsChips'
+import { useI18n } from '../../lib/i18n'
 
 export function ProjectsGrid({ items }: { items: CvProject[] }) {
+  const { t } = useI18n()
   return (
     <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60">
       {items.map((p) => {
@@ -22,7 +24,7 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
               {iconLinks.map((l) => {
                 const kind = inferProjectLinkLabelKind(l)
                 const Icon = kind === 'github' ? SiGithubIcon : Globe
-                const text = kind === 'github' ? 'GitHub' : 'Web'
+                const text = kind === 'github' ? 'GitHub' : t('web')
                 return (
                   <a
                     key={`${p.name}:${kind}:${l.url}`}
@@ -30,7 +32,7 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
                     href={l.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${p.name}: ${text} (opens in new tab)`}
+                    aria-label={`${p.name}: ${text} (${t('opensInNewTab')})`}
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0 opacity-80 transition-opacity group-hover:opacity-100" aria-hidden="true" />
                     <span>{text}</span>
@@ -54,7 +56,7 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
                     href={l.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${p.name}: ${l.label} (opens in new tab)`}
+                    aria-label={`${p.name}: ${l.label} (${t('opensInNewTab')})`}
                   >
                     {l.label}
                   </a>
