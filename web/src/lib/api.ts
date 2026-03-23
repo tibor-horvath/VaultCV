@@ -64,6 +64,7 @@ export async function fetchCv(token: string, locale: Locale): Promise<ApiResult<
       headers: {
         accept: 'application/json',
         authorization: `Bearer ${token}`,
+        'x-cv-session-token': token,
       },
     })
   } catch {
