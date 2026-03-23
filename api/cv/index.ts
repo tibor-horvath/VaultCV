@@ -51,11 +51,26 @@ function verifySessionToken(token: string) {
   }
 }
 
+function getHeaderInsensitive(headers: Record<string, string | undefined> | undefined, name: string) {
+  if (!headers) return undefined
+  const lower = name.toLowerCase()
+  for (const [k, v] of Object.entries(headers)) {
+    if (k.toLowerCase() === lower && typeof v === 'string') return v
+  }
+  return undefined
+}
+
 function readBearerToken(authHeader: string | undefined) {
   if (!authHeader) return ''
   const normalized = authHeader.trim()
   const match = /^Bearer\s+(.+)$/i.exec(normalized)
   return match?.[1]?.trim() ?? ''
+}
+
+function readAccessToken(req: HttpRequest) {
+  const bearer = readBearerToken(getHeaderInsensitive(req.headers, 'authorization'))
+  if (bearer) return bearer
+  return getHeaderInsensitive(req.headers, 'x-cv-session-token')?.trim() ?? ''
 }
 
 function jsonResponse(status: number, body: unknown) {
@@ -69,10 +84,6 @@ function jsonResponse(status: number, body: unknown) {
   }
 }
 
-function isGuidN(token: string) {
-  return /^[0-9a-f]{32}$/i.test(token)
-}
-
 function normalizeSasToken(token: string) {
   return token.trim().replace(/^\?+/, '')
 }
@@ -84,7 +95,7 @@ function appendSasToken(url: string, sasToken: string) {
 }
 
 export default async function (context: Context, req: HttpRequest) {
-  const accessToken = readBearerToken(req.headers?.authorization)
+  const accessToken = readAccessToken(req)
   const requestedLocale = normalizeLocale(req.query?.lang)
   if (!getSigningSecret()) {
     context.res = jsonResponse(500, { error: 'Server is not configured.' })
