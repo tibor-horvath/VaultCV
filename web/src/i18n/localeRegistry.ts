@@ -11,6 +11,7 @@ export type LocaleOption = {
 
 export const fallbackLocale = 'en'
 export const localeStorageKey = 'cv-locale'
+export const defaultSupportedLocales: Locale[] = [fallbackLocale]
 
 const localePattern = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i
 
@@ -47,41 +48,56 @@ function getLocaleLabel(locale: string) {
   }
 }
 
-function parseConfiguredLocales() {
-  const raw = (import.meta.env.VITE_SUPPORTED_LOCALES as string | undefined)?.trim()
-  if (!raw) return ['en', 'hu']
-  const parsed = raw
-    .split(',')
-    .map((x) => normalizeLocale(x))
-    .filter((x): x is string => Boolean(x))
-  return parsed.length ? Array.from(new Set(parsed)) : ['en', 'hu']
-}
-
-export const supportedLocales = parseConfiguredLocales()
-export const localeOptions: LocaleOption[] = supportedLocales.map((code) => ({
-  code,
-  label: getLocaleLabel(code),
-  countryCode: localeToCountryCode[getLocaleBase(code)],
-}))
-
 function hasMessageCatalog(locale: string): locale is keyof typeof messages {
   return locale in messages
 }
 
-function validateLocaleCoverage() {
+function hasUiCoverage(locale: string) {
+  return hasMessageCatalog(locale) || hasMessageCatalog(getLocaleBase(locale))
+}
+
+function validateFallbackCatalogCoverage() {
   if (!hasMessageCatalog(fallbackLocale)) {
     throw new Error(`Missing fallback message catalog for "${fallbackLocale}".`)
   }
-
-  const missing = supportedLocales.filter((locale) => !hasMessageCatalog(locale) && !hasMessageCatalog(getLocaleBase(locale)))
-  if (missing.length) {
-    throw new Error(`Missing message catalogs for configured locale(s): ${missing.join(', ')}`)
-  }
 }
 
-validateLocaleCoverage()
+validateFallbackCatalogCoverage()
 
-export function resolveSupportedLocale(input: string | null | undefined): Locale | null {
+export function sanitizeSupportedLocales(inputs: Array<string | null | undefined>): Locale[] {
+  const unique: Locale[] = []
+  for (const raw of inputs) {
+    const normalized = normalizeLocale(raw)
+    if (!normalized) continue
+    if (!hasUiCoverage(normalized)) continue
+    if (!unique.includes(normalized)) unique.push(normalized)
+  }
+
+  if (!unique.includes(fallbackLocale)) unique.unshift(fallbackLocale)
+  return unique
+}
+
+export function parseSupportedLocalesCsv(raw: string | null | undefined) {
+  if (!raw?.trim()) return [...defaultSupportedLocales]
+  const parsed = raw
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean)
+  return sanitizeSupportedLocales(parsed)
+}
+
+export function toLocaleOptions(supportedLocales: readonly Locale[]): LocaleOption[] {
+  return supportedLocales.map((code) => ({
+    code,
+    label: getLocaleLabel(code),
+    countryCode: localeToCountryCode[getLocaleBase(code)],
+  }))
+}
+
+export function resolveSupportedLocale(
+  input: string | null | undefined,
+  supportedLocales: readonly Locale[] = defaultSupportedLocales,
+): Locale | null {
   const normalized = normalizeLocale(input)
   if (!normalized) return null
   if (supportedLocales.includes(normalized)) return normalized

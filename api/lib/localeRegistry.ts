@@ -1,12 +1,34 @@
 export const fallbackLocale = 'en'
 
 const localePattern = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i
+const defaultSupportedLocales = [fallbackLocale]
+
+function normalizeLocaleStrict(input: string | undefined) {
+  const normalized = input?.trim().toLowerCase()
+  if (!normalized) return null
+  if (!localePattern.test(normalized)) return null
+  return normalized
+}
 
 export function normalizeLocale(input: string | undefined) {
-  const normalized = input?.trim().toLowerCase()
+  const normalized = normalizeLocaleStrict(input)
   if (!normalized) return fallbackLocale
-  if (!localePattern.test(normalized)) return fallbackLocale
   return normalized
+}
+
+export function readSupportedLocales() {
+  const raw = process.env.SUPPORTED_LOCALES?.trim()
+  if (!raw) return [...defaultSupportedLocales]
+
+  const unique: string[] = []
+  for (const candidate of raw.split(',')) {
+    const locale = normalizeLocaleStrict(candidate)
+    if (!locale) continue
+    if (!unique.includes(locale)) unique.push(locale)
+  }
+
+  if (!unique.includes(fallbackLocale)) unique.unshift(fallbackLocale)
+  return unique.length ? unique : [...defaultSupportedLocales]
 }
 
 export function localeEnvCandidates(prefix: string, locale: string) {

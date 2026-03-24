@@ -12,7 +12,7 @@ import {
   PT,
   SK,
 } from 'country-flag-icons/react/3x2'
-import { localeOptions, useI18n, type Locale, type LocaleOption } from '../lib/i18n'
+import { useI18n, type Locale, type LocaleOption } from '../lib/i18n'
 
 const flagComponentsByCountryCode = {
   GB,
@@ -53,7 +53,7 @@ function LocaleRow({
 }
 
 export function LanguageSelector() {
-  const { locale, setLocale, t } = useI18n()
+  const { locale, localeOptions, setLocale, t } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const rootRef = useRef<HTMLDivElement | null>(null)

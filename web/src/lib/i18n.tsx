@@ -1,30 +1,34 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { enMessages, type MessageKey } from '../i18n/messages'
 import {
+  defaultSupportedLocales,
   fallbackLocale,
   getUiDictionary,
-  localeOptions,
   localeStorageKey,
+  parseSupportedLocalesCsv,
   resolveSupportedLocale,
   resolveUiLocale,
-  supportedLocales,
+  toLocaleOptions,
   type Locale,
   type LocaleOption,
 } from '../i18n/localeRegistry'
 
 export type { Locale, LocaleOption }
-export { supportedLocales, localeOptions }
 
-function detectInitialLocale(): Locale {
+function readPreferredLocaleInput() {
   if (typeof window === 'undefined') return fallbackLocale
 
-  const fromQuery = resolveSupportedLocale(new URLSearchParams(window.location.search).get('lang'))
+  const fromQuery = new URLSearchParams(window.location.search).get('lang')?.trim()
   if (fromQuery) return fromQuery
 
-  const fromStorage = resolveSupportedLocale(window.localStorage.getItem(localeStorageKey))
+  const fromStorage = window.localStorage.getItem(localeStorageKey)?.trim()
   if (fromStorage) return fromStorage
 
-  return resolveSupportedLocale(window.navigator.language) ?? fallbackLocale
+  return window.navigator.language
+}
+
+function detectInitialLocale(supportedLocales: readonly Locale[]): Locale {
+  return resolveSupportedLocale(readPreferredLocaleInput(), supportedLocales) ?? fallbackLocale
 }
 
 function setDocumentLang(locale: Locale) {
@@ -43,14 +47,45 @@ export function buildLocalizedPath(pathname: string, search: string, locale: Loc
 type TranslationApi = {
   locale: Locale
   setLocale: (locale: Locale) => void
+  supportedLocales: readonly Locale[]
+  localeOptions: readonly LocaleOption[]
   t: (key: MessageKey) => string
 }
 
 const LocaleContext = createContext<TranslationApi | null>(null)
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>(() => detectInitialLocale())
+  const [supportedLocales, setSupportedLocales] = useState<Locale[]>(() => [...defaultSupportedLocales])
+  const [locale, setLocaleState] = useState<Locale>(() => detectInitialLocale(defaultSupportedLocales))
+  const localeOptions = useMemo(() => toLocaleOptions(supportedLocales), [supportedLocales])
   const resolvedUiLocale = useMemo(() => resolveUiLocale(locale), [locale])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    async function loadSupportedLocales() {
+      try {
+        const res = await fetch('/api/locales', {
+          method: 'GET',
+          headers: { accept: 'application/json' },
+          signal: controller.signal,
+        })
+        if (!res.ok) return
+        const body = (await res.json()) as { locales?: unknown }
+        const csv = Array.isArray(body.locales)
+          ? body.locales.filter((x): x is string => typeof x === 'string').join(',')
+          : ''
+        setSupportedLocales(parseSupportedLocalesCsv(csv))
+      } catch {
+        // Keep fallback locale set when endpoint is unavailable.
+      }
+    }
+    loadSupportedLocales()
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    setLocaleState(detectInitialLocale(supportedLocales))
+  }, [supportedLocales])
 
   useEffect(() => {
     setDocumentLang(resolvedUiLocale)
@@ -66,12 +101,14 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     const dict = getUiDictionary(resolvedUiLocale)
     return {
       locale: resolvedUiLocale,
+      supportedLocales,
+      localeOptions,
       setLocale: (nextLocale: Locale) => {
-        setLocale(resolveSupportedLocale(nextLocale) ?? fallbackLocale)
+        setLocaleState(resolveSupportedLocale(nextLocale, supportedLocales) ?? fallbackLocale)
       },
       t: (key) => dict[key] ?? enMessages[key],
     }
-  }, [resolvedUiLocale])
+  }, [localeOptions, resolvedUiLocale, supportedLocales])
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }

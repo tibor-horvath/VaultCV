@@ -62,7 +62,7 @@ VaultCV supports two localization layers:
 ### Locale selection and fallback
 
 - Active locale comes from this order: URL `lang` query -> `localStorage` -> browser language.
-- Supported locales are configured by `VITE_SUPPORTED_LOCALES` (comma-separated, e.g. `en,hu,de`).
+- Supported locales are configured by API runtime env var `SUPPORTED_LOCALES` (comma-separated, e.g. `en,hu,de`) and served by `GET /api/locales`.
 - Locale fallback follows `exact -> base -> en` (example: `de-AT -> de -> en`).
 
 ### UI message catalogs
@@ -95,7 +95,7 @@ When API/local env vars are not available, web can use static fallback files in 
 
 ### Add a new locale
 
-1. Add the locale to `VITE_SUPPORTED_LOCALES` (web env).
+1. Add the locale to `SUPPORTED_LOCALES` (Azure app settings).
 2. Add a UI message catalog in `web/src/i18n/messages/`.
 3. Add localized content payloads:
    - `PRIVATE_PROFILE_JSON_<LOCALE>`
@@ -261,6 +261,7 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | `CV_ACCESS_TOKEN` | A long random secret — the code in your shareable link. Generate one: `[guid]::NewGuid().ToString("N")` (PowerShell) or `openssl rand -hex 32` (bash). |
 | `CV_SESSION_SIGNING_KEY` | Required signing secret for short-lived session tokens. Use a different random value than `CV_ACCESS_TOKEN` (do not reuse). |
 | `CV_SESSION_TTL_SECONDS` | Optional session token lifetime in seconds. Default: `3600` (1 hour). Allowed range: `60` to `86400`. |
+| `SUPPORTED_LOCALES` | Optional comma-separated locale list exposed by `/api/locales` and used by the frontend selector (example: `en` or `en,hu,de`). Fallback: `en`. |
 | `PRIVATE_PROFILE_JSON` | Your full private CV as a JSON string. Use the example in `api/local.settings.example.json` as a starting point. Validate your JSON at [jsonlint.com](https://jsonlint.com) before pasting. |
 | `PUBLIC_PROFILE_JSON` | Your public profile JSON string (shown on the landing page). |
 | `PROFILE_PHOTO_URL` | Azure Blob URL of your profile photo (the part before `?` from Step 3). |
