@@ -88,19 +88,14 @@ function usePublicName(locale: string) {
 }
 
 function useCvState(accessCode: string, locale: string) {
-  const [state, setState] = useState<CvRouteState>(accessCode ? { kind: 'loading' } : { kind: 'locked' })
+  const [state, setState] = useState<CvRouteState>({ kind: 'loading' })
 
   useEffect(() => {
     let cancelled = false
     async function run() {
-      if (!accessCode) {
-        setState({ kind: 'locked' })
-        return
-      }
-
       setState({ kind: 'loading' })
       let accessToken = getStoredAccessToken().trim()
-      if (!accessToken) {
+      if (!accessToken && accessCode) {
         const exchangeRes = await exchangeAccessCode(accessCode)
         if (cancelled) return
         if (!exchangeRes.ok) {
@@ -123,6 +118,10 @@ function useCvState(accessCode: string, locale: string) {
         if (res.code === 'unauthorized') {
           clearStoredAccessCode()
           clearStoredAccessToken()
+          if (!accessCode) {
+            setState({ kind: 'locked' })
+            return
+          }
         }
         setState({
           kind: 'error',

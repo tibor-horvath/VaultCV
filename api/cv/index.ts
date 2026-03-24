@@ -21,11 +21,14 @@ type TokenVerificationResult =
 
 type AccessTokenReadResult = {
   token: string
-  source: 'authorization' | 'x-cv-session-token' | 'none'
+  source: 'authorization' | 'x-cv-session-token' | 'cookie' | 'none'
   hasAuthorizationHeader: boolean
   authorizationHeaderHasBearer: boolean
   hasSessionHeader: boolean
+  hasCookieHeader: boolean
 }
+
+const SESSION_COOKIE_NAME = 'cv_session'
 
 function constantTimeEqual(a: string, b: string) {
   const aBuf = Buffer.from(a)
@@ -81,9 +84,28 @@ function readBearerToken(authHeader: string | undefined) {
   return match?.[1]?.trim() ?? ''
 }
 
+function readCookieValue(cookieHeader: string | undefined, name: string) {
+  if (!cookieHeader) return ''
+  const cookieParts = cookieHeader.split(';')
+  for (const part of cookieParts) {
+    const [rawName, ...rawValueParts] = part.split('=')
+    const cookieName = rawName?.trim()
+    if (cookieName !== name) continue
+    const rawValue = rawValueParts.join('=').trim()
+    if (!rawValue) return ''
+    try {
+      return decodeURIComponent(rawValue)
+    } catch {
+      return rawValue
+    }
+  }
+  return ''
+}
+
 function readAccessToken(req: HttpRequest): AccessTokenReadResult {
   const authorizationHeader = getHeaderInsensitive(req.headers, 'authorization')
   const sessionHeader = getHeaderInsensitive(req.headers, 'x-cv-session-token')
+  const cookieHeader = getHeaderInsensitive(req.headers, 'cookie')
   const sessionToken = sessionHeader?.trim() ?? ''
   if (sessionToken) {
     return {
@@ -92,6 +114,18 @@ function readAccessToken(req: HttpRequest): AccessTokenReadResult {
       hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
       authorizationHeaderHasBearer: Boolean(readBearerToken(authorizationHeader)),
       hasSessionHeader: true,
+      hasCookieHeader: Boolean(cookieHeader?.trim()),
+    }
+  }
+  const cookieToken = readCookieValue(cookieHeader, SESSION_COOKIE_NAME).trim()
+  if (cookieToken) {
+    return {
+      token: cookieToken,
+      source: 'cookie',
+      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
+      authorizationHeaderHasBearer: Boolean(readBearerToken(authorizationHeader)),
+      hasSessionHeader: Boolean(sessionHeader?.trim()),
+      hasCookieHeader: true,
     }
   }
   const bearer = readBearerToken(authorizationHeader)
@@ -102,6 +136,7 @@ function readAccessToken(req: HttpRequest): AccessTokenReadResult {
       hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
       authorizationHeaderHasBearer: true,
       hasSessionHeader: Boolean(sessionHeader?.trim()),
+      hasCookieHeader: Boolean(cookieHeader?.trim()),
     }
   }
   return {
@@ -110,6 +145,7 @@ function readAccessToken(req: HttpRequest): AccessTokenReadResult {
     hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
     authorizationHeaderHasBearer: false,
     hasSessionHeader: Boolean(sessionHeader?.trim()),
+    hasCookieHeader: Boolean(cookieHeader?.trim()),
   }
 }
 
@@ -175,6 +211,7 @@ export default async function (context: Context, req: HttpRequest) {
       hasAuthorizationHeader: tokenRead.hasAuthorizationHeader,
       authorizationHeaderHasBearer: tokenRead.authorizationHeaderHasBearer,
       hasSessionHeader: tokenRead.hasSessionHeader,
+      hasCookieHeader: tokenRead.hasCookieHeader,
     })
     const body: { error: string; debug?: Record<string, unknown> } = { error: 'Unauthorized' }
     if (isDebugAuthEnabled()) {
@@ -184,6 +221,7 @@ export default async function (context: Context, req: HttpRequest) {
         hasAuthorizationHeader: tokenRead.hasAuthorizationHeader,
         authorizationHeaderHasBearer: tokenRead.authorizationHeaderHasBearer,
         hasSessionHeader: tokenRead.hasSessionHeader,
+        hasCookieHeader: tokenRead.hasCookieHeader,
         selectedTokenLength: accessToken.length,
       }
     }

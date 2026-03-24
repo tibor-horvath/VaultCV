@@ -12,6 +12,8 @@ type HttpRequest = {
   body?: unknown
 }
 
+const SESSION_COOKIE_NAME = 'cv_session'
+
 function jsonResponse(status: number, body: unknown) {
   return {
     status,
@@ -20,6 +22,10 @@ function jsonResponse(status: number, body: unknown) {
       'cache-control': 'no-store',
     },
     body,
+  } as {
+    status: number
+    headers: Record<string, string>
+    body: unknown
   }
 }
 
@@ -77,6 +83,10 @@ function issueSessionToken(expSecondsFromNow: number) {
   return `${encodedPayload}.${signature}`
 }
 
+function buildSessionCookie(token: string, maxAgeSeconds: number) {
+  return `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAgeSeconds}`
+}
+
 export default async function (context: Context, req: HttpRequest) {
   const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
   const code = (typeof payload?.code === 'string' ? payload.code : '').trim()
@@ -111,7 +121,13 @@ export default async function (context: Context, req: HttpRequest) {
     return
   }
 
-  const response = jsonResponse(200, { accessToken: issueSessionToken(getSessionTtlSeconds()) })
+  const ttlSeconds = getSessionTtlSeconds()
+  const sessionToken = issueSessionToken(ttlSeconds)
+  const response = jsonResponse(200, { accessToken: sessionToken })
+  response.headers = {
+    ...(response.headers ?? {}),
+    'set-cookie': buildSessionCookie(sessionToken, ttlSeconds),
+  }
   attachDebugHeaders(response, signingSecret)
   context.res = response
 }

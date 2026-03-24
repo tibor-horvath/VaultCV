@@ -56,15 +56,20 @@ export async function fetchCv(token: string, locale: Locale): Promise<ApiResult<
   }
 
   const url = `/api/cv?lang=${encodeURIComponent(locale)}`
+  const tokenValue = token.trim()
+  const headers: Record<string, string> = {
+    accept: 'application/json',
+  }
+  if (tokenValue) {
+    headers['x-cv-session-token'] = tokenValue
+  }
 
   let res: Response
   try {
     res = await fetch(url, {
       method: 'GET',
-      headers: {
-        accept: 'application/json',
-        'x-cv-session-token': token,
-      },
+      headers,
+      credentials: 'same-origin',
     })
   } catch {
     return { ok: false, status: 0, code: 'network_error' }
@@ -111,6 +116,7 @@ export async function exchangeAccessCode(code: string): Promise<ApiResult<{ acce
         'content-type': 'application/json',
       },
       body: JSON.stringify({ code }),
+      credentials: 'same-origin',
     })
   } catch {
     return { ok: false, status: 0, code: 'network_error' }
