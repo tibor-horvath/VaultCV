@@ -18,7 +18,7 @@ export const huMessages: Partial<MessageCatalog> = {
   locked: 'Zárolva',
   lockedHintPrefix: 'A QR-kód beolvasásával nyisd meg ezt az oldalt token paraméterrel:',
   loadingCv: 'Token ellenőrzése és CV betöltése...',
-  unlockedUntil: 'Feloldva eddig:',
+  unlockedUntil: 'Feloldva eddig',
   unableToLoad: 'Nem tölthető be',
   serverConfigHint: 'Ha hozzáférést vársz, ellenőrizd a tokent és a szerver beállításait.',
   credentials: 'Tanúsítványok',

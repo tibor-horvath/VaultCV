@@ -18,7 +18,7 @@ export const deMessages: Partial<MessageCatalog> = {
   locked: 'Gesperrt',
   lockedHintPrefix: 'Scanne deinen QR-Code, um diese Seite mit einem Token-Parameter zu öffnen:',
   loadingCv: 'Token wird geprüft und Lebenslauf wird geladen...',
-  unlockedUntil: 'Freigeschaltet bis:',
+  unlockedUntil: 'Freigeschaltet bis',
   unableToLoad: 'Kann nicht geladen werden',
   serverConfigHint: 'Wenn du Zugriff erwartest, prüfe den Token und die Serverkonfiguration.',
   credentials: 'Zertifikate',

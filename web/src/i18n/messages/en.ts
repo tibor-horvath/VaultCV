@@ -16,7 +16,7 @@ export const enMessages = {
   locked: 'Locked',
   lockedHintPrefix: 'Scan your QR code to open this page with a token parameter:',
   loadingCv: 'Verifying token and loading CV...',
-  unlockedUntil: 'Unlocked until:',
+  unlockedUntil: 'Unlocked until',
   unableToLoad: 'Unable to load',
   serverConfigHint: 'If you expected access, confirm your token is correct and server settings are configured.',
   credentials: 'Credentials',
