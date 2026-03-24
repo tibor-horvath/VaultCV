@@ -26,11 +26,6 @@ function getSigningSecret() {
   return (process.env.CV_SESSION_SIGNING_KEY ?? '').trim()
 }
 
-function getSigningSecretFingerprint(secret: string) {
-  if (!secret) return 'missing'
-  return crypto.createHash('sha256').update(secret).digest('hex').slice(0, 12)
-}
-
 function toBase64Url(input: string | Buffer) {
   return Buffer.from(input).toString('base64url')
 }
@@ -103,21 +98,11 @@ export default async function (context: Context, req: HttpRequest) {
   const accessToken = readAccessToken(req)
   const requestedLocale = normalizeLocale(req.query?.lang)
   const signingSecret = getSigningSecret()
-  const signingSecretFingerprint = getSigningSecretFingerprint(signingSecret)
   if (!signingSecret) {
-    // #region agent log
-    fetch('http://127.0.0.1:7741/ingest/111ce85a-0d60-4ead-aca6-5123da71a13d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac91fc'},body:JSON.stringify({sessionId:'ac91fc',runId:'run1',hypothesisId:'H1',location:'api/cv/index.ts:108',message:'cv missing signing secret',data:{hasSigningSecret:Boolean(signingSecret),signingSecretFingerprint,timestamp:Date.now()},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     context.res = jsonResponse(500, { error: 'Server is not configured.' })
     return
   }
-  const tokenPresent = Boolean(accessToken)
-  const tokenLooksStructured = accessToken.includes('.')
-  const tokenValid = tokenPresent ? verifySessionToken(accessToken) : false
-  // #region agent log
-  fetch('http://127.0.0.1:7741/ingest/111ce85a-0d60-4ead-aca6-5123da71a13d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac91fc'},body:JSON.stringify({sessionId:'ac91fc',runId:'run1',hypothesisId:'H3',location:'api/cv/index.ts:117',message:'cv request token validation result',data:{signingSecretFingerprint,tokenPresent,tokenLooksStructured,tokenValid,tokenLength:accessToken.length,timestamp:Date.now()},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-  if (!tokenPresent || !tokenValid) {
+  if (!accessToken || !verifySessionToken(accessToken)) {
     context.res = jsonResponse(401, { error: 'Unauthorized' })
     return
   }

@@ -42,11 +42,6 @@ function getSigningSecret() {
   return (process.env.CV_SESSION_SIGNING_KEY ?? '').trim()
 }
 
-function getSigningSecretFingerprint(secret: string) {
-  if (!secret) return 'missing'
-  return crypto.createHash('sha256').update(secret).digest('hex').slice(0, 12)
-}
-
 function getSessionTtlSeconds() {
   const raw = (process.env.CV_SESSION_TTL_SECONDS ?? '').trim()
   if (!raw) return 60 * 60
@@ -70,12 +65,8 @@ export default async function (context: Context, req: HttpRequest) {
   const code = (typeof payload?.code === 'string' ? payload.code : '').trim()
   const expected = (process.env.CV_ACCESS_TOKEN ?? '').trim()
   const signingSecret = getSigningSecret()
-  const signingSecretFingerprint = getSigningSecretFingerprint(signingSecret)
 
   if (!expected || !signingSecret) {
-    // #region agent log
-    fetch('http://127.0.0.1:7741/ingest/111ce85a-0d60-4ead-aca6-5123da71a13d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac91fc'},body:JSON.stringify({sessionId:'ac91fc',runId:'run1',hypothesisId:'H1',location:'api/auth/index.ts:74',message:'auth missing required config',data:{hasExpected:Boolean(expected),hasSigningSecret:Boolean(signingSecret),signingSecretFingerprint,timestamp:Date.now()},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     context.res = jsonResponse(500, { error: 'Server is not configured.' })
     return
   }
@@ -95,8 +86,5 @@ export default async function (context: Context, req: HttpRequest) {
     return
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7741/ingest/111ce85a-0d60-4ead-aca6-5123da71a13d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac91fc'},body:JSON.stringify({sessionId:'ac91fc',runId:'run1',hypothesisId:'H2',location:'api/auth/index.ts:97',message:'auth issued session token',data:{signingSecretFingerprint,ttlSeconds:getSessionTtlSeconds()},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   context.res = jsonResponse(200, { accessToken: issueSessionToken(getSessionTtlSeconds()) })
 }
