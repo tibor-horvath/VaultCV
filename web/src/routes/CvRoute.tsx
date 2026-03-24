@@ -204,6 +204,7 @@ export function CvRoute() {
   const { theme, toggleTheme } = useTheme()
   const [params] = useSearchParams()
   const urlToken = params.get('t')?.trim() ?? ''
+  const urlTokenUpper = params.get('T')?.trim() ?? ''
   const accessCode = urlToken || getStoredAccessCode()
   const state = useCvState(accessCode, locale)
   const publicName = usePublicName(locale)
@@ -212,6 +213,12 @@ export function CvRoute() {
   useEffect(() => {
     document.title = publicName
   }, [publicName])
+
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7741/ingest/111ce85a-0d60-4ead-aca6-5123da71a13d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac91fc'},body:JSON.stringify({sessionId:'ac91fc',runId:'run2',hypothesisId:'H5',location:'web/src/routes/CvRoute.tsx:222',message:'cv route token query inspection',data:{hasLowerT:Boolean(urlToken),hasUpperT:Boolean(urlTokenUpper),lowerTLength:urlToken.length,upperTLength:urlTokenUpper.length,storedAccessCodeLength:getStoredAccessCode().length,selectedAccessCodeSource:urlToken?'lower_t':'stored'},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }, [urlToken, urlTokenUpper])
 
   useEffect(() => {
     if (!urlToken) return
