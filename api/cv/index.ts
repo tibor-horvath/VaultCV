@@ -15,6 +15,18 @@ type HttpRequest = {
   headers?: Record<string, string | undefined>
 }
 
+type TokenVerificationResult =
+  | { ok: true; exp: number }
+  | { ok: false; reason: 'missing_token' | 'invalid_format' | 'missing_signing_secret' | 'signature_mismatch' | 'invalid_payload' | 'expired' }
+
+type AccessTokenReadResult = {
+  token: string
+  source: 'authorization' | 'x-cv-session-token' | 'none'
+  hasAuthorizationHeader: boolean
+  authorizationHeaderHasBearer: boolean
+  hasSessionHeader: boolean
+}
+
 function constantTimeEqual(a: string, b: string) {
   const aBuf = Buffer.from(a)
   const bBuf = Buffer.from(b)
@@ -30,24 +42,26 @@ function toBase64Url(input: string | Buffer) {
   return Buffer.from(input).toString('base64url')
 }
 
-function verifySessionToken(token: string) {
+function verifySessionToken(token: string): TokenVerificationResult {
+  if (!token) return { ok: false, reason: 'missing_token' }
   const [encodedPayload, providedSig] = token.split('.')
-  if (!encodedPayload || !providedSig) return false
+  if (!encodedPayload || !providedSig) return { ok: false, reason: 'invalid_format' }
 
   const signingSecret = getSigningSecret()
-  if (!signingSecret) return false
+  if (!signingSecret) return { ok: false, reason: 'missing_signing_secret' }
 
   const expectedSig = toBase64Url(crypto.createHmac('sha256', signingSecret).update(encodedPayload).digest())
-  if (!constantTimeEqual(providedSig, expectedSig)) return false
+  if (!constantTimeEqual(providedSig, expectedSig)) return { ok: false, reason: 'signature_mismatch' }
 
   try {
     const payloadJson = Buffer.from(encodedPayload, 'base64url').toString('utf8')
     const payload = JSON.parse(payloadJson) as { exp?: number }
     const exp = payload.exp ?? 0
-    if (!Number.isFinite(exp)) return false
-    return Math.floor(Date.now() / 1000) < exp
+    if (!Number.isFinite(exp)) return { ok: false, reason: 'invalid_payload' }
+    if (Math.floor(Date.now() / 1000) >= exp) return { ok: false, reason: 'expired' }
+    return { ok: true, exp }
   } catch {
-    return false
+    return { ok: false, reason: 'invalid_payload' }
   }
 }
 
@@ -67,10 +81,36 @@ function readBearerToken(authHeader: string | undefined) {
   return match?.[1]?.trim() ?? ''
 }
 
-function readAccessToken(req: HttpRequest) {
-  const bearer = readBearerToken(getHeaderInsensitive(req.headers, 'authorization'))
-  if (bearer) return bearer
-  return getHeaderInsensitive(req.headers, 'x-cv-session-token')?.trim() ?? ''
+function readAccessToken(req: HttpRequest): AccessTokenReadResult {
+  const authorizationHeader = getHeaderInsensitive(req.headers, 'authorization')
+  const sessionHeader = getHeaderInsensitive(req.headers, 'x-cv-session-token')
+  const bearer = readBearerToken(authorizationHeader)
+  if (bearer) {
+    return {
+      token: bearer,
+      source: 'authorization',
+      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
+      authorizationHeaderHasBearer: true,
+      hasSessionHeader: Boolean(sessionHeader?.trim()),
+    }
+  }
+  const sessionToken = sessionHeader?.trim() ?? ''
+  if (sessionToken) {
+    return {
+      token: sessionToken,
+      source: 'x-cv-session-token',
+      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
+      authorizationHeaderHasBearer: false,
+      hasSessionHeader: true,
+    }
+  }
+  return {
+    token: '',
+    source: 'none',
+    hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
+    authorizationHeaderHasBearer: false,
+    hasSessionHeader: Boolean(sessionHeader?.trim()),
+  }
 }
 
 function jsonResponse(status: number, body: unknown) {
@@ -94,16 +134,65 @@ function appendSasToken(url: string, sasToken: string) {
   return `${url}${separator}${sasToken}`
 }
 
+function isDebugAuthEnabled() {
+  return (process.env.CV_DEBUG_AUTH ?? '').trim() === '1'
+}
+
+function signingKeyFingerprint(signingSecret: string) {
+  if (!signingSecret) return 'missing'
+  return crypto.createHash('sha256').update(signingSecret).digest('hex').slice(0, 12)
+}
+
+function attachDebugHeaders(
+  response: { headers?: Record<string, string> },
+  signingSecret: string,
+  fields: Partial<Record<'x-cv-debug-reason' | 'x-cv-debug-token-source', string>>,
+) {
+  if (!isDebugAuthEnabled()) return
+  response.headers = {
+    ...(response.headers ?? {}),
+    'x-cv-debug-signing-key-fp': signingKeyFingerprint(signingSecret),
+    ...fields,
+  }
+}
+
 export default async function (context: Context, req: HttpRequest) {
-  const accessToken = readAccessToken(req)
+  const tokenRead = readAccessToken(req)
+  const accessToken = tokenRead.token
   const requestedLocale = normalizeLocale(req.query?.lang)
   const signingSecret = getSigningSecret()
   if (!signingSecret) {
-    context.res = jsonResponse(500, { error: 'Server is not configured.' })
+    const response = jsonResponse(500, { error: 'Server is not configured.' })
+    attachDebugHeaders(response, signingSecret, { 'x-cv-debug-reason': 'missing_signing_secret' })
+    context.res = response
     return
   }
-  if (!accessToken || !verifySessionToken(accessToken)) {
-    context.res = jsonResponse(401, { error: 'Unauthorized' })
+  const tokenVerification = verifySessionToken(accessToken)
+  if (!tokenVerification.ok) {
+    context.log('Unauthorized /api/cv request', {
+      reason: tokenVerification.reason,
+      tokenSource: tokenRead.source,
+      hasAuthorizationHeader: tokenRead.hasAuthorizationHeader,
+      authorizationHeaderHasBearer: tokenRead.authorizationHeaderHasBearer,
+      hasSessionHeader: tokenRead.hasSessionHeader,
+    })
+    const body: { error: string; debug?: Record<string, unknown> } = { error: 'Unauthorized' }
+    if (isDebugAuthEnabled()) {
+      body.debug = {
+        reason: tokenVerification.reason,
+        tokenSource: tokenRead.source,
+        hasAuthorizationHeader: tokenRead.hasAuthorizationHeader,
+        authorizationHeaderHasBearer: tokenRead.authorizationHeaderHasBearer,
+        hasSessionHeader: tokenRead.hasSessionHeader,
+        selectedTokenLength: accessToken.length,
+      }
+    }
+    const response = jsonResponse(401, body)
+    attachDebugHeaders(response, signingSecret, {
+      'x-cv-debug-reason': tokenVerification.reason,
+      'x-cv-debug-token-source': tokenRead.source,
+    })
+    context.res = response
     return
   }
 
@@ -131,10 +220,14 @@ export default async function (context: Context, req: HttpRequest) {
       }
     }
 
-    context.res = jsonResponse(200, data)
+    const response = jsonResponse(200, data)
+    attachDebugHeaders(response, signingSecret, { 'x-cv-debug-token-source': tokenRead.source })
+    context.res = response
   } catch (err) {
     context.log('Failed parsing PRIVATE_PROFILE_JSON', err)
-    context.res = jsonResponse(500, { error: 'CV data is invalid JSON.' })
+    const response = jsonResponse(500, { error: 'CV data is invalid JSON.' })
+    attachDebugHeaders(response, signingSecret, { 'x-cv-debug-reason': 'invalid_cv_json' })
+    context.res = response
   }
 }
 

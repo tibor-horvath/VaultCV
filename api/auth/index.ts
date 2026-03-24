@@ -38,6 +38,23 @@ function toBase64Url(input: string | Buffer) {
   return Buffer.from(input).toString('base64url')
 }
 
+function isDebugAuthEnabled() {
+  return (process.env.CV_DEBUG_AUTH ?? '').trim() === '1'
+}
+
+function signingKeyFingerprint(signingSecret: string) {
+  if (!signingSecret) return 'missing'
+  return crypto.createHash('sha256').update(signingSecret).digest('hex').slice(0, 12)
+}
+
+function attachDebugHeaders(response: { headers?: Record<string, string> }, signingSecret: string) {
+  if (!isDebugAuthEnabled()) return
+  response.headers = {
+    ...(response.headers ?? {}),
+    'x-cv-debug-signing-key-fp': signingKeyFingerprint(signingSecret),
+  }
+}
+
 function getSigningSecret() {
   return (process.env.CV_SESSION_SIGNING_KEY ?? '').trim()
 }
@@ -67,24 +84,34 @@ export default async function (context: Context, req: HttpRequest) {
   const signingSecret = getSigningSecret()
 
   if (!expected || !signingSecret) {
-    context.res = jsonResponse(500, { error: 'Server is not configured.' })
+    const response = jsonResponse(500, { error: 'Server is not configured.' })
+    attachDebugHeaders(response, signingSecret)
+    context.res = response
     return
   }
 
   if (!isGuidN(code)) {
-    context.res = jsonResponse(400, { error: 'Invalid token format.' })
+    const response = jsonResponse(400, { error: 'Invalid token format.' })
+    attachDebugHeaders(response, signingSecret)
+    context.res = response
     return
   }
 
   if (!isGuidN(expected)) {
-    context.res = jsonResponse(500, { error: 'Server token is invalid.' })
+    const response = jsonResponse(500, { error: 'Server token is invalid.' })
+    attachDebugHeaders(response, signingSecret)
+    context.res = response
     return
   }
 
   if (!constantTimeEqual(code, expected)) {
-    context.res = jsonResponse(401, { error: 'Unauthorized' })
+    const response = jsonResponse(401, { error: 'Unauthorized' })
+    attachDebugHeaders(response, signingSecret)
+    context.res = response
     return
   }
 
-  context.res = jsonResponse(200, { accessToken: issueSessionToken(getSessionTtlSeconds()) })
+  const response = jsonResponse(200, { accessToken: issueSessionToken(getSessionTtlSeconds()) })
+  attachDebugHeaders(response, signingSecret)
+  context.res = response
 }
