@@ -13,6 +13,7 @@ import {
   Moon,
   ShieldCheck,
   Sun,
+  Timer,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { FloatingBasicsMenu } from '../components/cv/FloatingBasicsMenu'
@@ -143,6 +144,18 @@ function useCvState(accessCode: string, locale: string) {
   return state
 }
 
+function pad2(value: number) {
+  return value.toString().padStart(2, '0')
+}
+
+function formatCountdown(totalSeconds: number) {
+  const clamped = Math.max(0, totalSeconds)
+  const hours = Math.floor(clamped / 3600)
+  const minutes = Math.floor((clamped % 3600) / 60)
+  const seconds = clamped % 60
+  return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`
+}
+
 function useBasicsVisibility(stateKind: CvRouteState['kind']) {
   const basicsSentinelRef = useRef<HTMLDivElement | null>(null)
   const [isBasicsInView, setIsBasicsInView] = useState(true)
@@ -222,9 +235,17 @@ export function CvRoute() {
 
   const faviconName = state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
   useDocumentFavicon(faviconName)
-  const unlockedUntilLabel =
+  const [countdownNow, setCountdownNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (state.kind !== 'ready' || !state.sessionExpiresAt) return
+    const interval = window.setInterval(() => setCountdownNow(Date.now()), 1000)
+    return () => window.clearInterval(interval)
+  }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined])
+
+  const unlockedCountdown =
     state.kind === 'ready' && state.sessionExpiresAt
-      ? `${t('unlockedUntil')} ${new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(state.sessionExpiresAt))}`
+      ? formatCountdown(Math.floor((new Date(state.sessionExpiresAt).getTime() - countdownNow) / 1000))
       : undefined
 
   const themeToggle = (
@@ -286,11 +307,20 @@ export function CvRoute() {
             <BasicsCard
               basics={state.cv.basics}
               links={state.cv.links}
-              unlockedUntilLabel={unlockedUntilLabel}
               headerRight={
-                <div className="inline-flex items-center gap-2">
-                  <LanguageSelector />
-                  {themeToggle}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="inline-flex items-center gap-2">
+                    <LanguageSelector />
+                    {themeToggle}
+                  </div>
+                  {unlockedCountdown ? (
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                      <Timer className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>
+                        {t('unlockedUntil')} {unlockedCountdown}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               }
             />
