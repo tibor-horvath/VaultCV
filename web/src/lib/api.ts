@@ -15,7 +15,7 @@ export type ApiErrorCode =
   | 'cv_data_invalid_json'
 
 export type ApiResult<T> =
-  | { ok: true; data: T }
+  | { ok: true; data: T; sessionExpiresAt?: string }
   | { ok: false; status: number; code: ApiErrorCode; details?: string }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -95,7 +95,11 @@ export async function fetchCv(token: string, locale: Locale): Promise<ApiResult<
     if (!isValidCvPayload(data)) {
       return { ok: false, status: 500, code: 'invalid_cv_payload' }
     }
-    return { ok: true, data }
+    const expHeader = res.headers.get('x-cv-session-exp')?.trim() ?? ''
+    const expSeconds = Number.parseInt(expHeader, 10)
+    const sessionExpiresAt =
+      Number.isFinite(expSeconds) && expSeconds > 0 ? new Date(expSeconds * 1000).toISOString() : undefined
+    return { ok: true, data, sessionExpiresAt }
   } catch {
     return { ok: false, status: 500, code: 'invalid_json_response' }
   }

@@ -29,6 +29,7 @@ type AccessTokenReadResult = {
 }
 
 const SESSION_COOKIE_NAME = 'cv_session'
+const SESSION_EXP_HEADER = 'x-cv-session-exp'
 
 function constantTimeEqual(a: string, b: string) {
   const aBuf = Buffer.from(a)
@@ -157,6 +158,10 @@ function jsonResponse(status: number, body: unknown) {
       'cache-control': 'no-store',
     },
     body,
+  } as {
+    status: number
+    headers: Record<string, string>
+    body: unknown
   }
 }
 
@@ -259,6 +264,10 @@ export default async function (context: Context, req: HttpRequest) {
     }
 
     const response = jsonResponse(200, data)
+    response.headers = {
+      ...(response.headers ?? {}),
+      [SESSION_EXP_HEADER]: String(tokenVerification.exp),
+    }
     attachDebugHeaders(response, signingSecret, { 'x-cv-debug-token-source': tokenRead.source })
     context.res = response
   } catch (err) {

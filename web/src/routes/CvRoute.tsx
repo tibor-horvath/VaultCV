@@ -43,7 +43,7 @@ type CvRouteState =
   | { kind: 'locked' }
   | { kind: 'loading' }
   | { kind: 'error'; messageKey: MessageKey; details?: string; status?: number }
-  | { kind: 'ready'; cv: CvData }
+  | { kind: 'ready'; cv: CvData; sessionExpiresAt?: string }
 
 const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
 
@@ -131,7 +131,7 @@ function useCvState(accessCode: string, locale: string) {
         })
         return
       }
-      setState({ kind: 'ready', cv: res.data })
+      setState({ kind: 'ready', cv: res.data, sessionExpiresAt: res.sessionExpiresAt })
     }
 
     run()
@@ -222,6 +222,10 @@ export function CvRoute() {
 
   const faviconName = state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
   useDocumentFavicon(faviconName)
+  const unlockedUntilLabel =
+    state.kind === 'ready' && state.sessionExpiresAt
+      ? `${t('unlockedUntil')} ${new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(state.sessionExpiresAt))}`
+      : undefined
 
   const themeToggle = (
     <button
@@ -282,6 +286,7 @@ export function CvRoute() {
             <BasicsCard
               basics={state.cv.basics}
               links={state.cv.links}
+              unlockedUntilLabel={unlockedUntilLabel}
               headerRight={
                 <div className="inline-flex items-center gap-2">
                   <LanguageSelector />

@@ -8,10 +8,12 @@ export function BasicsCard({
   basics,
   links,
   headerRight,
+  unlockedUntilLabel,
 }: {
   basics: CvBasics
   links?: CvLink[]
   headerRight?: ReactNode
+  unlockedUntilLabel?: string
 }) {
   const { role, chip } = parseBasicsHeadline(basics.headline)
 
@@ -42,6 +44,9 @@ export function BasicsCard({
                   <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {chip}
                 </div>
+              ) : null}
+              {unlockedUntilLabel ? (
+                <div className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">{unlockedUntilLabel}</div>
               ) : null}
             </div>
 
