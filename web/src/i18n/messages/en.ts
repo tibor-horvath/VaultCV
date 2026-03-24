@@ -44,6 +44,8 @@ export const enMessages = {
   cvDataInvalidJson: 'CV data is invalid JSON.',
   invalidCvPayload: 'Invalid CV payload received.',
   footerRights: 'All rights reserved.',
+  cookieDisclosure:
+    'This site uses a strictly necessary secure session cookie (cv_session) to keep CV access active after unlock. No analytics or marketing cookies are used.',
 }
 
 export type MessageCatalog = typeof enMessages

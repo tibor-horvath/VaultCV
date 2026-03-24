@@ -39,6 +39,7 @@ export function AppShell() {
           <p className="text-xs text-slate-500 dark:text-slate-400">
             &copy; {currentYear} Tibor Horvath. {t('footerRights')}
           </p>
+          <p className="max-w-3xl text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{t('cookieDisclosure')}</p>
         </div>
       </footer>
 

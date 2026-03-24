@@ -46,4 +46,6 @@ export const huMessages: Partial<MessageCatalog> = {
   cvDataInvalidJson: 'A CV adat JSON formátuma érvénytelen.',
   invalidCvPayload: 'Érvénytelen CV payload érkezett.',
   footerRights: 'Minden jog fenntartva.',
+  cookieDisclosure:
+    'Ez az oldal egy technikailag szükséges, biztonságos munkamenet cookie-t (cv_session) használ, hogy a CV-hozzáférés feloldás után aktív maradjon. Analitikai vagy marketing cookie-kat nem használ.',
 }
