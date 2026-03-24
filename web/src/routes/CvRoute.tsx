@@ -13,7 +13,6 @@ import {
   Moon,
   ShieldCheck,
   Sun,
-  Timer,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { FloatingBasicsMenu } from '../components/cv/FloatingBasicsMenu'
@@ -21,6 +20,7 @@ import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
 import { ProjectsGrid } from '../components/cv/ProjectsGrid'
 import { Section } from '../components/cv/Section'
+import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { SkillsChips } from '../components/cv/SkillsChips'
 import { SiGoogleIcon } from '../components/icons/SimpleBrandIcons'
 import { exchangeAccessCode, fetchCv, type ApiErrorCode } from '../lib/api'
@@ -250,10 +250,21 @@ export function CvRoute() {
     return () => window.clearInterval(interval)
   }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined])
 
-  const unlockedCountdown =
+  const remainingSeconds =
     state.kind === 'ready' && state.sessionExpiresAt
-      ? formatCountdown(Math.floor((new Date(state.sessionExpiresAt).getTime() - countdownNow) / 1000))
+      ? Math.floor((new Date(state.sessionExpiresAt).getTime() - countdownNow) / 1000)
       : undefined
+  const unlockedCountdown = remainingSeconds !== undefined ? formatCountdown(remainingSeconds) : undefined
+  const isSessionLocked = remainingSeconds !== undefined && remainingSeconds <= 0
+
+  useEffect(() => {
+    if (state.kind !== 'ready') return
+    if (!state.sessionExpiresAt) return
+    if (!isSessionLocked) return
+    clearStoredAccessCode()
+    clearStoredAccessToken()
+    navigate(buildLocalizedPath('/', '', locale), { replace: true })
+  }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined, isSessionLocked, navigate, locale])
 
   const themeToggle = (
     <button
@@ -266,6 +277,16 @@ export function CvRoute() {
       {theme === 'dark' ? t('themeLight') : t('themeDark')}
     </button>
   )
+  const unlockedStatus =
+    unlockedCountdown ? (
+      <SessionStatusBadge
+        isLocked={isSessionLocked}
+        lockedText={t('lockedUntilCode')}
+        unlockedText={`${t('unlockedUntil')}: ${unlockedCountdown}`}
+        size="xs"
+        minWidthClass="min-w-[13.5rem]"
+      />
+    ) : null
 
   return (
     <div className="space-y-6 lg:pt-20">
@@ -314,30 +335,11 @@ export function CvRoute() {
             <BasicsCard
               basics={state.cv.basics}
               links={state.cv.links}
-              mobileTop={
-                unlockedCountdown ? (
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <Timer className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span className="whitespace-nowrap">
-                      {t('unlockedUntil')}: {unlockedCountdown}
-                    </span>
-                  </div>
-                ) : null
-              }
+              topStatus={unlockedStatus}
               headerRight={
-                <div className="flex flex-col items-end gap-2">
-                  <div className="inline-flex items-center gap-2">
-                    <LanguageSelector />
-                    {themeToggle}
-                  </div>
-                  {unlockedCountdown ? (
-                    <div className="hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-300 sm:inline-flex">
-                      <Timer className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span className="whitespace-nowrap">
-                          {t('unlockedUntil')}: {unlockedCountdown}
-                      </span>
-                    </div>
-                  ) : null}
+                <div className="flex items-center gap-2">
+                  <LanguageSelector />
+                  {themeToggle}
                 </div>
               }
             />

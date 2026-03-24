@@ -8,18 +8,18 @@ export function BasicsCard({
   basics,
   links,
   headerRight,
-  mobileTop,
+  topStatus,
 }: {
   basics: CvBasics
   links?: CvLink[]
   headerRight?: ReactNode
-  mobileTop?: ReactNode
+  topStatus?: ReactNode
 }) {
   const { role, chip } = parseBasicsHeadline(basics.headline)
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-      {mobileTop ? <div className="mb-3 sm:hidden">{mobileTop}</div> : null}
+      {topStatus ? <div className="mb-3 flex w-full justify-center">{topStatus}</div> : null}
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <div className="mx-auto flex-shrink-0 sm:mx-0">
           <img

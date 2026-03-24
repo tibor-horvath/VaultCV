@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, ShieldCheck, Sun, Target } from 'lucide-react'
+import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, Sun, Target } from 'lucide-react'
 import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
+import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
 import { useDocumentFavicon } from '../lib/favicon'
 import { buildLocalizedPath, useI18n } from '../lib/i18n'
@@ -189,10 +190,13 @@ export function LandingRoute() {
               </button>
             )}
 
-            <div className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <ShieldCheck className="h-4 w-4 opacity-80" />
-              {isUnlocked ? <>{t('accessDetected')}</> : <>{t('lockedUntilCode')}</>}
-            </div>
+            <SessionStatusBadge
+              isLocked={!isUnlocked}
+              lockedText={t('lockedUntilCode')}
+              unlockedText={t('accessDetected')}
+              size="sm"
+              minWidthClass="min-w-0"
+            />
           </div>
         </div>
       </div>
