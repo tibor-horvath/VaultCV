@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, ShieldCheck, Sun, Target } from 'lucide-react'
 import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
@@ -8,6 +8,7 @@ import { buildLocalizedPath, useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
+import { fetchCv } from '../lib/api'
 
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -16,6 +17,7 @@ function getPublicText(value: string | undefined, fallback: string) {
 
 export function LandingRoute() {
   const { locale, t } = useI18n()
+  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const [params] = useSearchParams()
   const urlToken = params.get('t') ?? ''
@@ -55,6 +57,21 @@ export function LandingRoute() {
     return fromInput
   }, [tokenInput, urlToken])
   const isUnlocked = Boolean(effectiveToken)
+
+  useEffect(() => {
+    if (urlToken.trim()) return
+    if (tokenInput.trim()) return
+    let cancelled = false
+    async function checkExistingSession() {
+      const cvRes = await fetchCv('', locale)
+      if (cancelled || !cvRes.ok) return
+      navigate(buildLocalizedPath('/cv', '', locale), { replace: true })
+    }
+    checkExistingSession()
+    return () => {
+      cancelled = true
+    }
+  }, [locale, navigate, tokenInput, urlToken])
 
   return (
     <div className="mx-auto w-full max-w-3xl">

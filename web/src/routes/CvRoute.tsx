@@ -316,12 +316,12 @@ export function CvRoute() {
               links={state.cv.links}
               headerRight={
                 <div className="flex flex-col items-end gap-2">
-                  <div className="inline-flex items-center gap-2">
+                  <div className="order-2 inline-flex items-center gap-2 sm:order-1">
                     <LanguageSelector />
                     {themeToggle}
                   </div>
                   {unlockedCountdown ? (
-                    <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <div className="order-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-300 sm:order-2">
                       <Timer className="h-3.5 w-3.5" aria-hidden="true" />
                       <span>
                         {t('unlockedUntil')} {unlockedCountdown}
