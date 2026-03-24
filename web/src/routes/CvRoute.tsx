@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   BriefcaseBusiness,
   Calendar,
@@ -27,7 +27,7 @@ import { exchangeAccessCode, fetchCv, type ApiErrorCode } from '../lib/api'
 import { fetchPublicProfile } from '../lib/publicProfile'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
 import { useDocumentFavicon } from '../lib/favicon'
-import { useI18n } from '../lib/i18n'
+import { buildLocalizedPath, useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
 import type { MessageKey } from '../i18n/messages'
 import { useTheme } from '../lib/themeContext'
@@ -42,6 +42,7 @@ import {
 
 type CvRouteState =
   | { kind: 'locked' }
+  | { kind: 'expired' }
   | { kind: 'loading' }
   | { kind: 'error'; messageKey: MessageKey; details?: string; status?: number }
   | { kind: 'ready'; cv: CvData; sessionExpiresAt?: string }
@@ -120,7 +121,7 @@ function useCvState(accessCode: string, locale: string) {
           clearStoredAccessCode()
           clearStoredAccessToken()
           if (!accessCode) {
-            setState({ kind: 'locked' })
+            setState({ kind: 'expired' })
             return
           }
         }
@@ -213,6 +214,7 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
 
 export function CvRoute() {
   const { locale, t } = useI18n()
+  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const [params] = useSearchParams()
   const urlToken = params.get('t')?.trim() ?? ''
@@ -232,6 +234,11 @@ export function CvRoute() {
     const nextUrl = `${window.location.pathname}${window.location.hash}`
     window.history.replaceState(null, '', nextUrl)
   }, [urlToken])
+
+  useEffect(() => {
+    if (state.kind !== 'expired') return
+    navigate(buildLocalizedPath('/', '', locale), { replace: true })
+  }, [state.kind, navigate, locale])
 
   const faviconName = state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
   useDocumentFavicon(faviconName)

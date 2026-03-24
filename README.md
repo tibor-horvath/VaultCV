@@ -5,7 +5,7 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 **New to this? Start here:** VaultCV is a personal CV website you self-host on Azure. Your CV content stays private on the server — visitors only see your name and a prompt to enter an access code. You share a private link (or QR code) that contains the code, so only people you choose can read your full CV.
 
 - The static site (`web/`) is a "locked by default" shell.
-- The private CV JSON is returned by an API (`/api/cv`) **only** when a valid short-lived bearer token is provided.
+- The private CV JSON is returned by an API (`/api/cv`) **only** when a valid short-lived signed session token is provided.
 
 ## How it works (plain English)
 
@@ -13,7 +13,9 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 2. You deploy this app to Azure Static Web Apps (free tier). It hosts the website and the API together.
 3. You generate a random secret token and store it in Azure too.
 4. Your shareable link looks like `https://your-site.azurestaticapps.net/cv?t=YOUR_TOKEN`.
-5. The app exchanges that access code using `POST /api/auth` (JSON body) for a short-lived bearer token, then loads CV data from `/api/cv` using the `Authorization` header.
+5. The app exchanges that access code using `POST /api/auth` (JSON body) for a short-lived signed session token.
+6. `/api/auth` also sets a secure `HttpOnly` cookie (`cv_session`) so revisits can stay unlocked until expiry.
+7. The app loads CV data from `/api/cv` using `x-cv-session-token` (and the API can also read the `cv_session` cookie).
 
 ## Repo structure
 
@@ -25,7 +27,14 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 
 ## Security model (important)
 
-This is **real server-side enforcement**: without a valid bearer token, the CV API returns 401 (access denied) and the website cannot load your CV data at all.
+This is **real server-side enforcement**: without a valid signed session token, the CV API returns 401 (access denied) and the website cannot load your CV data at all.
+
+Session details:
+
+- Session cookie name: `cv_session`
+- Cookie flags: `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`
+- Expiry: controlled by `CV_SESSION_TTL_SECONDS` (default `3600`)
+- UX behavior: when the session expires, `/cv` redirects back to the landing page
 
 The shared `?t=` access code still behaves like a bearer secret: anyone you share it with can forward it. If you need identity-based, non-shareable access later, switch to Azure AD / Azure AD B2C authentication.
 
@@ -289,6 +298,7 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 |---|---|---|
 | GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
 | API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your `/cv?t=...` URL exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
+| API returns 401 and debug shows `signature_mismatch` while headers are present | Wrong token source selected (often a platform-injected `Authorization` bearer token) | Ensure client sends `x-cv-session-token` (already default in this repo) and prefer `x-cv-session-token`/cookie over `Authorization` in API token resolution. |
 | API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
 | Landing page shows no profile details | Missing public profile | Check that `PUBLIC_PROFILE_JSON` is set in Azure settings, or that `web/public/public-profile.json` is present. |
 | Profile photo not loading | Invalid URL or expired SAS token | Regenerate a SAS token in Azure Storage and update `PROFILE_PHOTO_SAS_TOKEN`. |
@@ -302,10 +312,11 @@ Your shareable access link should look like:
 
 You can turn this into a QR code using any free QR generator (search "free QR code generator"). Print it on a business card or add it to your paper CV.
 
-The SPA uses the code like this:
+The SPA/API auth flow uses the code like this:
 
-- `POST /api/auth` with body `{"code":"<TOKEN>"}` to obtain a short-lived bearer token
-- `GET /api/cv?lang=<locale>` with `Authorization: Bearer <accessToken>`
+- `POST /api/auth` with body `{"code":"<TOKEN>"}` to obtain a short-lived signed session token
+- `POST /api/auth` sets `Set-Cookie: cv_session=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=<ttl>`
+- `GET /api/cv?lang=<locale>` with `x-cv-session-token: <accessToken>` (or cookie-based session on revisit)
 
 ## 6‑month access code rotation (manual)
 
