@@ -84,6 +84,16 @@ function readBearerToken(authHeader: string | undefined) {
 function readAccessToken(req: HttpRequest): AccessTokenReadResult {
   const authorizationHeader = getHeaderInsensitive(req.headers, 'authorization')
   const sessionHeader = getHeaderInsensitive(req.headers, 'x-cv-session-token')
+  const sessionToken = sessionHeader?.trim() ?? ''
+  if (sessionToken) {
+    return {
+      token: sessionToken,
+      source: 'x-cv-session-token',
+      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
+      authorizationHeaderHasBearer: Boolean(readBearerToken(authorizationHeader)),
+      hasSessionHeader: true,
+    }
+  }
   const bearer = readBearerToken(authorizationHeader)
   if (bearer) {
     return {
@@ -92,16 +102,6 @@ function readAccessToken(req: HttpRequest): AccessTokenReadResult {
       hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
       authorizationHeaderHasBearer: true,
       hasSessionHeader: Boolean(sessionHeader?.trim()),
-    }
-  }
-  const sessionToken = sessionHeader?.trim() ?? ''
-  if (sessionToken) {
-    return {
-      token: sessionToken,
-      source: 'x-cv-session-token',
-      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
-      authorizationHeaderHasBearer: false,
-      hasSessionHeader: true,
     }
   }
   return {
