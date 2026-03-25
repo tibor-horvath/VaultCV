@@ -236,7 +236,10 @@ export function CvRoute() {
     if (!urlToken) return
     setStoredAccessCode(urlToken)
     clearStoredAccessToken()
-    const nextUrl = `${window.location.pathname}${window.location.hash}`
+    const url = new URL(window.location.href)
+    url.searchParams.delete('t')
+    const qs = url.searchParams.toString()
+    const nextUrl = `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`
     window.history.replaceState(null, '', nextUrl)
   }, [urlToken])
 

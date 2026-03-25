@@ -8,7 +8,7 @@ import { useDocumentFavicon } from '../lib/favicon'
 import { buildLocalizedPath, useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useTheme } from '../lib/themeContext'
-import { setStoredAccessCode } from '../lib/accessSession'
+import { getStoredAccessToken, setStoredAccessCode } from '../lib/accessSession'
 import { fetchCv } from '../lib/api'
 
 function getPublicText(value: string | undefined, fallback: string) {
@@ -66,7 +66,9 @@ export function LandingRoute() {
     if (tokenInput.trim()) return
     let cancelled = false
     async function checkExistingSession() {
-      const cvRes = await fetchCv('', locale)
+      const storedToken = getStoredAccessToken().trim()
+      if (!storedToken) return
+      const cvRes = await fetchCv(storedToken, locale)
       if (cancelled || !cvRes.ok) return
       navigate(buildLocalizedPath('/cv', '', locale), { replace: true })
     }
