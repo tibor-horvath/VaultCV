@@ -37,3 +37,9 @@
     @apply bg-sky-200/70 text-slate-900 dark:bg-sky-400/35 dark:text-slate-50;
   }
 }
+
+/* Hide built-in password reveal/clear icons (Edge/IE) */
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
+}
