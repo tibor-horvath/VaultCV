@@ -45,6 +45,7 @@ function toBase64Url(input: string | Buffer) {
 }
 
 function isDebugAuthEnabled() {
+  if ((process.env.NODE_ENV ?? '').trim().toLowerCase() === 'production') return false
   return (process.env.CV_DEBUG_AUTH ?? '').trim() === '1'
 }
 

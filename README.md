@@ -15,7 +15,7 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 4. Your shareable link looks like `https://your-site.azurestaticapps.net/cv?t=YOUR_TOKEN`.
 5. The app exchanges that access code using `POST /api/auth` (JSON body) for a short-lived signed session token.
 6. `/api/auth` also sets a secure `HttpOnly` cookie (`cv_session`) so revisits can stay unlocked until expiry.
-7. The app loads CV data from `/api/cv` using `x-cv-session-token` (and the API can also read the `cv_session` cookie).
+7. The app loads CV data from `/api/cv` using the `cv_session` cookie (set by `/api/auth`). The cookie is `HttpOnly`, so the browser sends it automatically; JS never reads the session token.
 
 ## Repo structure
 
@@ -298,7 +298,7 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 |---|---|---|
 | GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
 | API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your `/cv?t=...` URL exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
-| API returns 401 and debug shows `signature_mismatch` while headers are present | Wrong token source selected (often a platform-injected `Authorization` bearer token) | Ensure client sends `x-cv-session-token` (already default in this repo) and prefer `x-cv-session-token`/cookie over `Authorization` in API token resolution. |
+| API returns 401 and debug shows `signature_mismatch` while headers are present | Wrong token source selected (often a platform-injected `Authorization` bearer token) | Prefer the `cv_session` cookie over `Authorization` in API token resolution. |
 | API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
 | Landing page shows no profile details | Missing public profile | Check that `PUBLIC_PROFILE_JSON` is set in Azure settings, or that `web/public/public-profile.json` is present. |
 | Profile photo not loading | Invalid URL or expired SAS token | Regenerate a SAS token in Azure Storage and update `PROFILE_PHOTO_SAS_TOKEN`. |
@@ -316,7 +316,7 @@ The SPA/API auth flow uses the code like this:
 
 - `POST /api/auth` with body `{"code":"<TOKEN>"}` to obtain a short-lived signed session token
 - `POST /api/auth` sets `Set-Cookie: cv_session=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=<ttl>`
-- `GET /api/cv?lang=<locale>` with `x-cv-session-token: <accessToken>` (or cookie-based session on revisit)
+- `GET /api/cv?lang=<locale>` using the `cv_session` cookie (sent automatically by the browser)
 
 ## 6‑month access code rotation (manual)
 

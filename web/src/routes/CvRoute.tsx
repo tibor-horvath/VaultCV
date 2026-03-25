@@ -33,11 +33,8 @@ import type { MessageKey } from '../i18n/messages'
 import { useTheme } from '../lib/themeContext'
 import {
   clearStoredAccessCode,
-  clearStoredAccessToken,
   getStoredAccessCode,
-  getStoredAccessToken,
   setStoredAccessCode,
-  setStoredAccessToken,
 } from '../lib/accessSession'
 
 type CvRouteState =
@@ -96,8 +93,8 @@ function useCvState(accessCode: string, locale: string) {
     let cancelled = false
     async function run() {
       setState({ kind: 'loading' })
-      let accessToken = getStoredAccessToken().trim()
-      if (!accessToken && accessCode) {
+      let tokenForFetch = ''
+      if (accessCode) {
         const exchangeRes = await exchangeAccessCode(accessCode)
         if (cancelled) return
         if (!exchangeRes.ok) {
@@ -109,17 +106,15 @@ function useCvState(accessCode: string, locale: string) {
           })
           return
         }
-        accessToken = exchangeRes.data.accessToken
-        setStoredAccessToken(accessToken)
+        tokenForFetch = exchangeRes.data.accessToken
       }
 
-      const res = await fetchCv(accessToken, locale)
+      const res = await fetchCv(tokenForFetch, locale)
       if (cancelled) return
 
       if (!res.ok) {
         if (res.code === 'unauthorized') {
           clearStoredAccessCode()
-          clearStoredAccessToken()
           setState({ kind: 'expired' })
           return
         }
@@ -131,6 +126,7 @@ function useCvState(accessCode: string, locale: string) {
         })
         return
       }
+      clearStoredAccessCode()
       setState({ kind: 'ready', cv: res.data, sessionExpiresAt: res.sessionExpiresAt })
     }
 
@@ -228,14 +224,12 @@ export function CvRoute() {
   useEffect(() => {
     if (urlToken) return
     if (getStoredAccessCode().trim()) return
-    if (getStoredAccessToken().trim()) return
     navigate(buildLocalizedPath('/', '', locale), { replace: true })
   }, [locale, navigate, urlToken])
 
   useEffect(() => {
     if (!urlToken) return
     setStoredAccessCode(urlToken)
-    clearStoredAccessToken()
     const url = new URL(window.location.href)
     url.searchParams.delete('t')
     const qs = url.searchParams.toString()
@@ -270,7 +264,6 @@ export function CvRoute() {
     if (!state.sessionExpiresAt) return
     if (!isSessionLocked) return
     clearStoredAccessCode()
-    clearStoredAccessToken()
     navigate(buildLocalizedPath('/', '', locale), { replace: true })
   }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined, isSessionLocked, navigate, locale])
 
@@ -308,7 +301,6 @@ export function CvRoute() {
             type="button"
             onClick={() => {
               clearStoredAccessCode()
-              clearStoredAccessToken()
             }}
             className="mt-3 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >

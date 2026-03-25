@@ -3,14 +3,10 @@ import type { ApiClient, ApiErrorCode, ApiResult } from './apiTypes'
 import { isValidCvPayload, mapServerMessageToCode } from './apiTypes'
 
 export class RealApiClient implements ApiClient {
-  async fetchCv(token: string, locale: string): Promise<ApiResult<LocalizedCvData>> {
+  async fetchCv(_token: string, locale: string): Promise<ApiResult<LocalizedCvData>> {
     const url = `/api/cv?lang=${encodeURIComponent(locale)}`
-    const tokenValue = token.trim()
     const headers: Record<string, string> = {
       accept: 'application/json',
-    }
-    if (tokenValue) {
-      headers['x-cv-session-token'] = tokenValue
     }
 
     let res: Response
