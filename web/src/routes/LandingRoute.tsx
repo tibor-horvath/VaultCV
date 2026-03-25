@@ -59,6 +59,7 @@ export function LandingRoute() {
     return fromInput
   }, [tokenInput, urlToken])
   const isUnlocked = Boolean(effectiveToken)
+  const isAccessDetected = Boolean(urlToken.trim())
 
   useEffect(() => {
     if (urlToken.trim()) return
@@ -206,7 +207,7 @@ export function LandingRoute() {
             )}
 
             <SessionStatusBadge
-              isLocked={!isUnlocked}
+              isLocked={!isAccessDetected}
               lockedText={t('lockedUntilCode')}
               unlockedText={t('accessDetected')}
               size="sm"
