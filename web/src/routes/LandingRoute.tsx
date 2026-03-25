@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight, KeyRound, LibraryBig, MapPin, Moon, Sun, Target } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, KeyRound, LibraryBig, MapPin, Moon, Sun, Target } from 'lucide-react'
 import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
 import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
@@ -23,6 +23,7 @@ export function LandingRoute() {
   const [params] = useSearchParams()
   const urlToken = params.get('t') ?? ''
   const [tokenInput, setTokenInput] = useState('')
+  const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [publicData, setPublicData] = useState<PublicData>(defaultPublicData)
   const [publicLoading, setPublicLoading] = useState(true)
   useEffect(() => {
@@ -157,15 +158,29 @@ export function LandingRoute() {
               <label className="sr-only" htmlFor="token">
                 {t('accessCode')}
               </label>
-              <input
-                id="token"
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-                placeholder={t('pasteAccessCode')}
-                inputMode="text"
-                autoComplete="off"
-                className="w-full rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-slate-600"
-              />
+              <div className="relative w-full">
+                <input
+                  id="token"
+                  type={isTokenVisible ? 'text' : 'password'}
+                  value={tokenInput}
+                  onChange={(e) => setTokenInput(e.target.value)}
+                  placeholder={t('pasteAccessCode')}
+                  inputMode="text"
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-slate-200/70 bg-white py-2.5 pl-4 pr-11 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-slate-600"
+                />
+                {tokenInput.trim().length ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsTokenVisible((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900/70 dark:hover:text-slate-200"
+                    aria-label={isTokenVisible ? 'Hide access code' : 'Show access code'}
+                    aria-pressed={isTokenVisible}
+                  >
+                    {isTokenVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                ) : null}
+              </div>
             </div>
           ) : null}
 
