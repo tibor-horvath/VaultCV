@@ -120,10 +120,8 @@ function useCvState(accessCode: string, locale: string) {
         if (res.code === 'unauthorized') {
           clearStoredAccessCode()
           clearStoredAccessToken()
-          if (!accessCode) {
-            setState({ kind: 'expired' })
-            return
-          }
+          setState({ kind: 'expired' })
+          return
         }
         setState({
           kind: 'error',
@@ -226,6 +224,13 @@ export function CvRoute() {
   useEffect(() => {
     document.title = publicName
   }, [publicName])
+
+  useEffect(() => {
+    if (urlToken) return
+    if (getStoredAccessCode().trim()) return
+    if (getStoredAccessToken().trim()) return
+    navigate(buildLocalizedPath('/', '', locale), { replace: true })
+  }, [locale, navigate, urlToken])
 
   useEffect(() => {
     if (!urlToken) return
