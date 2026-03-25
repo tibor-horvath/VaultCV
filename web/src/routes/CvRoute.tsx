@@ -88,10 +88,19 @@ function usePublicName(locale: string) {
 
 function useCvState(accessCode: string, locale: string) {
   const [state, setState] = useState<CvRouteState>({ kind: 'loading' })
+  const stateRef = useRef(state)
+
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
 
   useEffect(() => {
     let cancelled = false
     async function run() {
+      // If we already unlocked successfully and then the access code was cleared,
+      // don't re-run the unlock/fetch cycle. This prevents a loading/ready flash
+      // (and potential redirect bounce near session boundaries).
+      if (!accessCode && stateRef.current.kind === 'ready') return
       setState({ kind: 'loading' })
       let tokenForFetch = ''
       if (accessCode) {
