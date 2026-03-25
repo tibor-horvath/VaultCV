@@ -283,6 +283,7 @@ export function CvRoute() {
         isLocked={isSessionLocked}
         lockedText={t('lockedUntilCode')}
         unlockedText={`${t('unlockedUntil')}: ${unlockedCountdown}`}
+        expiresInSeconds={remainingSeconds}
         size="xs"
         minWidthClass="min-w-[13.5rem]"
       />
