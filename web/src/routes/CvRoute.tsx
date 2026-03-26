@@ -231,12 +231,6 @@ export function CvRoute() {
   }, [publicName])
 
   useEffect(() => {
-    if (urlToken) return
-    if (getStoredAccessCode().trim()) return
-    navigate(buildLocalizedPath('/', '', locale), { replace: true })
-  }, [locale, navigate, urlToken])
-
-  useEffect(() => {
     if (!urlToken) return
     setStoredAccessCode(urlToken)
     const url = new URL(window.location.href)
