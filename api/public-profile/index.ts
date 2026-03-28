@@ -1,3 +1,4 @@
+import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
 import { normalizeLocale, readLocalizedEnvJson } from '../lib/localeRegistry'
 
 type Context = {
@@ -11,6 +12,7 @@ type Context = {
 
 type HttpRequest = {
   query?: Record<string, string | undefined>
+  headers?: Record<string, string | undefined>
 }
 
 function jsonResponse(status: number, body: unknown) {
@@ -25,7 +27,8 @@ function jsonResponse(status: number, body: unknown) {
 }
 
 export default async function (context: Context, req: HttpRequest) {
-  const requestedLocale = normalizeLocale(req.query?.lang)
+  const acceptLanguage = getHeaderInsensitive(req.headers, 'accept-language')
+  const requestedLocale = normalizeLocale(firstLanguageTagFromAcceptLanguage(acceptLanguage))
   const { raw, resolvedLocale } = readLocalizedEnvJson('PUBLIC_PROFILE_JSON', requestedLocale)
 
   if (!raw) {

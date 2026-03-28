@@ -12,7 +12,7 @@ A modern React CV SPA where **personal CV data is never bundled into the public 
 1. You write your CV data as a JSON string and store it as a secret setting in Azure — it never lives in this repo.
 2. You deploy this app to Azure Static Web Apps (free tier). It hosts the website and the API together.
 3. You generate a random secret token and store it in Azure too.
-4. Your shareable link looks like `https://your-site.azurestaticapps.net/cv?t=YOUR_TOKEN`.
+4. Your shareable link looks like `https://your-site.azurestaticapps.net/?t=YOUR_TOKEN`. Optionally add `&lang=<locale>` (e.g. `&lang=de`) so the recipient opens the UI and CV content in that language — `lang` is only read when `t` is present.
 5. The app exchanges that access code using `POST /api/auth` (JSON body) for a short-lived signed session token.
 6. `/api/auth` also sets a secure `HttpOnly` cookie (`cv_session`) so revisits can stay unlocked until expiry.
 7. The app loads CV data from `/api/cv` using the `cv_session` cookie (set by `/api/auth`). The cookie is `HttpOnly`, so the browser sends it automatically; JS never reads the session token.
@@ -34,7 +34,7 @@ Session details:
 - Session cookie name: `cv_session`
 - Cookie flags: `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`
 - Expiry: controlled by `CV_SESSION_TTL_SECONDS` (default `3600`)
-- UX behavior: when the session expires, `/cv` redirects back to the landing page
+- UX behavior: when the session expires, the app returns to the landing page (same origin, root URL)
 
 The shared `?t=` access code still behaves like a bearer secret: anyone you share it with can forward it. If you need identity-based, non-shareable access later, switch to Azure AD / Azure AD B2C authentication.
 
@@ -70,7 +70,7 @@ VaultCV supports two localization layers:
 
 ### Locale selection and fallback
 
-- Active locale comes from this order: URL `lang` query -> `localStorage` -> browser language.
+- Active locale comes from this order: **share link** `?t=...&lang=...` (both query params together — forces that locale for the visit) → `localStorage` (remembered choice) → browser language. A standalone `?lang=` without `t` is ignored so ad‑hoc links cannot override locale. The chosen locale is sent to APIs via the HTTP `Accept-Language` header. After the access token is consumed on the CV screen, `t` and `lang` are removed from the address bar; the locale remains stored for the session.
 - Supported locales are configured by API runtime env var `SUPPORTED_LOCALES` (comma-separated, e.g. `en,hu,de`) and served by `GET /api/locales`.
 - Locale fallback follows `exact -> base -> en` (example: `de-AT -> de -> en`).
 
@@ -290,14 +290,14 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 
 1. In the Azure Portal, open your Static Web App and copy the **URL** from the overview page (e.g. `https://nice-river-abc123.azurestaticapps.net`).
 2. Open the URL in your browser — you should see the landing page with your name and title.
-3. Open `https://<your-site>/cv?t=<CV_ACCESS_TOKEN>` to confirm the full CV unlocks correctly.
+3. Open `https://<your-site>/?t=<CV_ACCESS_TOKEN>` to confirm the full CV unlocks correctly (paste the token or use the link; then open the CV from the landing page). Optionally try `?t=<CV_ACCESS_TOKEN>&lang=<locale>` to confirm the forced language.
 
 ### Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
-| API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your `/cv?t=...` URL exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
+| API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your shareable link (`/?t=...`) exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
 | API returns 401 and debug shows `signature_mismatch` while headers are present | Wrong token source selected (often a platform-injected `Authorization` bearer token) | Prefer the `cv_session` cookie over `Authorization` in API token resolution. |
 | API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
 | Landing page shows no profile details | Missing public profile | Check that `PUBLIC_PROFILE_JSON` is set in Azure settings, or that `web/public/public-profile.json` is present. |
@@ -308,7 +308,8 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 
 Your shareable access link should look like:
 
-- `https://<your-site>/cv?t=<TOKEN>`
+- `https://<your-site>/?t=<TOKEN>`
+- Optional — fixed language for the recipient (must use the same link as the token): `https://<your-site>/?t=<TOKEN>&lang=<locale>` (example: `lang=de` for German UI and localized CV/public profile content when configured)
 
 You can turn this into a QR code using any free QR generator (search "free QR code generator"). Print it on a business card or add it to your paper CV.
 
@@ -316,7 +317,8 @@ The SPA/API auth flow uses the code like this:
 
 - `POST /api/auth` with body `{"code":"<TOKEN>"}` to obtain a short-lived signed session token
 - `POST /api/auth` sets `Set-Cookie: cv_session=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=<ttl>`
-- `GET /api/cv?lang=<locale>` using the `cv_session` cookie (sent automatically by the browser)
+- `GET /api/cv` with the `cv_session` cookie (sent automatically by the browser) and an `Accept-Language` request header for locale selection (the React app sets this from the UI language picker)
+- `GET /api/public-profile` uses the same `Accept-Language` pattern for localized public profile JSON
 
 ## 6‑month access code rotation (manual)
 
@@ -336,7 +338,7 @@ openssl rand -hex 32
 ```
 
 - **2) Update `CV_ACCESS_TOKEN`** in your Azure Static Web App's **Settings → Environment variables**.
-- **3) Update your shareable link** — your old `/cv?t=<OLD_TOKEN>` links will stop working. Update any printed CVs, emails, or QR codes with the new `/cv?t=<NEW_TOKEN>` value.
+- **3) Update your shareable link** — your old `/?t=<OLD_TOKEN>` links will stop working. Update any printed CVs, emails, or QR codes with the new `/?t=<NEW_TOKEN>` value.
 - **4) Keep `CV_SESSION_SIGNING_KEY` separate** from `CV_ACCESS_TOKEN`; rotate it independently if needed.
 - **5) Optional:** set `CV_SESSION_TTL_SECONDS` (default `3600`) to tune session duration.
 

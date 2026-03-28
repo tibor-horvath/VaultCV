@@ -17,6 +17,7 @@ export const deMessages: Partial<MessageCatalog> = {
   themeDark: 'Dunkel',
   locked: 'Gesperrt',
   lockedHintPrefix: 'Scanne deinen QR-Code, um diese Seite mit einem Token-Parameter zu öffnen:',
+  lockedHintLangOptional: 'optional: &lang=<locale> anhängen (z. B. de, hu) für diese Sprache',
   loadingCv: 'Token wird geprüft und Lebenslauf wird geladen...',
   unlockedUntil: 'Freigeschaltet bis',
   unableToLoad: 'Kann nicht geladen werden',

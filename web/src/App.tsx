@@ -1,15 +1,11 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { AppShell } from './app/AppShell'
-import { CvRoute } from './routes/CvRoute'
-import { LandingRoute } from './routes/LandingRoute'
+import { RootRoute } from './routes/RootRoute'
 
 const router = createBrowserRouter([
   {
     element: <AppShell />,
-    children: [
-      { path: '/', element: <LandingRoute /> },
-      { path: '/cv', element: <CvRoute /> },
-    ],
+    children: [{ path: '/', element: <RootRoute /> }],
   },
 ])
 

@@ -15,6 +15,7 @@ export const enMessages = {
   themeDark: 'Dark',
   locked: 'Locked',
   lockedHintPrefix: 'Scan your QR code to open this page with a token parameter:',
+  lockedHintLangOptional: 'optional: add &lang=<locale> (e.g. de, hu) to open in that language',
   loadingCv: 'Verifying token and loading CV...',
   unlockedUntil: 'Unlocked until',
   unableToLoad: 'Unable to load',

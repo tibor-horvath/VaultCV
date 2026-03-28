@@ -87,9 +87,9 @@ function localeCandidates(locale: Locale) {
 
 export async function fetchPublicProfile(locale: Locale): Promise<Partial<PublicData>> {
   try {
-    const apiRes = await fetch(`/api/public-profile?lang=${encodeURIComponent(locale)}`, {
+    const apiRes = await fetch('/api/public-profile', {
       method: 'GET',
-      headers: { accept: 'application/json' },
+      headers: { accept: 'application/json', 'accept-language': locale },
     })
     if (apiRes.ok) return normalizePublicData((await apiRes.json()) as unknown)
   } catch {

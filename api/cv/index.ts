@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
 import { normalizeLocale, readLocalizedEnvJson } from '../lib/localeRegistry'
 
 type Context = {
@@ -67,15 +68,6 @@ function verifySessionToken(token: string): TokenVerificationResult {
   } catch {
     return { ok: false, reason: 'invalid_payload' }
   }
-}
-
-function getHeaderInsensitive(headers: Record<string, string | undefined> | undefined, name: string) {
-  if (!headers) return undefined
-  const lower = name.toLowerCase()
-  for (const [k, v] of Object.entries(headers)) {
-    if (k.toLowerCase() === lower && typeof v === 'string') return v
-  }
-  return undefined
 }
 
 function readBearerToken(authHeader: string | undefined) {
@@ -201,7 +193,8 @@ function attachDebugHeaders(
 export default async function (context: Context, req: HttpRequest) {
   const tokenRead = readAccessToken(req)
   const accessToken = tokenRead.token
-  const requestedLocale = normalizeLocale(req.query?.lang)
+  const acceptLanguage = getHeaderInsensitive(req.headers, 'accept-language')
+  const requestedLocale = normalizeLocale(firstLanguageTagFromAcceptLanguage(acceptLanguage))
   const signingSecret = getSigningSecret()
   if (!signingSecret) {
     const response = jsonResponse(500, { error: 'Server is not configured.' })

@@ -11,7 +11,8 @@ export type LocaleOption = {
 
 export const fallbackLocale = 'en'
 export const localeStorageKey = 'cv-locale'
-export const defaultSupportedLocales: Locale[] = [fallbackLocale]
+/** Used until `GET /api/locales` succeeds (then the server list replaces this). Keeps dev/web-only runs testable in every shipped UI language. */
+export const defaultSupportedLocales: Locale[] = [fallbackLocale, 'hu', 'de']
 
 const localePattern = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i
 

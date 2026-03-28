@@ -18,8 +18,12 @@ export type { Locale, LocaleOption }
 function readPreferredLocaleInput() {
   if (typeof window === 'undefined') return fallbackLocale
 
-  const fromQuery = new URLSearchParams(window.location.search).get('lang')?.trim()
-  if (fromQuery) return fromQuery
+  const params = new URLSearchParams(window.location.search)
+  const token = params.get('t')?.trim()
+  const langFromShare = params.get('lang')?.trim()
+  if (token && langFromShare) {
+    return langFromShare
+  }
 
   const fromStorage = window.localStorage.getItem(localeStorageKey)?.trim()
   if (fromStorage) return fromStorage
@@ -35,13 +39,6 @@ function setDocumentLang(locale: Locale) {
   if (typeof document !== 'undefined') {
     document.documentElement.lang = locale
   }
-}
-
-export function buildLocalizedPath(pathname: string, search: string, locale: Locale) {
-  const next = new URLSearchParams(search)
-  next.set('lang', locale)
-  const qs = next.toString()
-  return qs ? `${pathname}?${qs}` : pathname
 }
 
 type TranslationApi = {
@@ -91,9 +88,6 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     setDocumentLang(resolvedUiLocale)
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(localeStorageKey, resolvedUiLocale)
-      const url = new URL(window.location.href)
-      url.searchParams.set('lang', resolvedUiLocale)
-      window.history.replaceState({}, '', `${url.pathname}?${url.searchParams.toString()}${url.hash}`)
     }
   }, [resolvedUiLocale])
 

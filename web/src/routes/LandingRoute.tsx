@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { ArrowRight, Eye, EyeOff, KeyRound, LibraryBig, MapPin, Moon, Sun, Target } from 'lucide-react'
 import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
 import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
 import { useDocumentFavicon } from '../lib/favicon'
-import { buildLocalizedPath, useI18n } from '../lib/i18n'
+import { useAppView } from '../lib/appView'
+import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
@@ -18,7 +19,7 @@ function getPublicText(value: string | undefined, fallback: string) {
 
 export function LandingRoute() {
   const { locale, t } = useI18n()
-  const navigate = useNavigate()
+  const { openCv } = useAppView()
   const { theme, toggleTheme } = useTheme()
   const [params] = useSearchParams()
   const urlToken = params.get('t') ?? ''
@@ -68,16 +69,16 @@ export function LandingRoute() {
     async function checkExistingSession() {
       const cvRes = await fetchCv('', locale)
       if (cancelled || !cvRes.ok) return
-      navigate(buildLocalizedPath('/cv', '', locale), { replace: true })
+      openCv()
     }
     checkExistingSession()
     return () => {
       cancelled = true
     }
-  }, [locale, navigate, tokenInput, urlToken])
+  }, [locale, openCv, tokenInput, urlToken])
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full">
       <div className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-[0_30px_70px_-35px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/45 sm:p-8">
         <div className="flex items-center justify-end gap-2">
           <LanguageSelector />
@@ -187,14 +188,17 @@ export function LandingRoute() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {isUnlocked ? (
-              <Link
-                to={buildLocalizedPath('/cv', '', locale)}
-                onClick={() => setStoredAccessCode(effectiveToken)}
+              <button
+                type="button"
+                onClick={() => {
+                  setStoredAccessCode(effectiveToken)
+                  openCv()
+                }}
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 sm:w-auto dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
               >
                 {t('openCv')}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
+              </button>
             ) : (
               <button
                 type="button"

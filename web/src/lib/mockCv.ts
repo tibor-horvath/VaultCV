@@ -215,6 +215,116 @@ function getMockCvHu(): LocalizedCvData {
   }
 }
 
+function getMockCvDe(): LocalizedCvData {
+  return {
+    locale: 'de',
+    basics: {
+      name: 'John Doe',
+      headline: 'Full‑stack‑Entwickler · React · Azure',
+      email: 'john.doe@example.com',
+      photoAlt: 'Profilfoto',
+      location: 'Stadt, Land',
+      summary:
+        'Dies sind Mock-Daten für die lokale Entwicklung. Ersetze sie durch PRIVATE_PROFILE_JSON in den Azure Static Web Apps App-Einstellungen (oder api/local.settings.json lokal).',
+    },
+    links: [
+      { label: 'GitHub', url: 'https://github.com/your-handle' },
+      { label: 'LinkedIn', url: 'https://www.linkedin.com/in/your-handle/' },
+    ],
+    credentials: [
+      {
+        issuer: 'microsoft',
+        label: 'Microsoft Learn Profil',
+        url: 'https://learn.microsoft.com/',
+        dateEarned: '2024-01',
+      },
+      {
+        issuer: 'microsoft',
+        label: 'Zertifikatsauszug',
+        url: 'https://learn.microsoft.com/',
+        dateEarned: '2024-03',
+        dateExpires: '2026-03',
+      },
+      {
+        issuer: 'aws',
+        label: 'AWS Certified Developer – Associate',
+        url: 'https://aws.amazon.com/certification/',
+        dateEarned: '2023-06',
+        dateExpires: '2026-06',
+      },
+      {
+        issuer: 'google',
+        label: 'Google Cloud Skills Boost Profil',
+        url: 'https://www.cloudskillsboost.google/',
+      },
+      {
+        issuer: 'language',
+        label: 'Cambridge English C1 Advanced (CAE)',
+        url: 'https://www.cambridgeenglish.org/exams-and-tests/advanced/',
+        dateEarned: '2020-09',
+      },
+    ],
+    skills: ['React', 'TypeScript', 'Azure', 'Node.js', 'CI/CD'],
+    languages: ['Englisch (C1)', 'Deutsch (Muttersprache)'],
+    experience: [
+      {
+        id: 'exp-example-co',
+        company: 'Example Co.',
+        companyUrl: 'https://example.com',
+        companyLinkedInUrl: 'https://www.linkedin.com/company/example-co/',
+        skills: ['React', 'TypeScript', 'Azure'],
+        role: 'Softwareentwickler',
+        start: '2023',
+        end: '2026',
+        location: 'Remote',
+        highlights: [
+          'Token-geschützte CV-SPA gebaut, damit persönliche Daten nicht im öffentlichen Web-Bundle landen.',
+          'Modernes UI-System mit barrierefreien Komponenten und schnellen Builds geliefert.',
+        ],
+      },
+      {
+        id: 'exp-contoso',
+        company: 'Contoso',
+        companyUrl: 'https://www.microsoft.com/',
+        companyLinkedInUrl: 'https://www.linkedin.com/company/microsoft/',
+        skills: ['Node.js', 'React', 'AWS'],
+        role: 'Full-Stack-Entwickler',
+        start: '2021',
+        end: '2023',
+        location: 'Stadt, Land',
+        highlights: [
+          'React- und TypeScript-Features mit Fokus auf Performance und Barrierefreiheit geliefert.',
+          'Developer Experience durch Tooling, CI und wiederverwendbare UI-Komponenten verbessert.',
+        ],
+      },
+    ],
+    projects: [
+      {
+        name: 'Private CV SPA',
+        description: 'React-SPA mit Azure Functions API, geschützt per QR-Token.',
+        links: [
+          { label: 'github', url: 'https://github.com/your-handle/cv' },
+          { label: 'web', url: 'https://example.com' },
+        ],
+        tags: ['React', 'Azure', 'Functions'],
+      },
+    ],
+    education: [
+      {
+        id: 'edu-example-uni-bsc',
+        school: 'Example University',
+        program: 'BSc Informatik',
+        start: '2019',
+        end: '2023',
+        location: 'Stadt, Land',
+      },
+    ],
+  }
+}
+
 export function getMockCv(locale: Locale): LocalizedCvData {
-  return locale.startsWith('hu') ? getMockCvHu() : getMockCvEn()
+  const base = locale.split('-')[0]?.toLowerCase() ?? 'en'
+  if (base === 'hu') return getMockCvHu()
+  if (base === 'de') return getMockCvDe()
+  return getMockCvEn()
 }

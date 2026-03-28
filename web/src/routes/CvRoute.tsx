@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
   BriefcaseBusiness,
   Calendar,
@@ -27,7 +27,8 @@ import { exchangeAccessCode, fetchCv, type ApiErrorCode } from '../lib/api'
 import { fetchPublicProfile } from '../lib/publicProfile'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
 import { useDocumentFavicon } from '../lib/favicon'
-import { buildLocalizedPath, useI18n } from '../lib/i18n'
+import { useAppView } from '../lib/appView'
+import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
 import type { MessageKey } from '../i18n/messages'
 import { useTheme } from '../lib/themeContext'
@@ -217,7 +218,7 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
 
 export function CvRoute() {
   const { locale, t } = useI18n()
-  const navigate = useNavigate()
+  const { goHome } = useAppView()
   const { theme, toggleTheme } = useTheme()
   const [params] = useSearchParams()
   const urlToken = params.get('t')?.trim() ?? ''
@@ -235,6 +236,7 @@ export function CvRoute() {
     setStoredAccessCode(urlToken)
     const url = new URL(window.location.href)
     url.searchParams.delete('t')
+    url.searchParams.delete('lang')
     const qs = url.searchParams.toString()
     const nextUrl = `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`
     window.history.replaceState(null, '', nextUrl)
@@ -242,8 +244,8 @@ export function CvRoute() {
 
   useEffect(() => {
     if (state.kind !== 'expired') return
-    navigate(buildLocalizedPath('/', '', locale), { replace: true })
-  }, [state.kind, navigate, locale])
+    goHome()
+  }, [state.kind, goHome])
 
   const faviconName = state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
   useDocumentFavicon(faviconName)
@@ -267,8 +269,8 @@ export function CvRoute() {
     if (!state.sessionExpiresAt) return
     if (!isSessionLocked) return
     clearStoredAccessCode()
-    navigate(buildLocalizedPath('/', '', locale), { replace: true })
-  }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined, isSessionLocked, navigate, locale])
+    goHome()
+  }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined, isSessionLocked, goHome])
 
   const themeToggle = (
     <button
@@ -298,7 +300,9 @@ export function CvRoute() {
       {state.kind === 'locked' ? (
         <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
           <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-            {t('lockedHintPrefix')} <span className="font-mono">/cv?t=TOKEN</span>
+            {t('lockedHintPrefix')}{' '}
+            <span className="font-mono">/?t=TOKEN</span>
+            <span className="text-slate-500 dark:text-slate-400"> ({t('lockedHintLangOptional')})</span>
           </div>
           <button
             type="button"
