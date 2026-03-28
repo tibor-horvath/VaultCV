@@ -8,6 +8,8 @@ export const deMessages: Partial<MessageCatalog> = {
   skills: 'Fähigkeiten',
   accessCode: 'Zugangscode',
   pasteAccessCode: 'Zugangscode einfügen',
+  urlTokenInvalid:
+    'Der Token aus deinem Link ist ungültig oder abgelaufen.',
   openCv: 'Lebenslauf öffnen',
   accessDetected: 'Zugriff erkannt.',
   lockedUntilCode: 'Gesperrt, bis ein Code eingegeben wird.',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Eye, EyeOff, KeyRound, LibraryBig, MapPin, Moon, Sun, Target } from 'lucide-react'
 import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
 import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
@@ -21,10 +21,12 @@ export function LandingRoute() {
   const { locale, t } = useI18n()
   const { openCv } = useAppView()
   const { theme, toggleTheme } = useTheme()
+  const navigate = useNavigate()
   const [params] = useSearchParams()
   const urlToken = params.get('t') ?? ''
   const [tokenInput, setTokenInput] = useState('')
   const [isTokenVisible, setIsTokenVisible] = useState(false)
+  const [urlTokenInvalid, setUrlTokenInvalid] = useState(false)
   const [publicData, setPublicData] = useState<PublicData>(defaultPublicData)
   const [publicLoading, setPublicLoading] = useState(true)
   useEffect(() => {
@@ -69,14 +71,22 @@ export function LandingRoute() {
     ;(async () => {
       const res = await exchangeAccessCode(trimmed)
       if (cancelled) return
-      if (!res.ok) return
-      setStoredAccessCode(trimmed)
-      openCv()
+      if (res.ok) {
+        setStoredAccessCode(trimmed)
+        openCv()
+        return
+      }
+      setTokenInput(trimmed)
+      setUrlTokenInvalid(true)
+      const next = new URLSearchParams(window.location.search)
+      next.delete('t')
+      const qs = next.toString()
+      navigate({ pathname: '/', search: qs ? `?${qs}` : '' }, { replace: true })
     })()
     return () => {
       cancelled = true
     }
-  }, [urlToken, openCv])
+  }, [urlToken, openCv, navigate])
 
   useEffect(() => {
     if (urlToken.trim()) return
@@ -171,6 +181,12 @@ export function LandingRoute() {
             {t('accessCode')}
           </div>
 
+          {urlTokenInvalid ? (
+            <p className="text-sm leading-relaxed text-red-600 dark:text-red-400" role="alert">
+              {t('urlTokenInvalid')}
+            </p>
+          ) : null}
+
           {!urlToken ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <label className="sr-only" htmlFor="token">
@@ -181,7 +197,10 @@ export function LandingRoute() {
                   id="token"
                   type={isTokenVisible ? 'text' : 'password'}
                   value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
+                  onChange={(e) => {
+                    setTokenInput(e.target.value)
+                    setUrlTokenInvalid(false)
+                  }}
                   placeholder={t('pasteAccessCode')}
                   inputMode="text"
                   autoComplete="off"

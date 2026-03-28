@@ -8,6 +8,8 @@ export const huMessages: Partial<MessageCatalog> = {
   skills: 'Készségek',
   accessCode: 'Hozzáférési kód',
   pasteAccessCode: 'Illeszd be a hozzáférési kódot',
+  urlTokenInvalid:
+    'A linkben lévő token érvénytelen vagy lejárt.',
   openCv: 'CV megnyitása',
   accessDetected: 'Hozzáférés észlelve.',
   lockedUntilCode: 'Zárolva, ameddig nincs kód.',

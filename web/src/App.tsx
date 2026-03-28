@@ -1,11 +1,16 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { AppShell } from './app/AppShell'
+import { NotFoundRedirect } from './routes/NotFoundRedirect'
 import { RootRoute } from './routes/RootRoute'
 
 const router = createBrowserRouter([
   {
+    path: '/',
     element: <AppShell />,
-    children: [{ path: '/', element: <RootRoute /> }],
+    children: [
+      { index: true, element: <RootRoute /> },
+      { path: '*', element: <NotFoundRedirect /> },
+    ],
   },
 ])
 

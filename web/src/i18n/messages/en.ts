@@ -6,6 +6,7 @@ export const enMessages = {
   skills: 'Skills',
   accessCode: 'Access code',
   pasteAccessCode: 'Paste access code',
+  urlTokenInvalid: 'The token from your link is invalid or expired.',
   openCv: 'Open CV',
   accessDetected: 'Access detected.',
   lockedUntilCode: 'Locked until code is provided.',
