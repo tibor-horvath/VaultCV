@@ -24,6 +24,8 @@ export function LandingRoute() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const urlToken = params.get('t') ?? ''
+  const [urlTokenValidating, setUrlTokenValidating] = useState(() => Boolean(urlToken.trim()))
+  const [sessionProbePending, setSessionProbePending] = useState(() => !urlToken.trim())
   const [tokenInput, setTokenInput] = useState('')
   const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [urlTokenInvalid, setUrlTokenInvalid] = useState(false)
@@ -66,6 +68,22 @@ export function LandingRoute() {
 
   useEffect(() => {
     const trimmed = urlToken.trim()
+    if (trimmed) {
+      setUrlTokenValidating(true)
+      setSessionProbePending(false)
+    } else {
+      setUrlTokenValidating(false)
+    }
+  }, [urlToken])
+
+  useEffect(() => {
+    if (tokenInput.trim()) {
+      setSessionProbePending(false)
+    }
+  }, [tokenInput])
+
+  useEffect(() => {
+    const trimmed = urlToken.trim()
     if (!trimmed) return
     let cancelled = false
     ;(async () => {
@@ -76,6 +94,7 @@ export function LandingRoute() {
         openCv()
         return
       }
+      setUrlTokenValidating(false)
       setTokenInput(trimmed)
       setUrlTokenInvalid(true)
       const next = new URLSearchParams(window.location.search)
@@ -92,16 +111,37 @@ export function LandingRoute() {
     if (urlToken.trim()) return
     if (tokenInput.trim()) return
     let cancelled = false
+    setSessionProbePending(true)
     async function checkExistingSession() {
       const cvRes = await fetchCv('', locale)
-      if (cancelled || !cvRes.ok) return
-      openCv()
+      if (cancelled) return
+      if (cvRes.ok) {
+        openCv()
+        return
+      }
+      setSessionProbePending(false)
     }
     checkExistingSession()
     return () => {
       cancelled = true
     }
   }, [locale, openCv, tokenInput, urlToken])
+
+  if (urlTokenValidating || sessionProbePending) {
+    return (
+      <div
+        className="mx-auto flex w-full flex-1 flex-col items-center justify-center gap-4 py-24"
+        aria-busy="true"
+        role="status"
+      >
+        <div
+          className="h-9 w-9 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-600 dark:border-t-slate-200"
+          aria-hidden
+        />
+        <p className="text-center text-sm text-slate-600 dark:text-slate-400">{t('loadingCv')}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto w-full">
