@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
 type AppView = 'landing' | 'cv'
 
@@ -12,11 +12,9 @@ const AppViewContext = createContext<AppViewApi | null>(null)
 
 export function AppViewProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<AppView>('landing')
-  const value: AppViewApi = {
-    view,
-    openCv: () => setView('cv'),
-    goHome: () => setView('landing'),
-  }
+  const openCv = useCallback(() => setView('cv'), [])
+  const goHome = useCallback(() => setView('landing'), [])
+  const value = useMemo<AppViewApi>(() => ({ view, openCv, goHome }), [view, openCv, goHome])
   return <AppViewContext.Provider value={value}>{children}</AppViewContext.Provider>
 }
 

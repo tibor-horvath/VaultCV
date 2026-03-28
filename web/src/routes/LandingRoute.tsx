@@ -10,7 +10,7 @@ import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
-import { fetchCv } from '../lib/api'
+import { exchangeAccessCode, fetchCv } from '../lib/api'
 
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -61,6 +61,22 @@ export function LandingRoute() {
   }, [tokenInput, urlToken])
   const isUnlocked = Boolean(effectiveToken)
   const isAccessDetected = Boolean(urlToken.trim())
+
+  useEffect(() => {
+    const trimmed = urlToken.trim()
+    if (!trimmed) return
+    let cancelled = false
+    ;(async () => {
+      const res = await exchangeAccessCode(trimmed)
+      if (cancelled) return
+      if (!res.ok) return
+      setStoredAccessCode(trimmed)
+      openCv()
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [urlToken, openCv])
 
   useEffect(() => {
     if (urlToken.trim()) return
