@@ -26,6 +26,8 @@ export const enMessages = {
   experience: 'Experience',
   projects: 'Projects',
   education: 'Education',
+  educationThesis: 'Thesis',
+  educationAdvisor: 'Advisor',
   earned: 'Earned',
   expires: 'Expires',
   present: 'Present',

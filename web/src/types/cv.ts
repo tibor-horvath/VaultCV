@@ -57,10 +57,23 @@ export type CvEducation = {
   /** Stable key for list rendering; optional when composite fields uniquely identify the row. */
   id?: string
   school: string
+  /** Institution website (e.g. department or university homepage). */
+  schoolUrl?: string
+  /** Short degree label, e.g. BSc, MSc, PhD. */
+  degree?: string
+  /** Field or major, e.g. Computer Science. */
+  field?: string
   program: string
   start?: string
   end?: string
   location?: string
+  /** Grade as free text, e.g. 3.8/4.0 or First Class Honours. */
+  gpa?: string
+  /** Distinctions, e.g. summa cum laude. */
+  honors?: string
+  /** Graduate research title, if relevant. */
+  thesisTitle?: string
+  advisor?: string
   highlights?: string[]
 }
 

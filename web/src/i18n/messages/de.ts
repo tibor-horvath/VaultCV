@@ -29,6 +29,8 @@ export const deMessages: Partial<MessageCatalog> = {
   experience: 'Berufserfahrung',
   projects: 'Projekte',
   education: 'Ausbildung',
+  educationThesis: 'Abschlussarbeit',
+  educationAdvisor: 'Betreuer',
   earned: 'Erworben',
   expires: 'Läuft ab',
   present: 'Heute',

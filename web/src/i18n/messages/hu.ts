@@ -29,6 +29,8 @@ export const huMessages: Partial<MessageCatalog> = {
   experience: 'Tapasztalat',
   projects: 'Projektek',
   education: 'Tanulmányok',
+  educationThesis: 'Szakdolgozat / téma',
+  educationAdvisor: 'Konzulens',
   earned: 'Megszerezve',
   expires: 'Lejár',
   present: 'Jelenleg',

@@ -9,7 +9,16 @@ export function stableExperienceKey(x: CvExperience): string {
 
 export function stableEducationKey(e: CvEducation): string {
   if (e.id != null && e.id !== '') return e.id
-  return ['edu', e.school, e.program, e.start ?? '', e.end ?? '', e.location ?? ''].join(SEP)
+  return [
+    'edu',
+    e.school,
+    e.degree ?? '',
+    e.field ?? '',
+    e.program,
+    e.start ?? '',
+    e.end ?? '',
+    e.location ?? '',
+  ].join(SEP)
 }
 
 /** Keys for highlight `<li>` siblings under a stable parent row key. */
