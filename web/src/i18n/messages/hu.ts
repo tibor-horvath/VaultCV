@@ -54,4 +54,13 @@ export const huMessages: Partial<MessageCatalog> = {
   footerRights: 'Minden jog fenntartva.',
   cookieDisclosure:
     'Ez az oldal egy technikailag szükséges, biztonságos munkamenet cookie-t (cv_session) használ, hogy a CV-hozzáférés feloldás után aktív maradjon. Analitikai vagy marketing cookie-kat nem használ.',
+  downloadPdf: 'PDF letöltése',
+  generatingPdf: 'Generálás…',
+  backToCv: 'Vissza a CV-hez',
+  pdfLayoutTitle: 'Nyomtatási elrendezés',
+  pdfSessionExpiredHint:
+    'Nincs aktív munkamenet. Nyisd meg a CV-t a kezdőlapon a hozzáférési linkkel (vagy add hozzá a ?t=TOKEN paramétert az URL-hez), majd nyisd meg újra a nyomtatás / PDF oldalt.',
+  pdfDevPreviewBanner:
+    'Helyi előnézet: mock CV (?preview=1). Távolítsd el a paramétert, ha a feloldás utáni valódi CV-t szeretnéd.',
+  pdfProfilePhotoContext: 'Profilkép',
 }

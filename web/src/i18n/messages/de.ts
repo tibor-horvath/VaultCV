@@ -54,4 +54,13 @@ export const deMessages: Partial<MessageCatalog> = {
   footerRights: 'Alle Rechte vorbehalten.',
   cookieDisclosure:
     'Diese Website verwendet ein technisch notwendiges sicheres Session-Cookie (cv_session), um den CV-Zugriff nach dem Entsperren aktiv zu halten. Es werden keine Analyse- oder Marketing-Cookies verwendet.',
+  downloadPdf: 'PDF herunterladen',
+  generatingPdf: 'Wird erzeugt…',
+  backToCv: 'Zurück zum CV',
+  pdfLayoutTitle: 'Drucklayout',
+  pdfSessionExpiredHint:
+    'Deine Sitzung ist nicht aktiv. Öffne den Lebenslauf von der Startseite mit deinem Zugangslink (oder füge ?t=TOKEN zur URL hinzu), dann öffne Druck/PDF erneut.',
+  pdfDevPreviewBanner:
+    'Lokale Vorschau: Mock-CV (?preview=1). Parameter entfernen, um den echten CV nach Entsperren zu laden.',
+  pdfProfilePhotoContext: 'Profilfoto',
 }

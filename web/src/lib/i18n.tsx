@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- module exports provider + hook */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { enMessages, type MessageKey } from '../i18n/messages'
 import {

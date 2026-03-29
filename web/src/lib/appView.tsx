@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- module exports provider + hook */
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
 type AppView = 'landing' | 'cv'

@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   Calendar,
   CircleAlert,
+  FileDown,
   GraduationCap,
   Hourglass,
   Languages,
@@ -15,6 +16,7 @@ import {
   Sun,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
+import { CvPdfLayout } from '../components/cv/pdf/CvPdfLayout'
 import { FloatingBasicsMenu } from '../components/cv/FloatingBasicsMenu'
 import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
@@ -37,6 +39,7 @@ import {
   getStoredAccessCode,
   setStoredAccessCode,
 } from '../lib/accessSession'
+import { downloadCvPdf } from '../lib/downloadCvPdf'
 
 type CvRouteState =
   | { kind: 'locked' }
@@ -224,8 +227,23 @@ export function CvRoute() {
   const urlToken = params.get('t')?.trim() ?? ''
   const accessCode = urlToken || getStoredAccessCode()
   const state = useCvState(accessCode, locale)
+  const sessionExpiresAt = state.kind === 'ready' ? state.sessionExpiresAt : undefined
   const publicName = usePublicName(locale)
   const { basicsSentinelRef, isBasicsInView } = useBasicsVisibility(state.kind)
+  const pdfCaptureRef = useRef<HTMLDivElement>(null)
+  const [pdfBusy, setPdfBusy] = useState(false)
+
+  async function handleDownloadPdf() {
+    const el = pdfCaptureRef.current
+    if (!el || state.kind !== 'ready') return
+    setPdfBusy(true)
+    try {
+      const name = state.cv.basics.name?.trim().replace(/\s+/g, '-') || 'cv'
+      await downloadCvPdf({ root: el, fileBaseName: name })
+    } finally {
+      setPdfBusy(false)
+    }
+  }
 
   useEffect(() => {
     document.title = publicName
@@ -252,25 +270,25 @@ export function CvRoute() {
   const [countdownNow, setCountdownNow] = useState(() => Date.now())
 
   useEffect(() => {
-    if (state.kind !== 'ready' || !state.sessionExpiresAt) return
+    if (state.kind !== 'ready' || !sessionExpiresAt) return
     const interval = window.setInterval(() => setCountdownNow(Date.now()), 1000)
     return () => window.clearInterval(interval)
-  }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined])
+  }, [state.kind, sessionExpiresAt])
 
   const remainingSeconds =
-    state.kind === 'ready' && state.sessionExpiresAt
-      ? Math.floor((new Date(state.sessionExpiresAt).getTime() - countdownNow) / 1000)
+    state.kind === 'ready' && sessionExpiresAt
+      ? Math.floor((new Date(sessionExpiresAt).getTime() - countdownNow) / 1000)
       : undefined
   const unlockedCountdown = remainingSeconds !== undefined ? formatCountdown(remainingSeconds) : undefined
   const isSessionLocked = remainingSeconds !== undefined && remainingSeconds <= 0
 
   useEffect(() => {
     if (state.kind !== 'ready') return
-    if (!state.sessionExpiresAt) return
+    if (!sessionExpiresAt) return
     if (!isSessionLocked) return
     clearStoredAccessCode()
     goHome()
-  }, [state.kind, state.kind === 'ready' ? state.sessionExpiresAt : undefined, isSessionLocked, goHome])
+  }, [state.kind, sessionExpiresAt, isSessionLocked, goHome])
 
   const themeToggle = (
     <button
@@ -345,7 +363,16 @@ export function CvRoute() {
               links={state.cv.links}
               topStatus={unlockedStatus}
               headerRight={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadPdf()}
+                    disabled={pdfBusy}
+                    className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
+                  >
+                    <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+                  </button>
                   <LanguageSelector />
                   {themeToggle}
                 </div>
@@ -449,6 +476,13 @@ export function CvRoute() {
               <EducationList items={state.cv.education} />
             </Section>
           ) : null}
+
+          <div
+            className="pointer-events-none fixed left-[-10000px] top-0 z-0 w-full max-w-[794px]"
+            aria-hidden="true"
+          >
+            <CvPdfLayout ref={pdfCaptureRef} cv={state.cv} />
+          </div>
         </div>
       ) : null}
     </div>

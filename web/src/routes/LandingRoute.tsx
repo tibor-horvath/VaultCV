@@ -68,18 +68,21 @@ export function LandingRoute() {
 
   useEffect(() => {
     const trimmed = urlToken.trim()
-    if (trimmed) {
-      setUrlTokenValidating(true)
-      setSessionProbePending(false)
-    } else {
-      setUrlTokenValidating(false)
-    }
+    queueMicrotask(() => {
+      if (trimmed) {
+        setUrlTokenValidating(true)
+        setSessionProbePending(false)
+      } else {
+        setUrlTokenValidating(false)
+      }
+    })
   }, [urlToken])
 
   useEffect(() => {
-    if (tokenInput.trim()) {
+    if (!tokenInput.trim()) return
+    queueMicrotask(() => {
       setSessionProbePending(false)
-    }
+    })
   }, [tokenInput])
 
   useEffect(() => {
@@ -111,7 +114,9 @@ export function LandingRoute() {
     if (urlToken.trim()) return
     if (tokenInput.trim()) return
     let cancelled = false
-    setSessionProbePending(true)
+    queueMicrotask(() => {
+      setSessionProbePending(true)
+    })
     async function checkExistingSession() {
       const cvRes = await fetchCv('', locale)
       if (cancelled) return

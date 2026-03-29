@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- module exports provider + hook */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { applyTheme, setStoredTheme, type ThemePreference } from './theme'
 import { resolveInitialThemeForMode } from './themePreference'

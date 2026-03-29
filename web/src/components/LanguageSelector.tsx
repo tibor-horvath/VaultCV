@@ -63,18 +63,20 @@ export function LanguageSelector() {
 
   const selectedOption = useMemo(
     () => localeOptions.find((option) => option.code === locale) ?? localeOptions[0] ?? null,
-    [locale],
+    [locale, localeOptions],
   )
 
   useEffect(() => {
     if (!isOpen) return
-    const selectedIndex = localeOptions.findIndex((option) => option.code === selectedOption.code)
+    const selectedIndex = localeOptions.findIndex((option) => option.code === selectedOption?.code)
     const nextIndex = selectedIndex >= 0 ? selectedIndex : 0
-    setActiveIndex(nextIndex)
-    window.requestAnimationFrame(() => {
-      itemRefs.current[nextIndex]?.focus()
+    queueMicrotask(() => {
+      setActiveIndex(nextIndex)
+      window.requestAnimationFrame(() => {
+        itemRefs.current[nextIndex]?.focus()
+      })
     })
-  }, [isOpen, selectedOption.code])
+  }, [isOpen, localeOptions, selectedOption?.code])
 
   useEffect(() => {
     if (!isOpen) return

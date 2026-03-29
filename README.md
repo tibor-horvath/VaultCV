@@ -24,4 +24,5 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 | Shareable links, QR, API auth flow | [docs/qr-code-url-format.md](docs/qr-code-url-format.md) |
 | Access code rotation (~6 months) | [docs/access-code-rotation.md](docs/access-code-rotation.md) |
 | Mock CV for local UI testing | [docs/mock-data.md](docs/mock-data.md) |
+| PDF export (basics card; html2canvas + jsPDF) | [docs/pdf-export.md](docs/pdf-export.md) |
 

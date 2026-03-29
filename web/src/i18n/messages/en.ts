@@ -51,6 +51,15 @@ export const enMessages = {
   footerRights: 'All rights reserved.',
   cookieDisclosure:
     'This site uses a strictly necessary secure session cookie (cv_session) to keep CV access active after unlock. No analytics or marketing cookies are used.',
+  downloadPdf: 'Download PDF',
+  generatingPdf: 'Generating…',
+  backToCv: 'Back to CV',
+  pdfLayoutTitle: 'Print layout',
+  pdfSessionExpiredHint:
+    'Your session is not active. Open the CV from the home page with your access link (or add ?t=TOKEN to the URL), then open Print / PDF again.',
+  pdfDevPreviewBanner:
+    'Local preview: mock CV data (?preview=1). Remove the query to load the real CV when unlocked.',
+  pdfProfilePhotoContext: 'Profile photo',
 }
 
 export type MessageCatalog = typeof enMessages
