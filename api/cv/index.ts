@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
-import { normalizeLocale, readLocalizedEnvJson } from '../lib/localeRegistry'
+import { normalizeLocale } from '../lib/localeRegistry'
+import { ProfilePayloadSourceError, readLocalizedProfilePayload } from '../lib/profilePayloadSource'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -233,9 +234,36 @@ export default async function (context: Context, req: HttpRequest) {
     return
   }
 
-  const { raw, resolvedLocale } = readLocalizedEnvJson('PRIVATE_PROFILE_JSON', requestedLocale)
-  if (!raw) {
-    context.res = jsonResponse(500, { error: 'CV data is not configured.' })
+  let raw = ''
+  let resolvedLocale = requestedLocale
+  try {
+    const payload = await readLocalizedProfilePayload('PRIVATE_PROFILE_JSON', requestedLocale)
+    raw = payload.raw
+    resolvedLocale = payload.resolvedLocale
+    context.log('Loaded PRIVATE_PROFILE payload', {
+      payloadSource: payload.source,
+      sourceMode: payload.sourceMode,
+      localeRequested: requestedLocale,
+      localeResolved: payload.resolvedLocale,
+      fromCache: payload.fromCache,
+    })
+  } catch (error) {
+    if (error instanceof ProfilePayloadSourceError) {
+      context.log('Failed loading PRIVATE_PROFILE payload', {
+        payloadSource: 'profile_payload_loader',
+        sourceMode: error.sourceMode,
+        failureReason: error.reason,
+        payloadKey: error.key,
+        urlHost: error.urlHost,
+        httpStatus: error.httpStatus,
+      })
+      context.res = jsonResponse(error.reason === 'not_configured' ? 500 : 502, {
+        error: error.reason === 'not_configured' ? 'CV data is not configured.' : 'CV data could not be loaded.',
+      })
+      return
+    }
+    context.log('Failed loading PRIVATE_PROFILE payload', { failureReason: 'unexpected_loader_error' }, error)
+    context.res = jsonResponse(502, { error: 'CV data could not be loaded.' })
     return
   }
 

@@ -48,9 +48,18 @@ export function localeEnvCandidates(prefix: string, locale: string) {
 }
 
 export function readLocalizedEnvJson(prefix: string, locale: string) {
+  return readLocalizedEnvValue(prefix, locale)
+}
+
+export function readLocalizedEnvValue(prefix: string, locale: string) {
+  const result = readLocalizedEnvValueWithKey(prefix, locale)
+  return { raw: result.raw, resolvedLocale: result.resolvedLocale }
+}
+
+export function readLocalizedEnvValueWithKey(prefix: string, locale: string) {
   for (const candidate of localeEnvCandidates(prefix, locale)) {
     const raw = process.env[candidate.key]
-    if (raw) return { raw, resolvedLocale: candidate.resolvedLocale }
+    if (raw) return { key: candidate.key, raw, resolvedLocale: candidate.resolvedLocale }
   }
-  return { raw: '', resolvedLocale: fallbackLocale }
+  return { key: '', raw: '', resolvedLocale: fallbackLocale }
 }

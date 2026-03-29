@@ -24,9 +24,17 @@ The API endpoints support locale-specific environment variables:
 - CV endpoint (`/api/cv`)
   - `PRIVATE_PROFILE_JSON_<LOCALE>` (example: `PRIVATE_PROFILE_JSON_DE`, `PRIVATE_PROFILE_JSON_HU`)
   - fallback to `PRIVATE_PROFILE_JSON`
+  - URL alternative: `PRIVATE_PROFILE_JSON_URL_<LOCALE>` with fallback `PRIVATE_PROFILE_JSON_URL`
 - Public profile endpoint (`/api/public-profile`)
   - `PUBLIC_PROFILE_JSON_<LOCALE>` (example: `PUBLIC_PROFILE_JSON_DE`)
   - fallback to `PUBLIC_PROFILE_JSON`
+  - URL alternative: `PUBLIC_PROFILE_JSON_URL_<LOCALE>` with fallback `PUBLIC_PROFILE_JSON_URL`
+
+Payload source behavior is controlled by `PROFILE_PAYLOAD_SOURCE`:
+
+- `auto` (default): URL first, then inline fallback
+- `inline`: only `*_JSON*`
+- `url`: only `*_JSON_URL*`
 
 API locale resolution is centralized in `api/lib/localeRegistry.ts` and follows the same `exact -> base -> en` behavior.
 
@@ -46,6 +54,7 @@ When API/local env vars are not available, web can use static fallback files in 
 3. Add localized content payloads:
    - `PRIVATE_PROFILE_JSON_<LOCALE>`
    - `PUBLIC_PROFILE_JSON_<LOCALE>`
+   - or URL variants `PRIVATE_PROFILE_JSON_URL_<LOCALE>` / `PUBLIC_PROFILE_JSON_URL_<LOCALE>`
 4. Optionally add `web/public/public-profile.<locale>.json` for web-only fallback/local testing.
 
 After changing Azure settings, redeploy or restart the API so new locale env vars take effect.

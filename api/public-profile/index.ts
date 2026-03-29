@@ -1,5 +1,6 @@
 import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
-import { normalizeLocale, readLocalizedEnvJson } from '../lib/localeRegistry'
+import { normalizeLocale } from '../lib/localeRegistry'
+import { ProfilePayloadSourceError, readLocalizedProfilePayload } from '../lib/profilePayloadSource'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -29,12 +30,36 @@ function jsonResponse(status: number, body: unknown) {
 export default async function (context: Context, req: HttpRequest) {
   const acceptLanguage = getHeaderInsensitive(req.headers, 'accept-language')
   const requestedLocale = normalizeLocale(firstLanguageTagFromAcceptLanguage(acceptLanguage))
-  const { raw, resolvedLocale } = readLocalizedEnvJson('PUBLIC_PROFILE_JSON', requestedLocale)
-
-  if (!raw) {
-    // Keep API and web fallback data separate to avoid drift.
-    // The web app can still use `/public-profile.json` if this env var is unset.
-    context.res = jsonResponse(404, { error: 'PUBLIC_PROFILE_JSON is not configured.' })
+  let raw = ''
+  let resolvedLocale = requestedLocale
+  try {
+    const payload = await readLocalizedProfilePayload('PUBLIC_PROFILE_JSON', requestedLocale)
+    raw = payload.raw
+    resolvedLocale = payload.resolvedLocale
+    context.log('Loaded PUBLIC_PROFILE payload', {
+      payloadSource: payload.source,
+      sourceMode: payload.sourceMode,
+      localeRequested: requestedLocale,
+      localeResolved: payload.resolvedLocale,
+      fromCache: payload.fromCache,
+    })
+  } catch (error) {
+    if (error instanceof ProfilePayloadSourceError) {
+      context.log('Failed loading PUBLIC_PROFILE payload', {
+        payloadSource: 'profile_payload_loader',
+        sourceMode: error.sourceMode,
+        failureReason: error.reason,
+        payloadKey: error.key,
+        urlHost: error.urlHost,
+        httpStatus: error.httpStatus,
+      })
+      context.res = jsonResponse(error.reason === 'not_configured' ? 404 : 502, {
+        error: error.reason === 'not_configured' ? 'PUBLIC_PROFILE_JSON is not configured.' : 'PUBLIC_PROFILE_JSON could not be loaded.',
+      })
+      return
+    }
+    context.log('Failed loading PUBLIC_PROFILE payload', { failureReason: 'unexpected_loader_error' }, error)
+    context.res = jsonResponse(502, { error: 'PUBLIC_PROFILE_JSON could not be loaded.' })
     return
   }
 

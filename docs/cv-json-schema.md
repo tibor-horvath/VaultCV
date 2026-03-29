@@ -2,6 +2,8 @@
 
 You control the CV content via the `PRIVATE_PROFILE_JSON` environment variable (server-side). This is a JSON string you write once and store as a secret in Azure — it never goes into this repo.
 
+If your JSON gets too large for Azure app setting limits, use `PRIVATE_PROFILE_JSON_URL` and host the payload as a private JSON blob (SAS or identity-based access).
+
 > **Not familiar with JSON?** JSON is a plain-text data format that looks like `{"key": "value"}`. You can write it in any text editor. Use [jsonlint.com](https://jsonlint.com) to check your JSON for errors before pasting it into Azure.
 
 Key fields:

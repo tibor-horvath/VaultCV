@@ -38,7 +38,7 @@ To run the API locally with secrets, create `api/local.settings.json` (gitignore
 You can copy the committed template and edit values:
 
 - Copy `api/local.settings.example.json` to `api/local.settings.json`
-- Set `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, and `PRIVATE_PROFILE_JSON` (and optional `PUBLIC_PROFILE_JSON`, photo settings).
+- Set `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, and `PRIVATE_PROFILE_JSON` (and optional `PRIVATE_PROFILE_JSON_URL`, `PUBLIC_PROFILE_JSON`, `PUBLIC_PROFILE_JSON_URL`, photo settings).
 
 Minimal `Values` shape:
 
@@ -50,7 +50,10 @@ Minimal `Values` shape:
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "CV_ACCESS_TOKEN": "0123456789abcdef0123456789abcdef",
     "CV_SESSION_SIGNING_KEY": "<random-secret-at-least-32-chars>",
+    "PROFILE_PAYLOAD_SOURCE": "auto",
     "PRIVATE_PROFILE_JSON": "{\"basics\":{\"name\":\"Your Name\",\"headline\":\"Your Headline\",\"email\":\"you@example.com\"}}",
+    "PRIVATE_PROFILE_JSON_URL": "https://<account>.blob.core.windows.net/<container>/private-profile.json?<sas>",
+    "PUBLIC_PROFILE_JSON_URL": "https://<account>.blob.core.windows.net/<container>/public-profile.json?<sas>",
     "PROFILE_PHOTO_URL": "https://<account>.blob.core.windows.net/<container>/<blob>",
     "PROFILE_PHOTO_SAS_TOKEN": "sp=...&st=...&se=...&spr=https&sv=...&sr=b&sig=..."
   }
