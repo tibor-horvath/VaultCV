@@ -3,6 +3,7 @@ import {
   buildPhotoSrc,
   inferLinkKind,
   inferProjectLinkLabelKind,
+  isCrossOriginImageUrl,
   parseBasicsHeadline,
 } from './cvPresentation'
 
@@ -14,6 +15,19 @@ describe('buildPhotoSrc', () => {
   it('returns data URL when photoUrl missing', () => {
     const src = buildPhotoSrc({ name: 'A' })
     expect(src.startsWith('data:image/svg+xml')).toBe(true)
+  })
+})
+
+describe('isCrossOriginImageUrl', () => {
+  it('is true for http(s) and protocol-relative URLs', () => {
+    expect(isCrossOriginImageUrl('https://x.blob.core.windows.net/p.jpg')).toBe(true)
+    expect(isCrossOriginImageUrl('http://example.com/x.png')).toBe(true)
+    expect(isCrossOriginImageUrl('//cdn.example/x.png')).toBe(true)
+  })
+
+  it('is false for data URLs and relative paths', () => {
+    expect(isCrossOriginImageUrl('data:image/svg+xml;base64,xx')).toBe(false)
+    expect(isCrossOriginImageUrl('/assets/photo.jpg')).toBe(false)
   })
 })
 

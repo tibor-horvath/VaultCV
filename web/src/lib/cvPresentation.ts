@@ -36,6 +36,14 @@ export function buildPhotoSrc(basics: BasicsLike) {
 }
 
 /**
+ * True for http(s) or protocol-relative URLs. Use `crossOrigin="anonymous"` on `<img>` so
+ * canvas-based capture (e.g. html2canvas) can read pixels; the image host must send CORS headers.
+ */
+export function isCrossOriginImageUrl(src: string): boolean {
+  return /^https?:\/\//i.test(src) || src.startsWith('//')
+}
+
+/**
  * Headlines like "Role · React · Azure" are split: the role is shown as plain text;
  * the rest stays in the skills chip. A single segment (no middle dot) is only the role.
  */

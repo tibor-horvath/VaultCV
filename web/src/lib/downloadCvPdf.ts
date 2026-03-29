@@ -106,6 +106,23 @@ export type DownloadCvPdfOptions = {
   fileBaseName?: string
 }
 
+/** Wait until all `<img>` under `root` have finished loading (or failed). */
+export async function waitForImages(root: HTMLElement): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll('img'))
+  await Promise.all(
+    imgs.map((img) => {
+      if (img.complete) return Promise.resolve()
+      return new Promise<void>((resolve) => {
+        img.addEventListener('load', () => resolve(), { once: true })
+        img.addEventListener('error', () => resolve(), { once: true })
+      })
+    }),
+  )
+  await Promise.all(
+    imgs.map((img) => (img.decode ? img.decode().catch(() => undefined) : Promise.resolve())),
+  )
+}
+
 /**
  * Single scale from canvas pixels → mm: fit content width to printable width.
  * Using one mmPerPx for both axes keeps aspect ratio (avoids squeezed/stretched PDF).
@@ -121,12 +138,15 @@ export function canvasPageSliceHeightPx(contentH_mm: number, contentW_mm: number
  */
 export async function downloadCvPdf({ root, scale = 2, fileBaseName = 'cv' }: DownloadCvPdfOptions): Promise<void> {
   const { margin, contentW, contentH } = a4LayoutMm()
+  await waitForImages(root)
   const rootW = root.offsetWidth
   const rootH = root.offsetHeight
 
   const canvas = await html2canvas(root, {
     scale,
     useCORS: true,
+    allowTaint: false,
+    imageTimeout: 20000,
     logging: false,
     backgroundColor: '#ffffff',
     windowWidth: root.scrollWidth,

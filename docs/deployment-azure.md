@@ -77,6 +77,8 @@ The API can serve your photo from Azure Blob Storage without embedding it in `PR
    - Click **Generate SAS token and URL**
 6. Copy the **Blob SAS URL** — split it at the `?`: the part before is `PROFILE_PHOTO_URL`, the part from `?` onward (including the `?`) is `PROFILE_PHOTO_SAS_TOKEN`.
 
+7. **CORS (required for PDF export):** In the storage account, open **Settings** → **Resource sharing (CORS)** → **Blob service**. Add a rule that allows **GET** from your Static Web App origin (for example `https://your-app.azurestaticapps.net`). Allowed headers can be `*`; exposed headers can be empty. Without this, the photo may show in the browser but appear **missing in the generated PDF** (client-side canvas capture).
+
 ## Step 4 — Configure Application settings
 
 Application settings are the secure, server-side environment variables Azure injects into your API at runtime. **These never appear in your code or git history.**
@@ -121,4 +123,5 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 | API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
 | Landing page shows no profile details | Missing public profile | Check that `PUBLIC_PROFILE_JSON` is set in Azure settings, or that `web/public/public-profile.json` is present. |
 | Profile photo not loading | Invalid URL or expired SAS token | Regenerate a SAS token in Azure Storage and update `PROFILE_PHOTO_SAS_TOKEN`. |
+| Profile photo missing in **PDF** only | Blob CORS not allowing your site origin | In the storage account → **CORS** for Blob service, allow **GET** from your SWA URL. See [pdf-export.md](pdf-export.md). |
 | Site shows "page not found" for routes | Routing config missing | Ensure `staticwebapp.config.json` was deployed — it should be in the `web/public/` folder. |
