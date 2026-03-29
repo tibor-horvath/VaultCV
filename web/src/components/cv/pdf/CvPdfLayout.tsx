@@ -8,6 +8,7 @@ import {
   isCrossOriginImageUrl,
   parseBasicsHeadline,
 } from '../../../lib/cvPresentation'
+import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../../../lib/pdfCaptureLayout'
 import { highlightChildKey, stableEducationKey, stableExperienceKey } from '../../../lib/cvKeys'
 import { useI18n } from '../../../lib/i18n'
 import { SiGithubIcon, SiLinkedinIcon } from '../../icons/SimpleBrandIcons'
@@ -52,7 +53,12 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
   return (
     <div
       ref={ref}
-      className="mx-auto w-full max-w-[794px] overflow-visible rounded-3xl border border-slate-200/90 bg-white text-[13px] leading-relaxed text-slate-800 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.2)]"
+      className="mx-auto shrink-0 overflow-visible rounded-3xl border border-slate-200/90 bg-white text-[13px] leading-relaxed text-slate-800 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.2)]"
+      style={{
+        width: PDF_CAPTURE_ROOT_WIDTH_PX,
+        minWidth: PDF_CAPTURE_ROOT_WIDTH_PX,
+        maxWidth: PDF_CAPTURE_ROOT_WIDTH_PX,
+      }}
     >
       <div
         className="rounded-t-3xl border-b border-indigo-100/80 bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/70 px-8 pb-8 pt-10"

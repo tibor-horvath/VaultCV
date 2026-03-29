@@ -4,6 +4,8 @@ After a visitor unlocks your CV, they can download a print-ready **PDF** (A4, cl
 
 The export is generated in the browser with **html2canvas** and **jsPDF**; link regions in the PDF are preserved where the browser capture allows.
 
+The print layout is always rasterized at a **fixed width (794px, A4 content at ~96dpi)** so page breaks match desktop even on a narrow phone. Without that, a mobile viewport would reflow the HTML much taller and inflate the PDF page count.
+
 **Profile photos hosted remotely** (for example Azure Blob Storage) must be served with **CORS** allowing your site’s origin — otherwise the image can appear on the page but be **blank in the PDF**, because canvas capture requires a CORS-enabled image request. Configure blob CORS for your Static Web App URL (see [deployment-azure.md](deployment-azure.md) troubleshooting). The site’s Content Security Policy already allows `img-src` for `https://*.blob.core.windows.net`.
 
 In **production**, the **`/cv/pdf`** path **redirects to `/`**. There is no separate export screen at that URL—visitors are not expected to open, bookmark, or share `/cv/pdf`. The PDF file itself is still produced from the main CV when someone uses **Download PDF** (the print layout is rendered off-screen for capture).

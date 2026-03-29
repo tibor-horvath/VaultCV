@@ -40,6 +40,7 @@ import {
   setStoredAccessCode,
 } from '../lib/accessSession'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
+import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../lib/pdfCaptureLayout'
 
 type CvRouteState =
   | { kind: 'locked' }
@@ -489,7 +490,8 @@ export function CvRoute() {
           ) : null}
 
           <div
-            className="pointer-events-none fixed left-[-10000px] top-0 z-0 w-full max-w-[794px]"
+            className="pointer-events-none fixed left-[-10000px] top-0 z-0 shrink-0"
+            style={{ width: PDF_CAPTURE_ROOT_WIDTH_PX }}
             aria-hidden="true"
           >
             <CvPdfLayout ref={pdfCaptureRef} cv={state.cv} />

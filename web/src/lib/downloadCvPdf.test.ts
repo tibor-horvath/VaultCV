@@ -6,6 +6,7 @@ import {
   _mapRectsToCanvas,
   type PdfLinkRect,
 } from './downloadCvPdf'
+import { PDF_CAPTURE_ROOT_WIDTH_PX } from './pdfCaptureLayout'
 
 describe('clipVerticalToPage', () => {
   it('returns intersection when rect overlaps page band', () => {
@@ -23,7 +24,7 @@ describe('canvasPageSliceHeightPx', () => {
   it('matches contentH / mmPerPx with mmPerPx = contentW/canvasWidth', () => {
     const contentW = 190
     const contentH = 277
-    const canvasW = 794
+    const canvasW = PDF_CAPTURE_ROOT_WIDTH_PX
     expect(canvasPageSliceHeightPx(contentH, contentW, canvasW)).toBeCloseTo((contentH * canvasW) / contentW, 5)
   })
 })
