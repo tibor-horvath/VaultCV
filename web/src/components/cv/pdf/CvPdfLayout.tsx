@@ -336,6 +336,20 @@ export const CvPdfLayout = forwardRef<
                         ))}
                       </ul>
                     ) : null}
+                    {x.skills?.length ? (
+                      <div className="mt-3" data-pdf-page-break="">
+                        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                          {t('skills')}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {x.skills.map((skill) => (
+                            <span key={`${rowKey}:skill:${skill}`} className={pdfChipSmClass}>
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </article>
                 )
               })}
