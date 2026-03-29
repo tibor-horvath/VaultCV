@@ -89,10 +89,22 @@ export function computePdfSliceEnds(
     }
     const inRange = breaks.filter((c) => c > y && c <= limit)
     let end = inRange.length > 0 ? Math.max(...inRange) : limit
-    if (inRange.length === 0 && noSplitRangesCanvas.length) {
-      const blocking = noSplitRangesCanvas.find((r) => r.top > y + 0.5 && r.top < limit && r.bottom > limit)
-      if (blocking) end = blocking.top
-      if (end <= y + 0.5) end = limit
+    if (noSplitRangesCanvas.length) {
+      // Never cut inside a protected range: move the cut up to the range start
+      // (or an earlier break marker), unless the range itself starts at the page top.
+      for (let guard = 0; guard < 8; guard += 1) {
+        const blocking = noSplitRangesCanvas.find((r) => end > r.top + 0.5 && end < r.bottom - 0.5)
+        if (!blocking) break
+        const before = breaks.filter((c) => c > y + 0.5 && c <= blocking.top + 0.5)
+        const fallback = before.length > 0 ? Math.max(...before) : blocking.top
+        if (fallback > y + 0.5) {
+          end = fallback
+          continue
+        }
+        // Item starts exactly at page start (or is too tall): unavoidable.
+        end = limit
+        break
+      }
     }
     ends.push(end)
     y = end

@@ -197,6 +197,7 @@ export const CvPdfLayout = forwardRef<
                           key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`}
                           className="py-2.5"
                           data-pdf-page-break=""
+                          data-pdf-no-split=""
                         >
                           <div className="font-semibold text-slate-900" data-pdf-page-break="">
                             {c.label}
@@ -282,7 +283,7 @@ export const CvPdfLayout = forwardRef<
               {cv.experience.map((x) => {
                 const rowKey = stableExperienceKey(x)
                 return (
-                  <article key={rowKey} className="py-4" data-pdf-page-break="">
+                  <article key={rowKey} className="py-4" data-pdf-page-break="" data-pdf-no-split="">
                     {/* Stacked rows + per-row breaks so raster page slices do not cut through a single headline line */}
                     <div className="space-y-1 font-semibold leading-none text-slate-900">
                       <div data-pdf-page-break="">{x.role}</div>
@@ -356,6 +357,7 @@ export const CvPdfLayout = forwardRef<
                     key={p.name}
                     className="py-4"
                     {...(projectIndex > 0 ? { 'data-pdf-page-break': '' } : {})}
+                    data-pdf-no-split=""
                   >
                     <div className="font-semibold text-slate-900">{p.name}</div>
                     {projectLinks.length ? (
@@ -402,7 +404,7 @@ export const CvPdfLayout = forwardRef<
                 const rowKey = stableEducationKey(e)
                 const credential = educationCredentialLine(e)
                 return (
-                  <article key={rowKey} className="py-4" data-pdf-page-break="">
+                  <article key={rowKey} className="py-4" data-pdf-page-break="" data-pdf-no-split="">
                     {credential ? (
                       <div className="font-semibold text-slate-900" data-pdf-page-break="">
                         {credential}
