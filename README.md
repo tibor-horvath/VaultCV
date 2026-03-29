@@ -26,3 +26,7 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 | Mock CV for local UI testing | [docs/mock-data.md](docs/mock-data.md) |
 | PDF export (basics card; html2canvas + jsPDF) | [docs/pdf-export.md](docs/pdf-export.md) |
 
+## Acknowledgments
+
+Parts of this repository were developed using [Cursor](https://cursor.com) (AI-assisted editing).
+
