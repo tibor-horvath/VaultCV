@@ -236,7 +236,10 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                         {x.company}
                       </span>
                     </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
+                    <div
+                      className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600"
+                      data-pdf-page-break=""
+                    >
                       <span className="inline-flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5" />
                         {x.start} – {x.end ?? t('present')}
@@ -251,13 +254,13 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                     {x.companyUrl || x.companyLinkedInUrl ? (
                       <div className="mt-2 space-y-2">
                         {x.companyUrl ? (
-                          <div className="flex min-w-0 items-center gap-2">
+                          <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
                             <Globe className={pdfLinkIconClass} aria-hidden="true" />
                             <PdfPrintUrlLine href={x.companyUrl} className="min-w-0 flex-1" />
                           </div>
                         ) : null}
                         {x.companyLinkedInUrl ? (
-                          <div className="flex min-w-0 items-center gap-2">
+                          <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
                             <SiLinkedinIcon className={pdfLinkIconClass} aria-hidden="true" />
                             <PdfPrintUrlLine href={x.companyLinkedInUrl} className="min-w-0 flex-1" />
                           </div>
@@ -265,7 +268,10 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                       </div>
                     ) : null}
                     {x.highlights?.length ? (
-                      <ul className="mt-3 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
+                      <ul
+                        className="mt-3 list-disc space-y-1 pl-4 text-[13px] text-slate-700"
+                        data-pdf-page-break=""
+                      >
                         {x.highlights.map((h, i) => (
                           <li key={highlightChildKey(rowKey, i)}>{h}</li>
                         ))}
@@ -298,7 +304,11 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                           const kind = inferProjectLinkLabelKind(l)
                           const Icon = kind === 'github' ? SiGithubIcon : Globe
                           return (
-                            <div key={`${p.name}:${l.url}`} className="flex min-w-0 items-center gap-2">
+                            <div
+                              key={`${p.name}:${l.url}`}
+                              className="flex min-w-0 items-center gap-2"
+                              data-pdf-page-break=""
+                            >
                               <Icon className={pdfLinkIconClass} aria-hidden="true" />
                               <PdfPrintUrlLine href={l.url} className="min-w-0 flex-1" />
                             </div>
@@ -306,9 +316,11 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                         })}
                       </div>
                     ) : null}
-                    <p className="mt-2 text-[13px] text-slate-700">{p.description}</p>
+                    <p className="mt-2 text-[13px] text-slate-700" data-pdf-page-break="">
+                      {p.description}
+                    </p>
                     {p.tags?.length ? (
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-2 flex flex-wrap gap-2" data-pdf-page-break="">
                         {p.tags.map((tag) => (
                           <span key={tag} className={pdfChipSmClass}>
                             {tag}
@@ -340,12 +352,12 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                     {credential ? <div className="font-semibold text-slate-900">{credential}</div> : null}
                     <div className={`font-semibold text-slate-900 ${credential ? 'mt-1' : ''}`}>{e.school}</div>
                     {e.schoolUrl ? (
-                      <div className="mt-1.5 flex min-w-0 items-center gap-2">
+                      <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
                         <Globe className={pdfLinkIconClass} aria-hidden="true" />
                         <PdfPrintUrlLine href={e.schoolUrl} className="min-w-0 flex-1" />
                       </div>
                     ) : null}
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600" data-pdf-page-break="">
                       {e.location ? (
                         <span className="inline-flex items-center gap-1">
                           <MapPin className="h-3.5 w-3.5" />
@@ -360,7 +372,10 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                       ) : null}
                     </div>
                     {e.highlights?.length ? (
-                      <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
+                      <ul
+                        className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-700"
+                        data-pdf-page-break=""
+                      >
                         {e.highlights.map((h, i) => (
                           <li key={highlightChildKey(rowKey, i)}>{h}</li>
                         ))}
