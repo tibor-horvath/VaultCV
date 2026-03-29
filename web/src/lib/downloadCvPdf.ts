@@ -177,21 +177,40 @@ async function fetchImageAsDataUrl(absolute: string): Promise<string | null> {
 /**
  * When fetch fails but pixels are already available (CORS-safe), copy to PNG data URL for html2canvas.
  */
-function rasterizeLoadedImageToPngDataUrl(img: HTMLImageElement): string | null {
+function rasterizeLoadedImageToDataUrl(
+  img: HTMLImageElement,
+  opts: { maxSidePx?: number; mimeType?: string; quality?: number } = {},
+): string | null {
   if (!img.complete || img.naturalWidth === 0) return null
   try {
-    const w = img.naturalWidth
-    const h = img.naturalHeight
+    const maxSidePx = opts.maxSidePx ?? 0
+    const longest = Math.max(img.naturalWidth, img.naturalHeight)
+    const scale = maxSidePx > 0 && longest > maxSidePx ? maxSidePx / longest : 1
+    const w = Math.max(1, Math.round(img.naturalWidth * scale))
+    const h = Math.max(1, Math.round(img.naturalHeight * scale))
     const canvas = document.createElement('canvas')
     canvas.width = w
     canvas.height = h
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
-    ctx.drawImage(img, 0, 0)
-    return canvas.toDataURL('image/png')
+    ctx.drawImage(img, 0, 0, w, h)
+    return canvas.toDataURL(opts.mimeType ?? 'image/png', opts.quality)
   } catch {
     return null
   }
+}
+
+async function downscaleDataUrlImage(
+  dataUrl: string,
+  opts: { maxSidePx: number; mimeType: string; quality?: number },
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.decoding = 'sync'
+    img.onload = () => resolve(rasterizeLoadedImageToDataUrl(img, opts))
+    img.onerror = () => resolve(null)
+    img.src = dataUrl
+  })
 }
 
 /**
@@ -204,6 +223,7 @@ export async function inlineRemoteImagesForPdfCapture(root: HTMLElement): Promis
   const ordered = profile ? [profile, ...imgs.filter((n) => n !== profile)] : imgs
 
   for (const img of ordered) {
+    const isProfilePhoto = img === profile
     const srcAttr = img.getAttribute('src') ?? ''
     if (!srcAttr || srcAttr.startsWith('data:')) continue
     let absolute: string
@@ -213,7 +233,20 @@ export async function inlineRemoteImagesForPdfCapture(root: HTMLElement): Promis
       continue
     }
     let dataUrl = await fetchImageAsDataUrl(absolute)
-    if (!dataUrl) dataUrl = rasterizeLoadedImageToPngDataUrl(img)
+    if (isProfilePhoto && dataUrl) {
+      // Mobile Edge may drop very large decoded profile images during html2canvas capture.
+      const downscaled = await downscaleDataUrlImage(dataUrl, {
+        maxSidePx: 768,
+        mimeType: 'image/jpeg',
+        quality: 0.9,
+      })
+      if (downscaled) dataUrl = downscaled
+    }
+    if (!dataUrl) {
+      dataUrl = rasterizeLoadedImageToDataUrl(img, {
+        ...(isProfilePhoto ? { maxSidePx: 768, mimeType: 'image/jpeg', quality: 0.9 } : {}),
+      })
+    }
     if (dataUrl) {
       img.src = dataUrl
       img.removeAttribute('crossorigin')
