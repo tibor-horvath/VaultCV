@@ -32,6 +32,24 @@ jobs:
                const coredemo = require('@actions/core')
                return await coredemo.getIDToken()
            result-encoding: string
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            api/package-lock.json
+      - name: Install and test (web)
+        working-directory: web
+        run: |
+          npm ci
+          npm test
+      - name: Install and test (api)
+        working-directory: api
+        run: |
+          npm ci
+          npm test
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
