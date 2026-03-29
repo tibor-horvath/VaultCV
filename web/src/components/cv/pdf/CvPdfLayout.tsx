@@ -14,7 +14,7 @@ import { useI18n } from '../../../lib/i18n'
 import { SiGithubIcon, SiLinkedinIcon } from '../../icons/SimpleBrandIcons'
 import { CredentialIssuerIcon } from '../CredentialIssuerIcon'
 
-const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
+const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'school', 'language', 'other']
 
 /** Decorative icon next to links (not interactive; PDF hit targets use the URL line). */
 const pdfLinkIconClass = 'h-4 w-4 shrink-0 translate-y-px text-slate-600 opacity-90'
@@ -185,6 +185,8 @@ export const CvPdfLayout = forwardRef<
                       <CredentialIssuerIcon issuer={issuer} className="h-4 w-4 shrink-0 translate-y-px text-slate-600" />
                       {issuer === 'language'
                         ? t('languageExams')
+                        : issuer === 'school'
+                          ? t('education')
                         : issuer === 'other'
                           ? t('other')
                           : issuer === 'aws'

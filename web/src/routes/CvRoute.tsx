@@ -50,7 +50,7 @@ type CvRouteState =
   | { kind: 'error'; messageKey: MessageKey; details?: string; status?: number }
   | { kind: 'ready'; cv: CvData; sessionExpiresAt?: string }
 
-const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
+const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'school', 'language', 'other']
 
 function mapApiErrorToMessage(code: ApiErrorCode): MessageKey {
   if (code === 'network_error') return 'networkError'
@@ -217,6 +217,7 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
   if (issuer === 'microsoft') return <MicrosoftMark className={cls} />
   if (issuer === 'aws') return <AwsMark className={cls} />
   if (issuer === 'google') return <SiGoogleIcon className={cls} aria-hidden="true" focusable="false" />
+  if (issuer === 'school') return <GraduationCap className={cls} />
   if (issuer === 'language') return <Languages className={cls} />
   return <ShieldCheck className={cls} />
 }
@@ -412,6 +413,8 @@ export function CvRoute() {
                           <CredentialIssuerIcon issuer={issuer} />
                           {issuer === 'language'
                             ? t('languageExams')
+                            : issuer === 'school'
+                              ? t('education')
                             : issuer === 'other'
                               ? t('other')
                               : issuer === 'aws'

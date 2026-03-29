@@ -44,6 +44,12 @@ function getMockCvEn(): LocalizedCvData {
         url: 'https://www.cloudskillsboost.google/',
       },
       {
+        issuer: 'school',
+        label: 'Example University - Data Engineering Certificate',
+        url: 'https://example.edu/certificates/data-engineering',
+        dateEarned: '2022-12',
+      },
+      {
         issuer: 'language',
         label: 'Cambridge English C1 Advanced (CAE)',
         url: 'https://www.cambridgeenglish.org/exams-and-tests/advanced/',
@@ -156,6 +162,12 @@ function getMockCvHu(): LocalizedCvData {
         url: 'https://www.cloudskillsboost.google/',
       },
       {
+        issuer: 'school',
+        label: 'Example University - Data Engineering tanúsítvány',
+        url: 'https://example.edu/certificates/data-engineering',
+        dateEarned: '2022-12',
+      },
+      {
         issuer: 'language',
         label: 'Cambridge English C1 Advanced (CAE)',
         url: 'https://www.cambridgeenglish.org/exams-and-tests/advanced/',
@@ -266,6 +278,12 @@ function getMockCvDe(): LocalizedCvData {
         issuer: 'google',
         label: 'Google Cloud Skills Boost Profil',
         url: 'https://www.cloudskillsboost.google/',
+      },
+      {
+        issuer: 'school',
+        label: 'Example University - Data Engineering Zertifikat',
+        url: 'https://example.edu/certificates/data-engineering',
+        dateEarned: '2022-12',
       },
       {
         issuer: 'language',

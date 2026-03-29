@@ -10,7 +10,7 @@ Key fields:
   - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
   - Keep photo bytes out of `PRIVATE_PROFILE_JSON`. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
-- `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | language | other`
+- `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | school | language | other`
 - `languages`: string array, shown as chips
 - `skills`: optional top-level string array (general skill chips; separate from per-job skills on `experience`)
 - `experience`: supports `companyUrl?` to link the company name, `companyLinkedInUrl?` to show a LinkedIn icon link, and `skills?` to show per-job skill chips
@@ -52,6 +52,12 @@ Below is a single JSON object (what you paste as the value of `PRIVATE_PROFILE_J
       "url": "https://aws.amazon.com/certification/",
       "dateEarned": "2023-01",
       "dateExpires": "2026-01"
+    },
+    {
+      "issuer": "school",
+      "label": "Example University - Data Engineering Certificate",
+      "url": "https://www.example.edu/certificates/data-engineering",
+      "dateEarned": "2022-12"
     }
   ],
   "experience": [

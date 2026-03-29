@@ -1,4 +1,4 @@
-import { Languages, ShieldCheck } from 'lucide-react'
+import { GraduationCap, Languages, ShieldCheck } from 'lucide-react'
 import type { CvCredentialIssuer } from '../../types/cv'
 import { SiGoogleIcon } from '../icons/SimpleBrandIcons'
 
@@ -34,6 +34,7 @@ export function CredentialIssuerIcon({ issuer, className }: { issuer: CvCredenti
   if (issuer === 'microsoft') return <MicrosoftMark className={cls} />
   if (issuer === 'aws') return <AwsMark className={cls} />
   if (issuer === 'google') return <SiGoogleIcon className={cls} aria-hidden="true" focusable="false" />
+  if (issuer === 'school') return <GraduationCap className={cls} />
   if (issuer === 'language') return <Languages className={cls} />
   return <ShieldCheck className={cls} />
 }
