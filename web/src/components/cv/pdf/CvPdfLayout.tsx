@@ -104,7 +104,7 @@ export const CvPdfLayout = forwardRef<
               width={160}
               height={160}
               crossOrigin={isCrossOriginImageUrl(photoSrc) ? 'anonymous' : undefined}
-              decoding="sync"
+              decoding="async"
               loading="eager"
               className="aspect-square h-36 w-36 rounded-3xl object-cover object-top ring-2 ring-white shadow-md sm:h-40 sm:w-40"
             />

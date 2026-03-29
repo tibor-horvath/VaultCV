@@ -1,6 +1,5 @@
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
-import { isCrossOriginImageUrl } from './cvPresentation'
 
 export type PdfLinkRect = {
   href: string
@@ -133,41 +132,104 @@ function readBlobAsDataUrl(blob: Blob): Promise<string> {
   })
 }
 
+async function fetchImageAsDataUrl(absolute: string): Promise<string | null> {
+  try {
+    const res = await fetch(absolute, { mode: 'cors', credentials: 'omit' })
+    if (!res.ok) return null
+    const blob = await res.blob()
+    return await readBlobAsDataUrl(blob)
+  } catch {
+    return null
+  }
+}
+
 /**
- * Fetches remote http(s) images and replaces `src` with a data URL so html2canvas does not rely
- * on a second load (problematic on mobile / iOS). Requires blob CORS and CSP `connect-src`
- * for the image host.
+ * When fetch fails but pixels are already available (CORS-safe), copy to PNG data URL for html2canvas.
+ */
+function rasterizeLoadedImageToPngDataUrl(img: HTMLImageElement): string | null {
+  if (!img.complete || img.naturalWidth === 0) return null
+  try {
+    const w = img.naturalWidth
+    const h = img.naturalHeight
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(img, 0, 0)
+    return canvas.toDataURL('image/png')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Replaces every non-data `img` src with a data URL so html2canvas does not re-fetch in its clone
+ * (unreliable on mobile Edge / Safari). Profile photo is processed first.
  */
 export async function inlineRemoteImagesForPdfCapture(root: HTMLElement): Promise<void> {
   const imgs = Array.from(root.querySelectorAll('img'))
-  for (const img of imgs) {
+  const profile = root.querySelector<HTMLImageElement>('img[data-pdf-profile-photo]')
+  const ordered = profile ? [profile, ...imgs.filter((n) => n !== profile)] : imgs
+
+  for (const img of ordered) {
     const srcAttr = img.getAttribute('src') ?? ''
     if (!srcAttr || srcAttr.startsWith('data:')) continue
-    if (!isCrossOriginImageUrl(srcAttr)) continue
     let absolute: string
     try {
       absolute = new URL(srcAttr, window.location.href).href
     } catch {
       continue
     }
-    try {
-      const res = await fetch(absolute, { mode: 'cors', credentials: 'omit' })
-      if (!res.ok) continue
-      const blob = await res.blob()
-      const dataUrl = await readBlobAsDataUrl(blob)
+    let dataUrl = await fetchImageAsDataUrl(absolute)
+    if (!dataUrl) dataUrl = rasterizeLoadedImageToPngDataUrl(img)
+    if (dataUrl) {
       img.src = dataUrl
       img.removeAttribute('crossorigin')
-    } catch {
-      // CORS, CSP, or network
     }
   }
 }
 
-/** Mobile Safari often hits canvas/memory limits at scale 2; slightly lower scale keeps photos in the raster. */
+/**
+ * Off-screen capture (e.g. `left: -10000px`) can prevent decode on mobile browsers. During capture,
+ * move the wrapper into the viewport; restore after html2canvas.
+ */
+function normalizePdfCaptureViewport(root: HTMLElement): () => void {
+  const parent = root.parentElement
+  if (!parent) return () => {}
+
+  if (parent.getBoundingClientRect().left > -200) return () => {}
+
+  const props = ['position', 'left', 'top', 'z-index', 'transform'] as const
+  const prev: Array<[string, string]> = props.map((k) => [k, parent.style.getPropertyValue(k)])
+
+  parent.style.setProperty('position', 'fixed', 'important')
+  parent.style.setProperty('left', '0', 'important')
+  parent.style.setProperty('top', '0', 'important')
+  parent.style.setProperty('z-index', '-9999', 'important')
+  parent.style.setProperty('transform', 'none', 'important')
+
+  return () => {
+    for (const [k, v] of prev) {
+      if (v) parent.style.setProperty(k, v)
+      else parent.style.removeProperty(k)
+    }
+  }
+}
+
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()))
+}
+
+/** Narrow or touch UIs: lower scale avoids huge canvases that drop image layers on mobile Edge/Chromium. */
 function defaultHtml2canvasScale(requested?: number): number {
   if (requested != null) return requested
-  if (typeof window !== 'undefined' && window.innerWidth < 768) {
-    return 1.5
+  if (typeof window === 'undefined') return 2
+  const minDim = Math.min(window.innerWidth, window.innerHeight)
+  const coarse =
+    typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
+  if (minDim < 768 || (coarse && minDim < 1024)) {
+    return 1.25
   }
   return 2
 }
@@ -188,26 +250,42 @@ export function canvasPageSliceHeightPx(contentH_mm: number, contentW_mm: number
 export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: DownloadCvPdfOptions): Promise<void> {
   const { margin, contentW, contentH } = a4LayoutMm()
   const captureScale = defaultHtml2canvasScale(scale)
-  await waitForImages(root)
-  await inlineRemoteImagesForPdfCapture(root)
-  await waitForImages(root)
-  const rootW = root.offsetWidth
-  const rootH = root.offsetHeight
-
-  const canvas = await html2canvas(root, {
-    scale: captureScale,
-    useCORS: true,
-    allowTaint: false,
-    imageTimeout: 30000,
-    logging: false,
-    backgroundColor: '#ffffff',
-    scrollX: 0,
-    scrollY: 0,
-    windowWidth: root.scrollWidth,
-    windowHeight: root.scrollHeight,
-    onclone(clonedDoc) {
-      const style = clonedDoc.createElement('style')
-      style.textContent = `
+  const restoreViewport = normalizePdfCaptureViewport(root)
+  let rootW = 0
+  let rootH = 0
+  let canvas: HTMLCanvasElement
+  try {
+    await nextFrame()
+    await nextFrame()
+    await waitForImages(root)
+    await inlineRemoteImagesForPdfCapture(root)
+    await waitForImages(root)
+    await nextFrame()
+    rootW = root.offsetWidth
+    rootH = root.offsetHeight
+    canvas = await html2canvas(root, {
+      scale: captureScale,
+      useCORS: true,
+      allowTaint: false,
+      foreignObjectRendering: false,
+      imageTimeout: 60000,
+      logging: false,
+      backgroundColor: '#ffffff',
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: root.scrollWidth,
+      windowHeight: root.scrollHeight,
+      onclone(clonedDoc) {
+        const livePhoto = root.querySelector<HTMLImageElement>('img[data-pdf-profile-photo]')
+        const clonePhoto = clonedDoc.querySelector<HTMLImageElement>('img[data-pdf-profile-photo]')
+        if (livePhoto && clonePhoto) {
+          const src = livePhoto.currentSrc || livePhoto.getAttribute('src') || livePhoto.src
+          if (src.startsWith('data:')) {
+            clonePhoto.setAttribute('src', src)
+          }
+        }
+        const style = clonedDoc.createElement('style')
+        style.textContent = `
         .pdf-print-chip {
           display: inline-grid !important;
           box-sizing: border-box !important;
@@ -228,9 +306,12 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
           font-size: 11px !important;
         }
       `
-      clonedDoc.head.appendChild(style)
-    },
-  })
+        clonedDoc.head.appendChild(style)
+      },
+    })
+  } finally {
+    restoreViewport()
+  }
 
   const rectsDom = collectPdfLinkRects(root)
   const rects = mapRectsToCanvas(rectsDom, rootW, rootH, canvas.width, canvas.height)
