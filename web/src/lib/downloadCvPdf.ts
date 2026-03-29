@@ -46,11 +46,37 @@ export function collectPdfPageBreakTops(root: HTMLElement): number[] {
   return deduped
 }
 
+type VerticalRange = { top: number; bottom: number }
+
+/**
+ * Areas where a hard raster cut should be avoided. Used for list items so a page break
+ * is moved to the item's start instead of slicing text in the middle.
+ */
+export function collectPdfNoSplitRanges(root: HTMLElement): VerticalRange[] {
+  const rootRect = root.getBoundingClientRect()
+  const scrollY = root.scrollTop
+  const nodes = root.querySelectorAll<HTMLElement>('[data-pdf-no-split]')
+  const ranges: VerticalRange[] = []
+  nodes.forEach((el) => {
+    const r = el.getBoundingClientRect()
+    const top = r.top - rootRect.top + scrollY
+    const bottom = r.bottom - rootRect.top + scrollY
+    if (bottom - top > 0.5) ranges.push({ top, bottom })
+  })
+  ranges.sort((a, b) => a.top - b.top)
+  return ranges
+}
+
 /**
  * Vertical slice end positions in canvas px so cuts fall on page-break markers when possible.
  * If no marker fits within maxSlicePx, falls back to a hard cut (single item taller than one page).
  */
-export function computePdfSliceEnds(canvasHeight: number, maxSlicePx: number, breakTopsCanvas: number[]): number[] {
+export function computePdfSliceEnds(
+  canvasHeight: number,
+  maxSlicePx: number,
+  breakTopsCanvas: number[],
+  noSplitRangesCanvas: VerticalRange[] = [],
+): number[] {
   const breaks = [...new Set([0, ...breakTopsCanvas, canvasHeight])].sort((a, b) => a - b)
 
   const ends: number[] = []
@@ -62,7 +88,12 @@ export function computePdfSliceEnds(canvasHeight: number, maxSlicePx: number, br
       break
     }
     const inRange = breaks.filter((c) => c > y && c <= limit)
-    const end = inRange.length > 0 ? Math.max(...inRange) : limit
+    let end = inRange.length > 0 ? Math.max(...inRange) : limit
+    if (inRange.length === 0 && noSplitRangesCanvas.length) {
+      const blocking = noSplitRangesCanvas.find((r) => r.top > y + 0.5 && r.top < limit && r.bottom > limit)
+      if (blocking) end = blocking.top
+      if (end <= y + 0.5) end = limit
+    }
     ends.push(end)
     y = end
   }
@@ -319,10 +350,12 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
   const breakTopsDom = collectPdfPageBreakTops(root)
   const sy = canvas.height / rootH
   const breakTopsCanvas = breakTopsDom.map((t) => t * sy)
+  const noSplitRangesDom = collectPdfNoSplitRanges(root)
+  const noSplitRangesCanvas = noSplitRangesDom.map((r) => ({ top: r.top * sy, bottom: r.bottom * sy }))
 
   const mmPerPx = contentW / canvas.width
   const pageSlicePx = canvasPageSliceHeightPx(contentH, contentW, canvas.width)
-  const sliceEnds = computePdfSliceEnds(canvas.height, pageSlicePx, breakTopsCanvas)
+  const sliceEnds = computePdfSliceEnds(canvas.height, pageSlicePx, breakTopsCanvas, noSplitRangesCanvas)
 
   const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
 

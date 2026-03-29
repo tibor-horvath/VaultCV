@@ -327,7 +327,7 @@ export const CvPdfLayout = forwardRef<
                     {x.highlights?.length ? (
                       <ul className="mt-3 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
                         {x.highlights.map((h, i) => (
-                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="">
+                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="" data-pdf-no-split="">
                             {h}
                           </li>
                         ))}
@@ -442,7 +442,7 @@ export const CvPdfLayout = forwardRef<
                     {e.highlights?.length ? (
                       <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
                         {e.highlights.map((h, i) => (
-                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="">
+                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="" data-pdf-no-split="">
                             {h}
                           </li>
                         ))}
