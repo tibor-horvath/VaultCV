@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { isCrossOriginImageUrl } from './cvPresentation'
 
 export type PdfLinkRect = {
   href: string
@@ -123,6 +124,54 @@ export async function waitForImages(root: HTMLElement): Promise<void> {
   )
 }
 
+function readBlobAsDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(r.result as string)
+    r.onerror = () => reject(r.error)
+    r.readAsDataURL(blob)
+  })
+}
+
+/**
+ * Fetches remote http(s) images and replaces `src` with a data URL so html2canvas does not rely
+ * on a second load (problematic on mobile / iOS). Requires blob CORS and CSP `connect-src`
+ * for the image host.
+ */
+export async function inlineRemoteImagesForPdfCapture(root: HTMLElement): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll('img'))
+  for (const img of imgs) {
+    const srcAttr = img.getAttribute('src') ?? ''
+    if (!srcAttr || srcAttr.startsWith('data:')) continue
+    if (!isCrossOriginImageUrl(srcAttr)) continue
+    let absolute: string
+    try {
+      absolute = new URL(srcAttr, window.location.href).href
+    } catch {
+      continue
+    }
+    try {
+      const res = await fetch(absolute, { mode: 'cors', credentials: 'omit' })
+      if (!res.ok) continue
+      const blob = await res.blob()
+      const dataUrl = await readBlobAsDataUrl(blob)
+      img.src = dataUrl
+      img.removeAttribute('crossorigin')
+    } catch {
+      // CORS, CSP, or network
+    }
+  }
+}
+
+/** Mobile Safari often hits canvas/memory limits at scale 2; slightly lower scale keeps photos in the raster. */
+function defaultHtml2canvasScale(requested?: number): number {
+  if (requested != null) return requested
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return 1.5
+  }
+  return 2
+}
+
 /**
  * Single scale from canvas pixels → mm: fit content width to printable width.
  * Using one mmPerPx for both axes keeps aspect ratio (avoids squeezed/stretched PDF).
@@ -136,19 +185,24 @@ export function canvasPageSliceHeightPx(contentH_mm: number, contentW_mm: number
 /**
  * html2canvas raster + jsPDF with link annotations. CORS: useCORS for remote photos.
  */
-export async function downloadCvPdf({ root, scale = 2, fileBaseName = 'cv' }: DownloadCvPdfOptions): Promise<void> {
+export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: DownloadCvPdfOptions): Promise<void> {
   const { margin, contentW, contentH } = a4LayoutMm()
+  const captureScale = defaultHtml2canvasScale(scale)
+  await waitForImages(root)
+  await inlineRemoteImagesForPdfCapture(root)
   await waitForImages(root)
   const rootW = root.offsetWidth
   const rootH = root.offsetHeight
 
   const canvas = await html2canvas(root, {
-    scale,
+    scale: captureScale,
     useCORS: true,
     allowTaint: false,
-    imageTimeout: 20000,
+    imageTimeout: 30000,
     logging: false,
     backgroundColor: '#ffffff',
+    scrollX: 0,
+    scrollY: 0,
     windowWidth: root.scrollWidth,
     windowHeight: root.scrollHeight,
     onclone(clonedDoc) {

@@ -67,12 +67,13 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start">
           <div className="mx-auto shrink-0 sm:mx-0">
             <img
+              data-pdf-profile-photo=""
               src={photoSrc}
               alt={basics.photoAlt ?? `${basics.name} — ${t('pdfProfilePhotoContext')}`}
               width={160}
               height={160}
               crossOrigin={isCrossOriginImageUrl(photoSrc) ? 'anonymous' : undefined}
-              decoding="async"
+              decoding="sync"
               loading="eager"
               className="aspect-square h-36 w-36 rounded-3xl object-cover object-top ring-2 ring-white shadow-md sm:h-40 sm:w-40"
             />
