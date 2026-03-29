@@ -30,7 +30,8 @@ function getFallbackPhotoDataUrl() {
 }
 
 export function buildPhotoSrc(basics: BasicsLike) {
-  if (basics.photoUrl) return basics.photoUrl
+  const raw = basics.photoUrl
+  if (raw != null && String(raw).trim() !== '') return String(raw).trim()
 
   return getFallbackPhotoDataUrl()
 }
@@ -39,7 +40,8 @@ export function buildPhotoSrc(basics: BasicsLike) {
  * True for http(s) or protocol-relative URLs. Use `crossOrigin="anonymous"` on `<img>` so
  * canvas-based capture (e.g. html2canvas) can read pixels; the image host must send CORS headers.
  */
-export function isCrossOriginImageUrl(src: string): boolean {
+export function isCrossOriginImageUrl(src: string | undefined | null): boolean {
+  if (src == null || typeof src !== 'string') return false
   return /^https?:\/\//i.test(src) || src.startsWith('//')
 }
 
@@ -47,8 +49,8 @@ export function isCrossOriginImageUrl(src: string): boolean {
  * Headlines like "Role · React · Azure" are split: the role is shown as plain text;
  * the rest stays in the skills chip. A single segment (no middle dot) is only the role.
  */
-export function parseBasicsHeadline(headline: string): { role: string; chip: string | null } {
-  const trimmed = headline.trim()
+export function parseBasicsHeadline(headline: string | undefined | null): { role: string; chip: string | null } {
+  const trimmed = (headline ?? '').trim()
   if (!trimmed) return { role: '', chip: null }
 
   const parts = trimmed
@@ -63,12 +65,13 @@ export function parseBasicsHeadline(headline: string): { role: string; chip: str
 }
 
 export function inferLinkKind(link: LinkLike): 'github' | 'linkedin' | 'other' {
-  const label = link.label.toLowerCase()
+  const label = (link.label ?? '').toLowerCase()
   if (label.includes('github')) return 'github'
   if (label.includes('linkedin')) return 'linkedin'
 
   try {
-    const host = new URL(link.url).hostname.toLowerCase()
+    if (link.url == null || String(link.url).trim() === '') return 'other'
+    const host = new URL(String(link.url)).hostname.toLowerCase()
     if (host === 'github.com' || host.endsWith('.github.com')) return 'github'
     if (host === 'linkedin.com' || host.endsWith('.linkedin.com')) return 'linkedin'
   } catch {
@@ -82,7 +85,7 @@ export function inferLinkKind(link: LinkLike): 'github' | 'linkedin' | 'other' {
  * Project links with labels `github` or `web` (case-insensitive) render as icons next to the project name.
  */
 export function inferProjectLinkLabelKind(link: LinkLike): 'github' | 'web' | 'other' {
-  const label = link.label.trim().toLowerCase()
+  const label = (link.label ?? '').trim().toLowerCase()
   if (label === 'github') return 'github'
   if (label === 'web') return 'web'
   return 'other'

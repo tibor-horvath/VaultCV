@@ -24,12 +24,14 @@ const pdfChipSmClass =
   'pdf-print-chip pdf-print-chip--sm rounded-full border border-slate-200/90 bg-slate-50 px-[calc(10px*1.05)] font-medium text-slate-600'
 
 /** Visible, clickable URL for screen + PDF link annotations (`data-pdf-link` on the text, not the icon). */
-function PdfPrintUrlLine({ href, className = '' }: { href: string; className?: string }) {
-  const text = href.startsWith('mailto:') ? href.slice('mailto:'.length) : href
-  const mailto = href.startsWith('mailto:')
+function PdfPrintUrlLine({ href, className = '' }: { href: string | undefined; className?: string }) {
+  if (href == null || String(href).trim() === '') return null
+  const safe = String(href)
+  const text = safe.startsWith('mailto:') ? safe.slice('mailto:'.length) : safe
+  const mailto = safe.startsWith('mailto:')
   return (
     <a
-      href={href}
+      href={safe}
       data-pdf-link=""
       className={`max-w-full break-all font-mono text-[10px] leading-snug text-slate-600 underline decoration-slate-300/80 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500${className ? ` ${className}` : ''}`}
       {...(mailto ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
@@ -48,7 +50,9 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
   const basics = cv.basics
   const photoSrc = buildPhotoSrc(basics)
   const { role, chip } = parseBasicsHeadline(basics.headline)
-  const visibleLinks = (cv.links ?? []).filter((l) => inferLinkKind(l) !== 'other')
+  const visibleLinks = (cv.links ?? []).filter(
+    (l) => l.url != null && String(l.url).trim() !== '' && inferLinkKind(l) !== 'other',
+  )
 
   return (
     <div

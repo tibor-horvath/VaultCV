@@ -29,6 +29,11 @@ describe('isCrossOriginImageUrl', () => {
     expect(isCrossOriginImageUrl('data:image/svg+xml;base64,xx')).toBe(false)
     expect(isCrossOriginImageUrl('/assets/photo.jpg')).toBe(false)
   })
+
+  it('is false for null or undefined', () => {
+    expect(isCrossOriginImageUrl(undefined)).toBe(false)
+    expect(isCrossOriginImageUrl(null)).toBe(false)
+  })
 })
 
 describe('parseBasicsHeadline', () => {
@@ -45,6 +50,10 @@ describe('parseBasicsHeadline', () => {
       role: 'Role',
       chip: 'React · Azure',
     })
+  })
+
+  it('handles undefined headline', () => {
+    expect(parseBasicsHeadline(undefined)).toEqual({ role: '', chip: null })
   })
 })
 
