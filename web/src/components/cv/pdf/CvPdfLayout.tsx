@@ -339,9 +339,7 @@ export const CvPdfLayout = forwardRef<
                 const projectLinks = (p.links ?? []).filter((l) => hasPdfUrl(l.url))
                 return (
                   <article key={p.name} className="py-4" data-pdf-page-break="">
-                    <div className="font-semibold text-slate-900" data-pdf-page-break="">
-                      {p.name}
-                    </div>
+                    <div className="font-semibold text-slate-900">{p.name}</div>
                     {projectLinks.length ? (
                       <div className="mt-2 space-y-2">
                         {projectLinks.map((l) => {
@@ -351,7 +349,6 @@ export const CvPdfLayout = forwardRef<
                             <div
                               key={`${p.name}:${l.url}`}
                               className="flex min-w-0 items-center gap-2"
-                              data-pdf-page-break=""
                             >
                               <Icon className={pdfLinkIconClass} aria-hidden="true" />
                               <PdfPrintUrlLine href={l.url} className="min-w-0 flex-1" />
@@ -360,11 +357,9 @@ export const CvPdfLayout = forwardRef<
                         })}
                       </div>
                     ) : null}
-                    <p className="mt-2 text-[13px] text-slate-700" data-pdf-page-break="">
-                      {p.description}
-                    </p>
+                    <p className="mt-2 text-[13px] text-slate-700">{p.description}</p>
                     {p.tags?.length ? (
-                      <div className="mt-2 flex flex-wrap gap-2" data-pdf-page-break="">
+                      <div className="mt-2 flex flex-wrap gap-2">
                         {p.tags.map((tag) => (
                           <span key={tag} className={pdfChipSmClass}>
                             {tag}
