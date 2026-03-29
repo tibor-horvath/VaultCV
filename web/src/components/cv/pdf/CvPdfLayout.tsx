@@ -23,22 +23,46 @@ const pdfLinkIconClass = 'h-4 w-4 shrink-0 text-slate-600 opacity-90'
 const pdfChipSmClass =
   'pdf-print-chip pdf-print-chip--sm rounded-full border border-slate-200/90 bg-slate-50 px-[calc(10px*1.05)] font-medium text-slate-600'
 
+/**
+ * Bare `www.` / missing-scheme URLs would resolve as same-site paths (same tab). Add `https:` when needed.
+ * `mailto:` / `tel:` left as-is so the UA handles them; those do not use `target="_blank"`.
+ */
+function normalizePdfAnchorHref(raw: string): string {
+  const s = raw.trim()
+  if (!s) return s
+  if (/^[a-z][a-z0-9+.-]*:/i.test(s) || s.startsWith('//')) return s
+  if (/^www\./i.test(s)) return `https://${s}`
+  return s
+}
+
 /** Visible, clickable URL for screen + PDF link annotations (`data-pdf-link` on the text, not the icon). */
 function PdfPrintUrlLine({ href, className = '' }: { href: string | undefined; className?: string }) {
   if (href == null || String(href).trim() === '') return null
-  const safe = String(href)
-  const text = safe.startsWith('mailto:') ? safe.slice('mailto:'.length) : safe
-  const mailto = safe.startsWith('mailto:')
+  const safe = normalizePdfAnchorHref(String(href))
+  const lower = safe.toLowerCase()
+  const isMailto = lower.startsWith('mailto:')
+  const isTel = lower.startsWith('tel:')
+  const openInNewTab = !isMailto && !isTel
+  const text = isMailto
+    ? safe.replace(/^mailto:/i, '')
+    : isTel
+      ? safe.replace(/^tel:/i, '')
+      : safe
   return (
     <a
       href={safe}
       data-pdf-link=""
+      target={openInNewTab ? '_blank' : undefined}
+      rel={openInNewTab ? 'noopener noreferrer' : undefined}
       className={`max-w-full break-all font-mono text-[10px] leading-snug text-slate-600 underline decoration-slate-300/80 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500${className ? ` ${className}` : ''}`}
-      {...(mailto ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
     >
       {text}
     </a>
   )
+}
+
+function hasPdfUrl(url: string | undefined | null): boolean {
+  return url != null && String(url).trim() !== ''
 }
 
 function educationCredentialLine(e: CvEducation): string {
@@ -51,7 +75,7 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
   const photoSrc = buildPhotoSrc(basics)
   const { role, chip } = parseBasicsHeadline(basics.headline)
   const visibleLinks = (cv.links ?? []).filter(
-    (l) => l.url != null && String(l.url).trim() !== '' && inferLinkKind(l) !== 'other',
+    (l) => hasPdfUrl(l.url) && inferLinkKind(l) !== 'other',
   )
 
   return (
@@ -97,12 +121,12 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                 {basics.location}
               </div>
             ) : null}
-            {basics.email || visibleLinks.length ? (
+            {hasPdfUrl(basics.email) || visibleLinks.length ? (
               <div className="mt-5 space-y-2 border-t border-slate-200/70 pt-2">
-                {basics.email ? (
+                {hasPdfUrl(basics.email) ? (
                   <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
                     <Mail className={pdfLinkIconClass} aria-hidden="true" />
-                    <PdfPrintUrlLine href={`mailto:${basics.email}`} className="min-w-0 flex-1" />
+                    <PdfPrintUrlLine href={`mailto:${String(basics.email).trim()}`} className="min-w-0 flex-1" />
                   </div>
                 ) : null}
                 {visibleLinks.map((l) => {
@@ -165,10 +189,12 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                           <div className="font-semibold text-slate-900" data-pdf-page-break="">
                             {c.label}
                           </div>
-                          <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
-                            <Globe className={pdfLinkIconClass} aria-hidden="true" />
-                            <PdfPrintUrlLine href={c.url} className="min-w-0 flex-1" />
-                          </div>
+                          {hasPdfUrl(c.url) ? (
+                            <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
+                              <Globe className={pdfLinkIconClass} aria-hidden="true" />
+                              <PdfPrintUrlLine href={c.url} className="min-w-0 flex-1" />
+                            </div>
+                          ) : null}
                           {c.dateEarned || c.dateExpires ? (
                             <div
                               className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600"
@@ -264,15 +290,15 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                         </span>
                       ) : null}
                     </div>
-                    {x.companyUrl || x.companyLinkedInUrl ? (
+                    {hasPdfUrl(x.companyUrl) || hasPdfUrl(x.companyLinkedInUrl) ? (
                       <div className="mt-2 space-y-2">
-                        {x.companyUrl ? (
+                        {hasPdfUrl(x.companyUrl) ? (
                           <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
                             <Globe className={pdfLinkIconClass} aria-hidden="true" />
                             <PdfPrintUrlLine href={x.companyUrl} className="min-w-0 flex-1" />
                           </div>
                         ) : null}
-                        {x.companyLinkedInUrl ? (
+                        {hasPdfUrl(x.companyLinkedInUrl) ? (
                           <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
                             <SiLinkedinIcon className={pdfLinkIconClass} aria-hidden="true" />
                             <PdfPrintUrlLine href={x.companyLinkedInUrl} className="min-w-0 flex-1" />
@@ -307,15 +333,15 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
             </h2>
             <div className="mt-3 divide-y divide-slate-100">
               {cv.projects.map((p) => {
-                const links = p.links ?? []
+                const projectLinks = (p.links ?? []).filter((l) => hasPdfUrl(l.url))
                 return (
                   <article key={p.name} className="py-4" data-pdf-page-break="">
                     <div className="font-semibold text-slate-900" data-pdf-page-break="">
                       {p.name}
                     </div>
-                    {links.length ? (
+                    {projectLinks.length ? (
                       <div className="mt-2 space-y-2">
-                        {links.map((l) => {
+                        {projectLinks.map((l) => {
                           const kind = inferProjectLinkLabelKind(l)
                           const Icon = kind === 'github' ? SiGithubIcon : Globe
                           return (
@@ -366,7 +392,7 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                   <article key={rowKey} className="py-4" data-pdf-page-break="">
                     {credential ? <div className="font-semibold text-slate-900">{credential}</div> : null}
                     <div className={`font-semibold text-slate-900 ${credential ? 'mt-1' : ''}`}>{e.school}</div>
-                    {e.schoolUrl ? (
+                    {hasPdfUrl(e.schoolUrl) ? (
                       <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
                         <Globe className={pdfLinkIconClass} aria-hidden="true" />
                         <PdfPrintUrlLine href={e.schoolUrl} className="min-w-0 flex-1" />
