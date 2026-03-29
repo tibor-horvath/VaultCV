@@ -59,9 +59,9 @@ export function BasicsCard({
           </div>
 
           {basics.location ? (
-            <div className="mt-2 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {basics.location}
+            <div className="mt-2 flex items-center gap-2 text-sm leading-none text-slate-600 dark:text-slate-400">
+              <MapPin className="h-[1em] w-[1em] shrink-0 translate-y-[0.08em]" aria-hidden="true" />
+              <span>{basics.location}</span>
             </div>
           ) : null}
 

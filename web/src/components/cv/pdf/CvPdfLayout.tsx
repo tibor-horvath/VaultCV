@@ -125,7 +125,11 @@ export const CvPdfLayout = forwardRef<
             ) : null}
             {basics.location ? (
               <div className={`mt-4 ${pdfIconRowClass} text-sm text-slate-600`}>
-                <MapPin className="h-4 w-4 shrink-0 translate-y-px text-indigo-500/90" aria-hidden="true" />
+                {/* 1em matches text-sm cap height better than fixed h-4; Lucide pin is top-heavy in its viewBox */}
+                <MapPin
+                  className="h-[1em] w-[1em] shrink-0 translate-y-[0.08em] text-indigo-500/90"
+                  aria-hidden="true"
+                />
                 <span className="leading-none">{basics.location}</span>
               </div>
             ) : null}
