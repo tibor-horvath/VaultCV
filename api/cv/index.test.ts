@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { clearProfilePayloadCache } from '../lib/profilePayloadSource'
 import handler from './index'
 
 const originalEnv = { ...process.env }
@@ -22,15 +23,16 @@ function signToken(exp: number, signingSecret: string) {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  clearProfilePayloadCache()
   resetEnv()
 })
 
 describe('/api/cv', () => {
-  it('returns inline payload when configured and auth is valid', async () => {
+  it('returns URL payload when configured and auth is valid', async () => {
     const signingSecret = 'test-signing-secret'
-    process.env.PROFILE_PAYLOAD_SOURCE = 'inline'
     process.env.CV_SESSION_SIGNING_KEY = signingSecret
-    process.env.PRIVATE_PROFILE_JSON = '{"basics":{"name":"Jane"}}'
+    process.env.PRIVATE_PROFILE_JSON_URL = 'https://example.blob.core.windows.net/private/profile.json'
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"basics":{"name":"Jane"}}', { status: 200 })))
     const token = signToken(Math.floor(Date.now() / 1000) + 3600, signingSecret)
     const context: { log: ReturnType<typeof vi.fn>; res?: unknown } = { log: vi.fn() }
 
@@ -42,13 +44,12 @@ describe('/api/cv', () => {
     })
     expect(context.log).toHaveBeenCalledWith(
       'Loaded PRIVATE_PROFILE payload',
-      expect.objectContaining({ payloadSource: 'inline_env', sourceMode: 'inline' }),
+      expect.objectContaining({ payloadSource: 'url_env' }),
     )
   })
 
   it('returns 502 when URL payload fetch fails', async () => {
     const signingSecret = 'test-signing-secret'
-    process.env.PROFILE_PAYLOAD_SOURCE = 'url'
     process.env.CV_SESSION_SIGNING_KEY = signingSecret
     process.env.PRIVATE_PROFILE_JSON_URL = 'https://example.blob.core.windows.net/private/profile.json'
     vi.stubGlobal('fetch', vi.fn(async () => new Response('denied', { status: 403 })))

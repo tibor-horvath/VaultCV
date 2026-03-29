@@ -11,7 +11,7 @@ function getMockCvEn(): LocalizedCvData {
       photoAlt: 'Profile photo',
       location: 'City, Country',
       summary:
-        'This is mock data used for local development. Replace it by configuring PRIVATE_PROFILE_JSON in Azure Static Web Apps app settings (or api/local.settings.json locally).',
+        'This is mock data used for local development. Replace it by configuring PRIVATE_PROFILE_JSON_URL in Azure Static Web Apps app settings (or api/local.settings.json locally).',
     },
     links: [
       { label: 'GitHub', url: 'https://github.com/your-handle' },
@@ -129,7 +129,7 @@ function getMockCvHu(): LocalizedCvData {
       photoAlt: 'Profilkép',
       location: 'Város, Ország',
       summary:
-        'Ez mock adat helyi fejlesztéshez. Cseréld le a PRIVATE_PROFILE_JSON beállítással az Azure Static Web Apps app settingsben (vagy lokálisan az api/local.settings.json-ben).',
+        'Ez mock adat helyi fejlesztéshez. Cseréld le a PRIVATE_PROFILE_JSON_URL beállítással az Azure Static Web Apps app settingsben (vagy lokálisan az api/local.settings.json-ben).',
     },
     links: [
       { label: 'GitHub', url: 'https://github.com/your-handle' },
@@ -247,7 +247,7 @@ function getMockCvDe(): LocalizedCvData {
       photoAlt: 'Profilfoto',
       location: 'Stadt, Land',
       summary:
-        'Dies sind Mock-Daten für die lokale Entwicklung. Ersetze sie durch PRIVATE_PROFILE_JSON in den Azure Static Web Apps App-Einstellungen (oder api/local.settings.json lokal).',
+        'Dies sind Mock-Daten für die lokale Entwicklung. Ersetze sie durch PRIVATE_PROFILE_JSON_URL in den Azure Static Web Apps App-Einstellungen (oder api/local.settings.json lokal).',
     },
     links: [
       { label: 'GitHub', url: 'https://github.com/your-handle' },

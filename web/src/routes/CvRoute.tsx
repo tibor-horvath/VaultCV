@@ -354,7 +354,7 @@ export function CvRoute() {
           </div>
           <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             {t('serverConfigHint')} The server has
-            <span className="font-mono"> CV_ACCESS_TOKEN</span> and <span className="font-mono">PRIVATE_PROFILE_JSON</span>{' '}
+            <span className="font-mono"> CV_ACCESS_TOKEN</span> and <span className="font-mono">PRIVATE_PROFILE_JSON_URL</span>{' '}
             configured.
           </div>
         </Section>

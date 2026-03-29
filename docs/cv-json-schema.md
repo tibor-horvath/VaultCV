@@ -1,8 +1,6 @@
 # CV JSON schema (overview)
 
-You control the CV content via the `PRIVATE_PROFILE_JSON` environment variable (server-side). This is a JSON string you write once and store as a secret in Azure — it never goes into this repo.
-
-If your JSON gets too large for Azure app setting limits, use `PRIVATE_PROFILE_JSON_URL` and host the payload as a private JSON blob (SAS or identity-based access).
+You control the CV content via the `PRIVATE_PROFILE_JSON_URL` environment variable (server-side). Host a JSON file in Azure Blob Storage and point this setting to that file URL (SAS or identity-based access).
 
 > **Not familiar with JSON?** JSON is a plain-text data format that looks like `{"key": "value"}`. You can write it in any text editor. Use [jsonlint.com](https://jsonlint.com) to check your JSON for errors before pasting it into Azure.
 
@@ -10,7 +8,7 @@ Key fields:
 
 - `basics`: `{ name, headline, email?, location?, summary?, photoAlt? }`
   - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
-  - Keep photo bytes out of `PRIVATE_PROFILE_JSON`. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
+  - Keep photo bytes out of profile JSON files. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
 - `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | school | language | other`
 - `languages`: string array, shown as chips
@@ -23,7 +21,7 @@ Key fields:
 
 ## Example
 
-Below is a single JSON object (what you paste as the value of `PRIVATE_PROFILE_JSON` in Azure or in `api/local.settings.json`). Omit sections you do not need. Do not put `basics.photoUrl` here unless you inject it yourself; the API normally adds it from blob settings.
+Below is a single JSON object (the file content you upload to Blob and reference from `PRIVATE_PROFILE_JSON_URL`). Omit sections you do not need. Do not put `basics.photoUrl` here unless you inject it yourself; the API normally adds it from blob settings.
 
 ```json
 {
@@ -106,4 +104,4 @@ Below is a single JSON object (what you paste as the value of `PRIVATE_PROFILE_J
 }
 ```
 
-The local settings example file (`api/local.settings.example.json`) contains another full sample as an escaped string inside `PRIVATE_PROFILE_JSON`.
+For local development, point `PRIVATE_PROFILE_JSON_URL` to a reachable JSON payload URL.

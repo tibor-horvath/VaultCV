@@ -4,11 +4,9 @@ const defaultFetchTimeoutMs = 3000
 const defaultCacheTtlMs = 60_000
 const cache = new Map<string, { expiresAt: number; value: string }>()
 
-export type ProfilePayloadSource = 'inline_env' | 'url_env'
-export type ProfilePayloadMode = 'inline' | 'url' | 'auto'
+export type ProfilePayloadSource = 'url_env'
 export type ProfilePayloadErrorReason =
   | 'not_configured'
-  | 'invalid_mode'
   | 'invalid_url'
   | 'host_not_allowed'
   | 'fetch_timeout'
@@ -20,21 +18,18 @@ export type ReadProfilePayloadResult = {
   raw: string
   resolvedLocale: string
   source: ProfilePayloadSource
-  sourceMode: ProfilePayloadMode
   fromCache: boolean
 }
 
 export class ProfilePayloadSourceError extends Error {
   readonly reason: ProfilePayloadErrorReason
   readonly httpStatus?: number
-  readonly sourceMode: ProfilePayloadMode
   readonly key: string
   readonly urlHost: string
 
   constructor(args: {
     reason: ProfilePayloadErrorReason
     message: string
-    sourceMode: ProfilePayloadMode
     key?: string
     httpStatus?: number
     urlHost?: string
@@ -42,7 +37,6 @@ export class ProfilePayloadSourceError extends Error {
     super(args.message)
     this.reason = args.reason
     this.httpStatus = args.httpStatus
-    this.sourceMode = args.sourceMode
     this.key = args.key ?? ''
     this.urlHost = args.urlHost ?? ''
   }
@@ -54,17 +48,6 @@ function parseDurationMs(raw: string | undefined, fallback: number) {
   return Math.floor(parsed)
 }
 
-export function readProfilePayloadMode(): ProfilePayloadMode {
-  const mode = (process.env.PROFILE_PAYLOAD_SOURCE ?? '').trim().toLowerCase()
-  if (!mode || mode === 'auto') return 'auto'
-  if (mode === 'inline' || mode === 'url') return mode
-  return 'auto'
-}
-
-function buildUrlPrefix(prefix: string) {
-  return `${prefix}_URL`
-}
-
 function allowedHosts() {
   const raw = process.env.PROFILE_PAYLOAD_ALLOWED_HOSTS?.trim()
   if (!raw) return []
@@ -74,7 +57,7 @@ function allowedHosts() {
     .filter(Boolean)
 }
 
-function validatePayloadUrl(urlValue: string, sourceMode: ProfilePayloadMode, key: string) {
+function validatePayloadUrl(urlValue: string, key: string) {
   let parsed: URL
   try {
     parsed = new URL(urlValue)
@@ -82,7 +65,6 @@ function validatePayloadUrl(urlValue: string, sourceMode: ProfilePayloadMode, ke
     throw new ProfilePayloadSourceError({
       reason: 'invalid_url',
       message: `Invalid URL in ${key}.`,
-      sourceMode,
       key,
     })
   }
@@ -91,7 +73,6 @@ function validatePayloadUrl(urlValue: string, sourceMode: ProfilePayloadMode, ke
     throw new ProfilePayloadSourceError({
       reason: 'invalid_url',
       message: `${key} must use https.`,
-      sourceMode,
       key,
       urlHost: parsed.host,
     })
@@ -102,7 +83,6 @@ function validatePayloadUrl(urlValue: string, sourceMode: ProfilePayloadMode, ke
     throw new ProfilePayloadSourceError({
       reason: 'host_not_allowed',
       message: `${key} host is not allowlisted.`,
-      sourceMode,
       key,
       urlHost: parsed.host,
     })
@@ -126,19 +106,18 @@ async function fetchTextWithTimeout(urlValue: string, timeoutMs: number) {
   }
 }
 
-async function readFromUrl(prefix: string, locale: string, sourceMode: ProfilePayloadMode): Promise<ReadProfilePayloadResult> {
-  const resolved = readLocalizedEnvValueWithKey(buildUrlPrefix(prefix), locale)
+export async function readLocalizedProfilePayload(urlPrefix: string, locale: string): Promise<ReadProfilePayloadResult> {
+  const resolved = readLocalizedEnvValueWithKey(urlPrefix, locale)
   const urlValue = resolved.raw.trim()
   if (!urlValue) {
     throw new ProfilePayloadSourceError({
       reason: 'not_configured',
-      message: `${buildUrlPrefix(prefix)} is not configured.`,
-      sourceMode,
+      message: `${urlPrefix} is not configured.`,
       key: resolved.key,
     })
   }
 
-  const parsedUrl = validatePayloadUrl(urlValue, sourceMode, resolved.key)
+  const parsedUrl = validatePayloadUrl(urlValue, resolved.key)
   const cacheTtlMs = parseDurationMs(process.env.PROFILE_PAYLOAD_CACHE_TTL_MS, defaultCacheTtlMs)
   const cacheKey = `${resolved.key}|${urlValue}`
   const now = Date.now()
@@ -148,7 +127,6 @@ async function readFromUrl(prefix: string, locale: string, sourceMode: ProfilePa
       raw: cached.value,
       resolvedLocale: resolved.resolvedLocale,
       source: 'url_env',
-      sourceMode,
       fromCache: true,
     }
   }
@@ -162,7 +140,6 @@ async function readFromUrl(prefix: string, locale: string, sourceMode: ProfilePa
     throw new ProfilePayloadSourceError({
       reason: isAbort ? 'fetch_timeout' : 'fetch_failed',
       message: isAbort ? `Timed out fetching ${resolved.key}.` : `Failed fetching ${resolved.key}.`,
-      sourceMode,
       key: resolved.key,
       urlHost: parsedUrl.host,
     })
@@ -172,7 +149,6 @@ async function readFromUrl(prefix: string, locale: string, sourceMode: ProfilePa
     throw new ProfilePayloadSourceError({
       reason: 'http_non_2xx',
       message: `Failed fetching ${resolved.key}: HTTP ${response.status}.`,
-      sourceMode,
       key: resolved.key,
       httpStatus: response.status,
       urlHost: parsedUrl.host,
@@ -184,7 +160,6 @@ async function readFromUrl(prefix: string, locale: string, sourceMode: ProfilePa
     throw new ProfilePayloadSourceError({
       reason: 'empty_body',
       message: `Fetched ${resolved.key} but body was empty.`,
-      sourceMode,
       key: resolved.key,
       urlHost: parsedUrl.host,
     })
@@ -195,44 +170,7 @@ async function readFromUrl(prefix: string, locale: string, sourceMode: ProfilePa
     raw,
     resolvedLocale: resolved.resolvedLocale,
     source: 'url_env',
-    sourceMode,
     fromCache: false,
-  }
-}
-
-function readFromInline(prefix: string, locale: string, sourceMode: ProfilePayloadMode): ReadProfilePayloadResult {
-  const resolved = readLocalizedEnvValueWithKey(prefix, locale)
-  const raw = resolved.raw.trim()
-  if (!raw) {
-    throw new ProfilePayloadSourceError({
-      reason: 'not_configured',
-      message: `${prefix} is not configured.`,
-      sourceMode,
-      key: resolved.key,
-    })
-  }
-  return {
-    raw,
-    resolvedLocale: resolved.resolvedLocale,
-    source: 'inline_env',
-    sourceMode,
-    fromCache: false,
-  }
-}
-
-export async function readLocalizedProfilePayload(prefix: string, locale: string): Promise<ReadProfilePayloadResult> {
-  const mode = readProfilePayloadMode()
-  if (mode === 'inline') return readFromInline(prefix, locale, mode)
-  if (mode === 'url') return readFromUrl(prefix, locale, mode)
-
-  try {
-    return await readFromUrl(prefix, locale, mode)
-  } catch (error) {
-    try {
-      return readFromInline(prefix, locale, mode)
-    } catch {
-      throw error
-    }
   }
 }
 

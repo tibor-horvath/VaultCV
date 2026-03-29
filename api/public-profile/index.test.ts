@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { clearProfilePayloadCache } from '../lib/profilePayloadSource'
 import handler from './index'
 
 const originalEnv = { ...process.env }
@@ -15,13 +16,14 @@ function resetEnv() {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  clearProfilePayloadCache()
   resetEnv()
 })
 
 describe('/api/public-profile', () => {
-  it('returns inline payload when configured', async () => {
-    process.env.PROFILE_PAYLOAD_SOURCE = 'inline'
-    process.env.PUBLIC_PROFILE_JSON = '{"basics":{"name":"Jane"}}'
+  it('returns URL payload when configured', async () => {
+    process.env.PUBLIC_PROFILE_JSON_URL = 'https://example.blob.core.windows.net/public/profile.json'
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"basics":{"name":"Jane"}}', { status: 200 })))
     const context: { log: ReturnType<typeof vi.fn>; res?: unknown } = { log: vi.fn() }
 
     await handler(context, { headers: { 'accept-language': 'en' } })
@@ -32,12 +34,11 @@ describe('/api/public-profile', () => {
     })
     expect(context.log).toHaveBeenCalledWith(
       'Loaded PUBLIC_PROFILE payload',
-      expect.objectContaining({ payloadSource: 'inline_env', sourceMode: 'inline' }),
+      expect.objectContaining({ payloadSource: 'url_env' }),
     )
   })
 
   it('returns 502 when URL payload fetch fails', async () => {
-    process.env.PROFILE_PAYLOAD_SOURCE = 'url'
     process.env.PUBLIC_PROFILE_JSON_URL = 'https://example.blob.core.windows.net/public/profile.json'
     vi.stubGlobal('fetch', vi.fn(async () => new Response('missing', { status: 404 })))
     const context: { log: ReturnType<typeof vi.fn>; res?: unknown } = { log: vi.fn() }
@@ -46,7 +47,7 @@ describe('/api/public-profile', () => {
 
     expect(context.res).toMatchObject({
       status: 502,
-      body: { error: 'PUBLIC_PROFILE_JSON could not be loaded.' },
+      body: { error: 'PUBLIC_PROFILE_JSON_URL could not be loaded.' },
     })
     expect(context.log).toHaveBeenCalledWith(
       'Failed loading PUBLIC_PROFILE payload',

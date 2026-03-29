@@ -16,7 +16,7 @@ Set these **public** (safe-to-ship) variables for the web app:
 
 For the rest of the public profile (location/focus/bio/links/tags), you can use either:
 
-- `PUBLIC_PROFILE_JSON` (served by `/api/public-profile`, preferred in deployed environments)
+- `PUBLIC_PROFILE_JSON_URL` (served by `/api/public-profile`, preferred in deployed environments)
 - `web/public/public-profile.json` (fallback file, useful for web-only local dev — edit this file to customise the landing page when running locally)
 
 At runtime, the landing page loads public profile data in this order:

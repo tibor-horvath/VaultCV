@@ -237,12 +237,11 @@ export default async function (context: Context, req: HttpRequest) {
   let raw = ''
   let resolvedLocale = requestedLocale
   try {
-    const payload = await readLocalizedProfilePayload('PRIVATE_PROFILE_JSON', requestedLocale)
+    const payload = await readLocalizedProfilePayload('PRIVATE_PROFILE_JSON_URL', requestedLocale)
     raw = payload.raw
     resolvedLocale = payload.resolvedLocale
     context.log('Loaded PRIVATE_PROFILE payload', {
       payloadSource: payload.source,
-      sourceMode: payload.sourceMode,
       localeRequested: requestedLocale,
       localeResolved: payload.resolvedLocale,
       fromCache: payload.fromCache,
@@ -251,7 +250,6 @@ export default async function (context: Context, req: HttpRequest) {
     if (error instanceof ProfilePayloadSourceError) {
       context.log('Failed loading PRIVATE_PROFILE payload', {
         payloadSource: 'profile_payload_loader',
-        sourceMode: error.sourceMode,
         failureReason: error.reason,
         payloadKey: error.key,
         urlHost: error.urlHost,
@@ -293,7 +291,7 @@ export default async function (context: Context, req: HttpRequest) {
     attachDebugHeaders(response, signingSecret, { 'x-cv-debug-token-source': tokenRead.source })
     context.res = response
   } catch (err) {
-    context.log('Failed parsing PRIVATE_PROFILE_JSON', err)
+    context.log('Failed parsing PRIVATE_PROFILE payload JSON', err)
     const response = jsonResponse(500, { error: 'CV data is invalid JSON.' })
     attachDebugHeaders(response, signingSecret, { 'x-cv-debug-reason': 'invalid_cv_json' })
     context.res = response

@@ -63,7 +63,7 @@ az staticwebapp create \
 
 ## Step 3 — Upload a profile photo (optional)
 
-The API can serve your photo from Azure Blob Storage without embedding it in `PRIVATE_PROFILE_JSON`. Skip this step if you don't want a profile photo.
+The API can serve your photo from Azure Blob Storage without embedding image data in your profile JSON payloads. Skip this step if you don't want a profile photo.
 
 > **What is Azure Blob Storage?** It's a file hosting service — like a private folder in the cloud. A **SAS token** (Shared Access Signature) is a special string you attach to a file URL that proves you have permission to access it, without needing a password.
 
@@ -91,27 +91,24 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | `CV_SESSION_SIGNING_KEY` | Required signing secret for short-lived session tokens. Use a different random value than `CV_ACCESS_TOKEN` (do not reuse). |
 | `CV_SESSION_TTL_SECONDS` | Optional session token lifetime in seconds. Default: `3600` (1 hour). Allowed range: `60` to `86400`. |
 | `SUPPORTED_LOCALES` | Optional comma-separated locale list exposed by `/api/locales` and used by the frontend selector (example: `en` or `en,hu,de`). Fallback: `en`. |
-| `PROFILE_PAYLOAD_SOURCE` | Optional payload source mode: `auto` (default, URL first then inline fallback), `inline` (env JSON only), or `url` (URL only). |
 | `PROFILE_PAYLOAD_FETCH_TIMEOUT_MS` | Optional fetch timeout for URL payload mode. Default: `3000`. |
 | `PROFILE_PAYLOAD_CACHE_TTL_MS` | Optional in-memory cache TTL for URL payload responses. Default: `60000`. |
 | `PROFILE_PAYLOAD_ALLOWED_HOSTS` | Optional comma-separated host allowlist for payload URLs (example: `<account>.blob.core.windows.net`). |
-| `PRIVATE_PROFILE_JSON` | Your full private CV as a JSON string. Use the example in `api/local.settings.example.json` as a starting point. Validate your JSON at [jsonlint.com](https://jsonlint.com) before pasting. |
-| `PRIVATE_PROFILE_JSON_URL` | Optional URL to private CV JSON. Use for large payloads that exceed app setting size limits. |
-| `PUBLIC_PROFILE_JSON` | Your public profile JSON string (shown on the landing page). |
-| `PUBLIC_PROFILE_JSON_URL` | Optional URL to public profile JSON. |
+| `PRIVATE_PROFILE_JSON_URL` | Required URL to private CV JSON blob. |
+| `PUBLIC_PROFILE_JSON_URL` | Required URL to public profile JSON blob. |
 | `PROFILE_PHOTO_URL` | Azure Blob URL of your profile photo (the part before `?` from Step 3). |
 | `PROFILE_PHOTO_SAS_TOKEN` | SAS token string from Step 3 (starting with `?` or without — both work). |
 
-> **Tip:** Azure Static Web Apps app settings have practical size limits (around 10 KB per setting). For larger profiles, host JSON in Blob and set `PRIVATE_PROFILE_JSON_URL` / `PUBLIC_PROFILE_JSON_URL` instead of inline JSON.
+> **Tip:** Azure Static Web Apps app settings have practical size limits (around 10 KB per setting). Store profile payloads in Blob and set `PRIVATE_PROFILE_JSON_URL` / `PUBLIC_PROFILE_JSON_URL`.
 >
-> **Locale-specific URL variants** are supported the same way as inline vars (for example `PRIVATE_PROFILE_JSON_URL_DE`, `PUBLIC_PROFILE_JSON_URL_HU`).
+> Locale-specific URL variants are supported (for example `PRIVATE_PROFILE_JSON_URL_DE`, `PUBLIC_PROFILE_JSON_URL_HU`).
 >
-> `PRIVATE_PROFILE_JSON` and `PUBLIC_PROFILE_JSON` can still be pasted directly into the value field in the portal when small enough. Alternatively, use the Azure CLI:
+> You can set values via Azure CLI:
 > ```bash
 > az staticwebapp appsettings set \
 >   --name <your-app-name> \
 >   --resource-group <your-rg> \
->   --setting-names CV_ACCESS_TOKEN="<token>" PRIVATE_PROFILE_JSON='<json>'
+>   --setting-names CV_ACCESS_TOKEN="<token>" PRIVATE_PROFILE_JSON_URL="https://<account>.blob.core.windows.net/<container>/private-profile.json?<sas>"
 > ```
 
 ### Blob security and operations guidance
@@ -122,22 +119,18 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 
 ### Canary rollout runbook for payload source migration
 
-1. Deploy code with `PROFILE_PAYLOAD_SOURCE=inline` (no behavior change).
-2. Add `PRIVATE_PROFILE_JSON_URL` / `PUBLIC_PROFILE_JSON_URL` (and locale-specific URL vars if needed).
-3. In non-prod, switch to `PROFILE_PAYLOAD_SOURCE=auto`; validate:
+1. Add `PRIVATE_PROFILE_JSON_URL` / `PUBLIC_PROFILE_JSON_URL` (and locale-specific URL vars if needed) in non-production.
+2. Validate:
    - `/api/cv` and `/api/public-profile` return expected payloads
    - locale fallback works (`exact -> base -> en`)
    - no sustained `Failed loading ... payload` logs
-4. In non-prod, switch to `PROFILE_PAYLOAD_SOURCE=url`; repeat checks.
-5. In prod, switch to `PROFILE_PAYLOAD_SOURCE=auto` for a canary window and monitor:
+3. Apply the same settings in production during a canary window and monitor:
    - HTTP 5xx rate
    - API latency (median/p95)
    - loader failure reasons in logs (`http_non_2xx`, `fetch_timeout`, etc.)
-6. If healthy, switch prod to `PROFILE_PAYLOAD_SOURCE=url`.
-7. After a stable bake window, remove large inline values (`PRIVATE_PROFILE_JSON`, `PUBLIC_PROFILE_JSON`) to eliminate app-setting size pressure.
-8. Rollback at any point: set `PROFILE_PAYLOAD_SOURCE=inline` and restart/redeploy.
+4. Keep previous known-good blob URLs available so rollback is a fast settings update.
 
-If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-profile.json` when that file is shipped with the web app.
+If `PUBLIC_PROFILE_JSON_URL` is not set, the UI can still fall back to `/public-profile.json` when that file is shipped with the web app.
 
 ## Step 5 — Verify the deployment
 
@@ -154,7 +147,7 @@ If `PUBLIC_PROFILE_JSON` is not set, the UI can still fall back to `/public-prof
 | API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your shareable link (`/?t=...`) exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
 | API returns 401 and debug shows `signature_mismatch` while headers are present | Wrong token source selected (often a platform-injected `Authorization` bearer token) | Prefer the `cv_session` cookie over `Authorization` in API token resolution. |
 | API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
-| Landing page shows no profile details | Missing public profile | Check that `PUBLIC_PROFILE_JSON` is set in Azure settings, or that `web/public/public-profile.json` is present. |
+| Landing page shows no profile details | Missing public profile config | Check that `PUBLIC_PROFILE_JSON_URL` (or locale variant) is set and reachable. |
 | Profile photo not loading | Invalid URL or expired SAS token | Regenerate a SAS token in Azure Storage and update `PROFILE_PHOTO_SAS_TOKEN`. |
 | Profile photo missing in **PDF** only | Blob CORS not allowing your site origin | In the storage account → **CORS** for Blob service, allow **GET** from your SWA URL. See [pdf-export.md](pdf-export.md). |
 | Site shows "page not found" for routes | Routing config missing | Ensure `staticwebapp.config.json` was deployed — it should be in the `web/public/` folder. |
