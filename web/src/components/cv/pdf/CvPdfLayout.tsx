@@ -270,13 +270,13 @@ export const CvPdfLayout = forwardRef<
                 const rowKey = stableExperienceKey(x)
                 return (
                   <article key={rowKey} className="py-4" data-pdf-page-break="">
-                    <div className="font-semibold text-slate-900">
-                      <span>{x.role}</span>
-                      <span className="mx-1 text-slate-400">·</span>
-                      <span className="inline-flex items-center gap-1">
-                        <AtSign className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                        {x.company}
-                      </span>
+                    {/* Stacked rows + per-row breaks so raster page slices do not cut through a single headline line */}
+                    <div className="space-y-1 font-semibold text-slate-900">
+                      <div data-pdf-page-break="">{x.role}</div>
+                      <div className="flex items-center gap-1" data-pdf-page-break="">
+                        <AtSign className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                        <span>{x.company}</span>
+                      </div>
                     </div>
                     <div
                       className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600"
@@ -310,12 +310,11 @@ export const CvPdfLayout = forwardRef<
                       </div>
                     ) : null}
                     {x.highlights?.length ? (
-                      <ul
-                        className="mt-3 list-disc space-y-1 pl-4 text-[13px] text-slate-700"
-                        data-pdf-page-break=""
-                      >
+                      <ul className="mt-3 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
                         {x.highlights.map((h, i) => (
-                          <li key={highlightChildKey(rowKey, i)}>{h}</li>
+                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="">
+                            {h}
+                          </li>
                         ))}
                       </ul>
                     ) : null}
@@ -388,8 +387,17 @@ export const CvPdfLayout = forwardRef<
                 const credential = educationCredentialLine(e)
                 return (
                   <article key={rowKey} className="py-4" data-pdf-page-break="">
-                    {credential ? <div className="font-semibold text-slate-900">{credential}</div> : null}
-                    <div className={`font-semibold text-slate-900 ${credential ? 'mt-1' : ''}`}>{e.school}</div>
+                    {credential ? (
+                      <div className="font-semibold text-slate-900" data-pdf-page-break="">
+                        {credential}
+                      </div>
+                    ) : null}
+                    <div
+                      className={`font-semibold text-slate-900 ${credential ? 'mt-1' : ''}`}
+                      data-pdf-page-break=""
+                    >
+                      {e.school}
+                    </div>
                     {hasPdfUrl(e.schoolUrl) ? (
                       <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
                         <Globe className={pdfLinkIconClass} aria-hidden="true" />
@@ -411,12 +419,11 @@ export const CvPdfLayout = forwardRef<
                       ) : null}
                     </div>
                     {e.highlights?.length ? (
-                      <ul
-                        className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-700"
-                        data-pdf-page-break=""
-                      >
+                      <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
                         {e.highlights.map((h, i) => (
-                          <li key={highlightChildKey(rowKey, i)}>{h}</li>
+                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="">
+                            {h}
+                          </li>
                         ))}
                       </ul>
                     ) : null}
