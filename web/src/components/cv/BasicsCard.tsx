@@ -9,11 +9,14 @@ export function BasicsCard({
   links,
   headerRight,
   topStatus,
+  belowLinks,
 }: {
   basics: CvBasics
   links?: CvLink[]
   headerRight?: ReactNode
   topStatus?: ReactNode
+  /** Shown only below GitHub/LinkedIn on narrow screens (e.g. mobile PDF download). */
+  belowLinks?: ReactNode
 }) {
   const { role, chip } = parseBasicsHeadline(basics.headline)
 
@@ -75,6 +78,7 @@ export function BasicsCard({
           ) : null}
 
           <BasicsLinksRow links={links} />
+          {belowLinks ? <div className="mt-3 sm:hidden">{belowLinks}</div> : null}
         </div>
       </div>
     </div>

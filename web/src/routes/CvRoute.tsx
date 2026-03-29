@@ -368,7 +368,7 @@ export function CvRoute() {
                     type="button"
                     onClick={() => void handleDownloadPdf()}
                     disabled={pdfBusy}
-                    className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
+                    className="hidden items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50 sm:inline-flex"
                   >
                     <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
                     {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
@@ -376,6 +376,17 @@ export function CvRoute() {
                   <LanguageSelector />
                   {themeToggle}
                 </div>
+              }
+              belowLinks={
+                <button
+                  type="button"
+                  onClick={() => void handleDownloadPdf()}
+                  disabled={pdfBusy}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
+                >
+                  <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+                </button>
               }
             />
           </div>
