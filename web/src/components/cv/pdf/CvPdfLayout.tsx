@@ -334,10 +334,14 @@ export const CvPdfLayout = forwardRef<
               {t('projects')}
             </h2>
             <div className="mt-3 divide-y divide-slate-100">
-              {cv.projects.map((p) => {
+              {cv.projects.map((p, projectIndex) => {
                 const projectLinks = (p.links ?? []).filter((l) => hasPdfUrl(l.url))
                 return (
-                  <article key={p.name} className="py-4" data-pdf-page-break="">
+                  <article
+                    key={p.name}
+                    className="py-4"
+                    {...(projectIndex > 0 ? { 'data-pdf-page-break': '' } : {})}
+                  >
                     <div className="font-semibold text-slate-900">{p.name}</div>
                     {projectLinks.length ? (
                       <div className="mt-2 space-y-2">
