@@ -17,7 +17,12 @@ import { CredentialIssuerIcon } from '../CredentialIssuerIcon'
 const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'language', 'other']
 
 /** Decorative icon next to links (not interactive; PDF hit targets use the URL line). */
-const pdfLinkIconClass = 'h-4 w-4 shrink-0 text-slate-600 opacity-90'
+const pdfLinkIconClass = 'h-4 w-4 shrink-0 translate-y-px text-slate-600 opacity-90'
+
+/** Tight line-height so flex `items-center` aligns text with icons (root uses `leading-relaxed`). */
+const pdfIconRowClass = 'flex min-w-0 items-center gap-2 leading-none'
+const pdfIconRowTightClass = 'flex min-w-0 items-center gap-1 leading-none'
+const pdfIconRowSmClass = 'inline-flex items-center gap-1 leading-none'
 
 /** Tag pills (skills, languages, project tags): `.pdf-print-chip` onclone styles in `downloadCvPdf`. */
 const pdfChipSmClass =
@@ -54,7 +59,7 @@ function PdfPrintUrlLine({ href, className = '' }: { href: string | undefined; c
       data-pdf-link=""
       target={openInNewTab ? '_blank' : undefined}
       rel={openInNewTab ? 'noopener noreferrer' : undefined}
-      className={`max-w-full break-all font-mono text-[10px] leading-snug text-slate-600 underline decoration-slate-300/80 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500${className ? ` ${className}` : ''}`}
+      className={`inline-flex max-w-full min-h-0 items-center break-all font-mono text-[10px] leading-none text-slate-600 underline decoration-slate-300/80 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500${className ? ` ${className}` : ''}`}
     >
       {text}
     </a>
@@ -113,21 +118,21 @@ export const CvPdfLayout = forwardRef<
             <h1 className="text-balance text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{basics.name}</h1>
             {role ? <p className="mt-2 text-base font-medium text-slate-600">{role}</p> : null}
             {chip ? (
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white/90 px-3 py-1 text-xs font-medium text-slate-600">
-                <Sparkles className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
-                {chip}
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white/90 px-3 py-1 text-xs font-medium leading-none text-slate-600">
+                <Sparkles className="h-3.5 w-3.5 shrink-0 text-indigo-500" aria-hidden="true" />
+                <span className="leading-none">{chip}</span>
               </div>
             ) : null}
             {basics.location ? (
-              <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
-                <MapPin className="h-4 w-4 shrink-0 text-indigo-500/90" aria-hidden="true" />
-                {basics.location}
+              <div className={`mt-4 ${pdfIconRowClass} text-sm text-slate-600`}>
+                <MapPin className="h-4 w-4 shrink-0 translate-y-px text-indigo-500/90" aria-hidden="true" />
+                <span className="leading-none">{basics.location}</span>
               </div>
             ) : null}
             {hasPdfUrl(basics.email) || visibleLinks.length ? (
               <div className="mt-5 space-y-2 border-t border-slate-200/70 pt-2">
                 {hasPdfUrl(basics.email) ? (
-                  <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
+                  <div className={`${pdfIconRowClass}`} data-pdf-page-break="">
                     <Mail className={pdfLinkIconClass} aria-hidden="true" />
                     <PdfPrintUrlLine href={`mailto:${String(basics.email).trim()}`} className="min-w-0 flex-1" />
                   </div>
@@ -136,7 +141,7 @@ export const CvPdfLayout = forwardRef<
                   const kind = inferLinkKind(l)
                   const Icon = kind === 'github' ? SiGithubIcon : kind === 'linkedin' ? SiLinkedinIcon : Globe
                   return (
-                    <div key={`${l.label}:${l.url}`} className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
+                    <div key={`${l.label}:${l.url}`} className={pdfIconRowClass} data-pdf-page-break="">
                       <Icon className={pdfLinkIconClass} aria-hidden="true" />
                       <PdfPrintUrlLine href={l.url} className="min-w-0 flex-1" />
                     </div>
@@ -170,10 +175,10 @@ export const CvPdfLayout = forwardRef<
                 return (
                   <div key={issuer}>
                     <div
-                      className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500"
+                      className="flex items-center gap-2 text-[10px] font-semibold uppercase leading-none tracking-wider text-slate-500"
                       data-pdf-page-break=""
                     >
-                      <CredentialIssuerIcon issuer={issuer} className="h-4 w-4 text-slate-600" />
+                      <CredentialIssuerIcon issuer={issuer} className="h-4 w-4 shrink-0 translate-y-px text-slate-600" />
                       {issuer === 'language'
                         ? t('languageExams')
                         : issuer === 'other'
@@ -193,26 +198,30 @@ export const CvPdfLayout = forwardRef<
                             {c.label}
                           </div>
                           {hasPdfUrl(c.url) ? (
-                            <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
+                            <div className={`mt-1.5 ${pdfIconRowClass}`} data-pdf-page-break="">
                               <Globe className={pdfLinkIconClass} aria-hidden="true" />
                               <PdfPrintUrlLine href={c.url} className="min-w-0 flex-1" />
                             </div>
                           ) : null}
                           {c.dateEarned || c.dateExpires ? (
                             <div
-                              className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600"
+                              className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs leading-none text-slate-600"
                               data-pdf-page-break=""
                             >
                               {c.dateEarned ? (
-                                <span className="inline-flex items-center gap-1">
-                                  <Calendar className="h-3 w-3 opacity-70" />
-                                  {t('earned')} {c.dateEarned}
+                                <span className={pdfIconRowSmClass}>
+                                  <Calendar className="h-3 w-3 shrink-0 opacity-70" />
+                                  <span>
+                                    {t('earned')} {c.dateEarned}
+                                  </span>
                                 </span>
                               ) : null}
                               {c.dateExpires ? (
-                                <span className="inline-flex items-center gap-1">
-                                  <Calendar className="h-3 w-3 opacity-70" />
-                                  {t('expires')} {c.dateExpires}
+                                <span className={pdfIconRowSmClass}>
+                                  <Calendar className="h-3 w-3 shrink-0 opacity-70" />
+                                  <span>
+                                    {t('expires')} {c.dateExpires}
+                                  </span>
                                 </span>
                               ) : null}
                             </div>
@@ -271,38 +280,40 @@ export const CvPdfLayout = forwardRef<
                 return (
                   <article key={rowKey} className="py-4" data-pdf-page-break="">
                     {/* Stacked rows + per-row breaks so raster page slices do not cut through a single headline line */}
-                    <div className="space-y-1 font-semibold text-slate-900">
+                    <div className="space-y-1 font-semibold leading-none text-slate-900">
                       <div data-pdf-page-break="">{x.role}</div>
-                      <div className="flex items-center gap-1" data-pdf-page-break="">
-                        <AtSign className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-                        <span>{x.company}</span>
+                      <div className={pdfIconRowTightClass} data-pdf-page-break="">
+                        <AtSign className="h-3.5 w-3.5 shrink-0 translate-y-px text-slate-400" aria-hidden="true" />
+                        <span className="leading-none">{x.company}</span>
                       </div>
                     </div>
                     <div
-                      className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600"
+                      className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-none text-slate-600"
                       data-pdf-page-break=""
                     >
-                      <span className="inline-flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {x.start} – {x.end ?? t('present')}
+                      <span className={pdfIconRowSmClass}>
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        <span>
+                          {x.start} – {x.end ?? t('present')}
+                        </span>
                       </span>
                       {x.location ? (
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {x.location}
+                        <span className={pdfIconRowSmClass}>
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span>{x.location}</span>
                         </span>
                       ) : null}
                     </div>
                     {hasPdfUrl(x.companyUrl) || hasPdfUrl(x.companyLinkedInUrl) ? (
                       <div className="mt-2 space-y-2">
                         {hasPdfUrl(x.companyUrl) ? (
-                          <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
+                          <div className={pdfIconRowClass} data-pdf-page-break="">
                             <Globe className={pdfLinkIconClass} aria-hidden="true" />
                             <PdfPrintUrlLine href={x.companyUrl} className="min-w-0 flex-1" />
                           </div>
                         ) : null}
                         {hasPdfUrl(x.companyLinkedInUrl) ? (
-                          <div className="flex min-w-0 items-center gap-2" data-pdf-page-break="">
+                          <div className={pdfIconRowClass} data-pdf-page-break="">
                             <SiLinkedinIcon className={pdfLinkIconClass} aria-hidden="true" />
                             <PdfPrintUrlLine href={x.companyLinkedInUrl} className="min-w-0 flex-1" />
                           </div>
@@ -349,10 +360,7 @@ export const CvPdfLayout = forwardRef<
                           const kind = inferProjectLinkLabelKind(l)
                           const Icon = kind === 'github' ? SiGithubIcon : Globe
                           return (
-                            <div
-                              key={`${p.name}:${l.url}`}
-                              className="flex min-w-0 items-center gap-2"
-                            >
+                            <div key={`${p.name}:${l.url}`} className={pdfIconRowClass}>
                               <Icon className={pdfLinkIconClass} aria-hidden="true" />
                               <PdfPrintUrlLine href={l.url} className="min-w-0 flex-1" />
                             </div>
@@ -403,22 +411,27 @@ export const CvPdfLayout = forwardRef<
                       {e.school}
                     </div>
                     {hasPdfUrl(e.schoolUrl) ? (
-                      <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
+                      <div className={`mt-1.5 ${pdfIconRowClass}`} data-pdf-page-break="">
                         <Globe className={pdfLinkIconClass} aria-hidden="true" />
                         <PdfPrintUrlLine href={e.schoolUrl} className="min-w-0 flex-1" />
                       </div>
                     ) : null}
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600" data-pdf-page-break="">
+                    <div
+                      className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs leading-none text-slate-600"
+                      data-pdf-page-break=""
+                    >
                       {e.location ? (
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {e.location}
+                        <span className={pdfIconRowSmClass}>
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span>{e.location}</span>
                         </span>
                       ) : null}
                       {e.start || e.end ? (
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {e.start ?? ''} {e.start && e.end ? '–' : ''} {e.end ?? t('present')}
+                        <span className={pdfIconRowSmClass}>
+                          <Calendar className="h-3.5 w-3.5 shrink-0" />
+                          <span>
+                            {e.start ?? ''} {e.start && e.end ? '–' : ''} {e.end ?? t('present')}
+                          </span>
                         </span>
                       ) : null}
                     </div>
