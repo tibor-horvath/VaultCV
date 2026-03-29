@@ -137,7 +137,10 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                 if (!items.length) return null
                 return (
                   <div key={issuer}>
-                    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    <div
+                      className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500"
+                      data-pdf-page-break=""
+                    >
                       <CredentialIssuerIcon issuer={issuer} className="h-4 w-4 text-slate-600" />
                       {issuer === 'language'
                         ? t('languageExams')
@@ -154,13 +157,18 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                           className="py-2.5"
                           data-pdf-page-break=""
                         >
-                          <div className="font-semibold text-slate-900">{c.label}</div>
-                          <div className="mt-1.5 flex min-w-0 items-center gap-2">
+                          <div className="font-semibold text-slate-900" data-pdf-page-break="">
+                            {c.label}
+                          </div>
+                          <div className="mt-1.5 flex min-w-0 items-center gap-2" data-pdf-page-break="">
                             <Globe className={pdfLinkIconClass} aria-hidden="true" />
                             <PdfPrintUrlLine href={c.url} className="min-w-0 flex-1" />
                           </div>
                           {c.dateEarned || c.dateExpires ? (
-                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                            <div
+                              className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600"
+                              data-pdf-page-break=""
+                            >
                               {c.dateEarned ? (
                                 <span className="inline-flex items-center gap-1">
                                   <Calendar className="h-3 w-3 opacity-70" />
@@ -297,7 +305,9 @@ export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function C
                 const links = p.links ?? []
                 return (
                   <article key={p.name} className="py-4" data-pdf-page-break="">
-                    <div className="font-semibold text-slate-900">{p.name}</div>
+                    <div className="font-semibold text-slate-900" data-pdf-page-break="">
+                      {p.name}
+                    </div>
                     {links.length ? (
                       <div className="mt-2 space-y-2">
                         {links.map((l) => {
