@@ -69,10 +69,13 @@ function educationCredentialLine(e: CvEducation): string {
   return [e.degree, e.field, e.program].filter((s) => s != null && String(s).trim() !== '').join(' · ')
 }
 
-export const CvPdfLayout = forwardRef<HTMLDivElement, { cv: CvData }>(function CvPdfLayout({ cv }, ref) {
+export const CvPdfLayout = forwardRef<
+  HTMLDivElement,
+  { cv: CvData; /** Same resolved avatar URL as BasicsCard when passed from the route. */ profilePhotoSrc?: string }
+>(function CvPdfLayout({ cv, profilePhotoSrc }, ref) {
   const { t } = useI18n()
   const basics = cv.basics
-  const photoSrc = buildPhotoSrc(basics)
+  const photoSrc = profilePhotoSrc ?? buildPhotoSrc(basics)
   const { role, chip } = parseBasicsHeadline(basics.headline)
   const visibleLinks = (cv.links ?? []).filter(
     (l) => hasPdfUrl(l.url) && inferLinkKind(l) !== 'other',

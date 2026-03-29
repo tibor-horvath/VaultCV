@@ -39,6 +39,7 @@ import {
   getStoredAccessCode,
   setStoredAccessCode,
 } from '../lib/accessSession'
+import { buildPhotoSrc } from '../lib/cvPresentation'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../lib/pdfCaptureLayout'
 
@@ -302,6 +303,8 @@ export function CvRoute() {
       {theme === 'dark' ? t('themeLight') : t('themeDark')}
     </button>
   )
+  const profilePhotoSrc = state.kind === 'ready' ? buildPhotoSrc(state.cv.basics) : undefined
+
   const unlockedStatus =
     unlockedCountdown ? (
       <SessionStatusBadge
@@ -392,7 +395,9 @@ export function CvRoute() {
             />
           </div>
 
-          {!isBasicsInView ? <FloatingBasicsMenu basics={state.cv.basics} links={state.cv.links} /> : null}
+          {!isBasicsInView ? (
+            <FloatingBasicsMenu basics={state.cv.basics} links={state.cv.links} profilePhotoSrc={profilePhotoSrc} />
+          ) : null}
 
           {state.cv.credentials?.length ? (
             <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
@@ -494,7 +499,7 @@ export function CvRoute() {
             style={{ width: PDF_CAPTURE_ROOT_WIDTH_PX }}
             aria-hidden="true"
           >
-            <CvPdfLayout ref={pdfCaptureRef} cv={state.cv} />
+            <CvPdfLayout ref={pdfCaptureRef} cv={state.cv} profilePhotoSrc={profilePhotoSrc} />
           </div>
         </div>
       ) : null}
