@@ -59,7 +59,7 @@ function PdfPrintUrlLine({ href, className = '' }: { href: string | undefined; c
       data-pdf-link=""
       target={openInNewTab ? '_blank' : undefined}
       rel={openInNewTab ? 'noopener noreferrer' : undefined}
-      className={`inline-flex max-w-full min-h-0 items-center break-all font-mono text-[10px] leading-none text-slate-600 underline decoration-slate-300/80 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500${className ? ` ${className}` : ''}`}
+      className={`inline-flex max-w-full min-h-0 items-center break-all font-mono text-[10px] leading-none text-slate-600 no-underline${className ? ` ${className}` : ''}`}
     >
       {text}
     </a>
