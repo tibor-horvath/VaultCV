@@ -24,8 +24,20 @@ async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
     const res = await fetch('/.auth/me', { credentials: 'same-origin' })
     if (!res.ok) return null
-    const data = (await res.json()) as { clientPrincipal?: ClientPrincipal }
-    return data.clientPrincipal ?? null
+    const text = await res.text()
+    if (!text.trim()) return null
+    const data = JSON.parse(text) as { clientPrincipal?: ClientPrincipal }
+    return data?.clientPrincipal ?? null
+  } catch {
+    return null
+  }
+}
+
+async function readJsonOrNull<T>(res: Response): Promise<T | null> {
+  try {
+    const text = await res.text()
+    if (!text.trim()) return null
+    return JSON.parse(text) as T
   } catch {
     return null
   }
@@ -65,9 +77,15 @@ export function AdminRoute() {
     setError(null)
     try {
       const res = await fetch('/api/admin/share-links', { credentials: 'same-origin' })
-      const body = (await res.json()) as { links?: ShareLink[]; error?: string }
-      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
-      setLinks(body.links ?? [])
+      const body = await readJsonOrNull<{ links?: ShareLink[]; error?: string }>(res)
+      if (!res.ok) {
+        const hint =
+          res.status === 404
+            ? 'Check Static Web App Role assignments for the admin role (SWA may return 404 for unauthorized routes).'
+            : ''
+        throw new Error(body?.error || `Request failed (${res.status}). ${hint}`.trim())
+      }
+      setLinks(body?.links ?? [])
     } catch (e: any) {
       setError(e?.message ?? 'Failed loading share links.')
     } finally {
@@ -102,8 +120,8 @@ export function AdminRoute() {
           expiresInDays: Number.isFinite(expiresInDays) ? expiresInDays : 30,
         }),
       })
-      const body = (await res.json()) as { id?: string; error?: string }
-      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+      const body = await readJsonOrNull<{ id?: string; error?: string }>(res)
+      if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
       form.reset()
     } catch (e: any) {
@@ -122,8 +140,8 @@ export function AdminRoute() {
         headers: { accept: 'application/json' },
         credentials: 'same-origin',
       })
-      const body = (await res.json()) as { ok?: boolean; error?: string }
-      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+      const body = await readJsonOrNull<{ ok?: boolean; error?: string }>(res)
+      if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
     } catch (e: any) {
       setError(e?.message ?? 'Failed revoking share link.')

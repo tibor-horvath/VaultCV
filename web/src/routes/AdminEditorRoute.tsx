@@ -13,8 +13,10 @@ async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
     const res = await fetch('/.auth/me', { credentials: 'same-origin' })
     if (!res.ok) return null
-    const data = (await res.json()) as { clientPrincipal?: ClientPrincipal }
-    return data.clientPrincipal ?? null
+    const text = await res.text()
+    if (!text.trim()) return null
+    const data = JSON.parse(text) as { clientPrincipal?: ClientPrincipal }
+    return data?.clientPrincipal ?? null
   } catch {
     return null
   }
