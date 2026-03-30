@@ -13,6 +13,9 @@
       "allowedRoles": ["admin"]
     }
   ],
+  "platform": {
+    "apiRuntime": "node:22"
+  },
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
