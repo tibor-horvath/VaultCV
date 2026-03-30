@@ -17,7 +17,7 @@ export function EducationList({ items }: { items: CvEducation[] }) {
         const program = e.program?.trim() ? e.program.trim() : null
         const hasMetaRow = Boolean(e.start || e.end || e.location || e.gpa || e.honors)
         return (
-          <article className="py-3.5 lg:rounded-xl lg:border lg:border-slate-200/60 lg:p-3.5 dark:lg:border-slate-800/60" key={rowKey}>
+          <article className="py-3.5" key={rowKey}>
             <div className="flex flex-col gap-1 sm:hidden">
               {credential ? (
                 <div className="font-semibold text-slate-900 dark:text-slate-100">{credential}</div>
