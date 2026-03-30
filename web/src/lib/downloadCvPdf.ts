@@ -183,20 +183,84 @@ function sanitizePdfFileBaseName(fileBaseName: string): string {
   return safe.slice(0, 80) || 'cv'
 }
 
+const IMAGE_LOAD_TIMEOUT_MS = 15000
+const IMAGE_DECODE_TIMEOUT_MS = 12000
+const IMAGE_FETCH_TIMEOUT_MS = 15000
+const DATA_URL_IMAGE_TIMEOUT_MS = 8000
+const PDF_CAPTURE_TIMEOUT_MS = 45000
+
+function settleWithin<T>(promise: Promise<T>, timeoutMs: number): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    let done = false
+    const timer = setTimeout(() => {
+      if (done) return
+      done = true
+      resolve(undefined)
+    }, timeoutMs)
+    promise
+      .then((value) => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        resolve(value)
+      })
+      .catch(() => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        resolve(undefined)
+      })
+  })
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, stepLabel: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    let done = false
+    const timer = setTimeout(() => {
+      if (done) return
+      done = true
+      reject(new Error(`PDF generation timed out while ${stepLabel}.`))
+    }, timeoutMs)
+    promise
+      .then((value) => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        resolve(value)
+      })
+      .catch((error) => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        reject(error)
+      })
+  })
+}
+
+function waitForImageLoadOrTimeout(img: HTMLImageElement, timeoutMs: number): Promise<void> {
+  if (img.complete) return Promise.resolve()
+  return new Promise((resolve) => {
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      clearTimeout(timer)
+      img.removeEventListener('load', finish)
+      img.removeEventListener('error', finish)
+      resolve()
+    }
+    const timer = setTimeout(finish, timeoutMs)
+    img.addEventListener('load', finish, { once: true })
+    img.addEventListener('error', finish, { once: true })
+  })
+}
+
 /** Wait until all `<img>` under `root` have finished loading (or failed). */
 export async function waitForImages(root: HTMLElement): Promise<void> {
   const imgs = Array.from(root.querySelectorAll('img'))
+  await Promise.all(imgs.map((img) => waitForImageLoadOrTimeout(img, IMAGE_LOAD_TIMEOUT_MS)))
   await Promise.all(
-    imgs.map((img) => {
-      if (img.complete) return Promise.resolve()
-      return new Promise<void>((resolve) => {
-        img.addEventListener('load', () => resolve(), { once: true })
-        img.addEventListener('error', () => resolve(), { once: true })
-      })
-    }),
-  )
-  await Promise.all(
-    imgs.map((img) => (img.decode ? img.decode().catch(() => undefined) : Promise.resolve())),
+    imgs.map((img) => (img.decode ? settleWithin(img.decode(), IMAGE_DECODE_TIMEOUT_MS) : Promise.resolve())),
   )
 }
 
@@ -210,13 +274,21 @@ function readBlobAsDataUrl(blob: Blob): Promise<string> {
 }
 
 async function fetchImageAsDataUrl(absolute: string): Promise<string | null> {
+  const controller = typeof AbortController === 'function' ? new AbortController() : undefined
+  const timer = setTimeout(() => controller?.abort(), IMAGE_FETCH_TIMEOUT_MS)
   try {
-    const res = await fetch(absolute, { mode: 'cors', credentials: 'omit' })
+    const res = await fetch(absolute, {
+      mode: 'cors',
+      credentials: 'omit',
+      ...(controller ? { signal: controller.signal } : {}),
+    })
     if (!res.ok) return null
     const blob = await res.blob()
     return await readBlobAsDataUrl(blob)
   } catch {
     return null
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -251,10 +323,18 @@ async function downscaleDataUrlImage(
   opts: { maxSidePx: number; mimeType: string; quality?: number },
 ): Promise<string | null> {
   return new Promise((resolve) => {
+    let done = false
+    const finish = (value: string | null) => {
+      if (done) return
+      done = true
+      clearTimeout(timer)
+      resolve(value)
+    }
     const img = new Image()
     img.decoding = 'sync'
-    img.onload = () => resolve(rasterizeLoadedImageToDataUrl(img, opts))
-    img.onerror = () => resolve(null)
+    const timer = setTimeout(() => finish(null), DATA_URL_IMAGE_TIMEOUT_MS)
+    img.onload = () => finish(rasterizeLoadedImageToDataUrl(img, opts))
+    img.onerror = () => finish(null)
     img.src = dataUrl
   })
 }
@@ -367,35 +447,36 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
   try {
     await nextFrame()
     await nextFrame()
-    await waitForImages(root)
-    await inlineRemoteImagesForPdfCapture(root)
-    await waitForImages(root)
+    await withTimeout(waitForImages(root), IMAGE_LOAD_TIMEOUT_MS + IMAGE_DECODE_TIMEOUT_MS, 'waiting for images')
+    await withTimeout(inlineRemoteImagesForPdfCapture(root), 30000, 'inlining remote images')
+    await withTimeout(waitForImages(root), IMAGE_LOAD_TIMEOUT_MS + IMAGE_DECODE_TIMEOUT_MS, 'waiting for inlined images')
     await nextFrame()
     rootW = root.offsetWidth
     rootH = root.offsetHeight
-    canvas = await html2canvas(root, {
-      scale: captureScale,
-      useCORS: true,
-      allowTaint: false,
-      foreignObjectRendering: false,
-      imageTimeout: 60000,
-      logging: false,
-      backgroundColor: '#ffffff',
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: root.scrollWidth,
-      windowHeight: root.scrollHeight,
-      onclone(clonedDoc) {
-        const livePhoto = root.querySelector<HTMLImageElement>('img[data-pdf-profile-photo]')
-        const clonePhoto = clonedDoc.querySelector<HTMLImageElement>('img[data-pdf-profile-photo]')
-        if (livePhoto && clonePhoto) {
-          const src = livePhoto.currentSrc || livePhoto.getAttribute('src') || livePhoto.src
-          if (src.startsWith('data:')) {
-            clonePhoto.setAttribute('src', src)
+    canvas = await withTimeout(
+      html2canvas(root, {
+        scale: captureScale,
+        useCORS: true,
+        allowTaint: false,
+        foreignObjectRendering: false,
+        imageTimeout: 60000,
+        logging: false,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: root.scrollWidth,
+        windowHeight: root.scrollHeight,
+        onclone(clonedDoc) {
+          const livePhoto = root.querySelector<HTMLImageElement>('img[data-pdf-profile-photo]')
+          const clonePhoto = clonedDoc.querySelector<HTMLImageElement>('img[data-pdf-profile-photo]')
+          if (livePhoto && clonePhoto) {
+            const src = livePhoto.currentSrc || livePhoto.getAttribute('src') || livePhoto.src
+            if (src.startsWith('data:')) {
+              clonePhoto.setAttribute('src', src)
+            }
           }
-        }
-        const style = clonedDoc.createElement('style')
-        style.textContent = `
+          const style = clonedDoc.createElement('style')
+          style.textContent = `
         .pdf-print-chip {
           display: inline-grid !important;
           box-sizing: border-box !important;
@@ -416,9 +497,12 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
           font-size: 11px !important;
         }
       `
-        clonedDoc.head.appendChild(style)
-      },
-    })
+          clonedDoc.head.appendChild(style)
+        },
+      }),
+      PDF_CAPTURE_TIMEOUT_MS,
+      'capturing the page to canvas',
+    )
   } finally {
     restoreViewport()
   }
