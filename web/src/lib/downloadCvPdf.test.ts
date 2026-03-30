@@ -8,6 +8,7 @@ import {
   _sanitizePdfFileBaseName,
   type PdfLinkRect,
 } from './downloadCvPdf'
+import { getBrand } from './brand'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from './pdfCaptureLayout'
 
 describe('clipVerticalToPage', () => {
@@ -74,8 +75,9 @@ describe('_sanitizePdfFileBaseName', () => {
 describe('_buildPdfGeneratedAtFooter', () => {
   it('formats generated-at footer with timestamp and project reference', () => {
     const date = new Date(2026, 2, 30, 14, 5, 9)
+    const brand = getBrand()
     expect(_buildPdfGeneratedAtFooter(date)).toBe(
-      'Generated on 2026-03-30 14:05:09 by VaultCV (https://github.com/tibor-horvath/VaultCV)',
+      `Generated on 2026-03-30 14:05:09 by ${brand.name} (${brand.repoUrl})`,
     )
   })
 })

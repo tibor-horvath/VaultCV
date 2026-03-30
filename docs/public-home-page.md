@@ -14,6 +14,13 @@ Set these **public** (safe-to-ship) variables for the web app:
 - `VITE_PUBLIC_NAME` — your display name (e.g. `Jane Smith`)
 - `VITE_PUBLIC_TITLE` — your job title or headline (e.g. `Senior Software Engineer`)
 
+Optional branding variables (used in the site footer and PDF footer):
+
+- `VITE_BRAND_NAME`
+- `VITE_BRAND_REPO_URL`
+- `VITE_BRAND_LINKEDIN_URL`
+- `VITE_BRAND_COPYRIGHT_NAME`
+
 For the rest of the public profile (location/focus/bio/links/tags), you can use either:
 
 - `PUBLIC_PROFILE_JSON_URL` (served by `/api/public-profile`, preferred in deployed environments)
