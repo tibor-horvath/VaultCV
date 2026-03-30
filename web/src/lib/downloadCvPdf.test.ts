@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  _buildPdfGeneratedAtFooter,
   canvasPageSliceHeightPx,
   clipVerticalToPage,
   computePdfSliceEnds,
@@ -67,5 +68,14 @@ describe('_sanitizePdfFileBaseName', () => {
 
   it('falls back to cv when nothing usable remains', () => {
     expect(_sanitizePdfFileBaseName('   ...   ')).toBe('cv')
+  })
+})
+
+describe('_buildPdfGeneratedAtFooter', () => {
+  it('formats generated-at footer with timestamp and project reference', () => {
+    const date = new Date(2026, 2, 30, 14, 5, 9)
+    expect(_buildPdfGeneratedAtFooter(date)).toBe(
+      'Generated on 2026-03-30 14:05:09 by VaultCV (https://github.com/tibor-horvath/VaultCV)',
+    )
   })
 })

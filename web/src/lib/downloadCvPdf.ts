@@ -149,6 +149,30 @@ export type DownloadCvPdfOptions = {
   fileBaseName?: string
 }
 
+const VAULT_CV_REPO_URL = 'https://github.com/tibor-horvath/VaultCV'
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0')
+}
+
+function formatLocalTimestamp(date: Date): string {
+  const yyyy = date.getFullYear()
+  const mm = pad2(date.getMonth() + 1)
+  const dd = pad2(date.getDate())
+  const hh = pad2(date.getHours())
+  const min = pad2(date.getMinutes())
+  const ss = pad2(date.getSeconds())
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`
+}
+
+function buildPdfGeneratedAtFooter(date: Date = new Date()): string {
+  return `Generated on ${formatLocalTimestamp(date)} by VaultCV (${VAULT_CV_REPO_URL})`
+}
+
+function buildPdfGeneratedAtFooterPrefix(date: Date = new Date()): string {
+  return `Generated on ${formatLocalTimestamp(date)} by VaultCV (`
+}
+
 function sanitizePdfFileBaseName(fileBaseName: string): string {
   const normalized = fileBaseName.normalize('NFKC').trim()
   const noControls = normalized.replace(/[\u0000-\u001F\u007F]/g, '')
@@ -334,7 +358,7 @@ export function canvasPageSliceHeightPx(contentH_mm: number, contentW_mm: number
  * html2canvas raster + jsPDF with link annotations. CORS: useCORS for remote photos.
  */
 export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: DownloadCvPdfOptions): Promise<void> {
-  const { margin, contentW, contentH } = a4LayoutMm()
+  const { margin, pageW, pageH, contentW, contentH } = a4LayoutMm()
   const captureScale = defaultHtml2canvasScale(scale)
   const restoreViewport = normalizePdfCaptureViewport(root)
   let rootW = 0
@@ -453,6 +477,33 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
     pageStartY = sliceEnd
   }
 
+  const pageCount = pdf.getNumberOfPages()
+  if (pageCount > 0) {
+    pdf.setPage(pageCount)
+    pdf.setFontSize(8)
+    const footerPrefix = buildPdfGeneratedAtFooterPrefix()
+    const footerUrl = VAULT_CV_REPO_URL
+    const footerSuffix = ')'
+    const prefixW = pdf.getTextWidth(footerPrefix)
+    const urlW = pdf.getTextWidth(footerUrl)
+    const suffixW = pdf.getTextWidth(footerSuffix)
+    const totalW = prefixW + urlW + suffixW
+    const xStart = pageW / 2 - totalW / 2
+    const y = pageH - margin / 2
+
+    pdf.setTextColor(100, 100, 100)
+    pdf.text(footerPrefix, xStart, y, { baseline: 'bottom' })
+
+    const urlX = xStart + prefixW
+    pdf.setTextColor(33, 99, 235)
+    pdf.text(footerUrl, urlX, y, { baseline: 'bottom' })
+    const textHeight = pdf.getFontSize() / pdf.internal.scaleFactor
+    pdf.link(urlX, y - textHeight, urlW, textHeight + 0.5, { url: footerUrl })
+
+    pdf.setTextColor(100, 100, 100)
+    pdf.text(footerSuffix, urlX + urlW, y, { baseline: 'bottom' })
+  }
+
   const safe = sanitizePdfFileBaseName(fileBaseName)
   pdf.save(`${safe}.pdf`)
 }
@@ -471,4 +522,9 @@ export function _mapRectsToCanvas(
 /** @internal */
 export function _sanitizePdfFileBaseName(fileBaseName: string): string {
   return sanitizePdfFileBaseName(fileBaseName)
+}
+
+/** @internal */
+export function _buildPdfGeneratedAtFooter(date?: Date): string {
+  return buildPdfGeneratedAtFooter(date)
 }
