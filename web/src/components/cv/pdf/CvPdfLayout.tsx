@@ -100,8 +100,8 @@ export const CvPdfLayout = forwardRef<
         className="rounded-t-3xl border-b border-indigo-100/80 bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/70 px-8 pb-8 pt-10"
         data-pdf-page-break=""
       >
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-start">
-          <div className="mx-auto shrink-0 sm:mx-0">
+        <div className="flex flex-row items-start gap-8">
+          <div className="shrink-0">
             <img
               data-pdf-profile-photo=""
               src={photoSrc}
@@ -111,11 +111,11 @@ export const CvPdfLayout = forwardRef<
               crossOrigin={isCrossOriginImageUrl(photoSrc) ? 'anonymous' : undefined}
               decoding="async"
               loading="eager"
-              className="aspect-square h-36 w-36 rounded-3xl object-cover object-top ring-2 ring-white shadow-md sm:h-40 sm:w-40"
+              className="aspect-square h-40 w-40 rounded-3xl object-cover object-top ring-2 ring-white shadow-md"
             />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-balance text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{basics.name}</h1>
+            <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900">{basics.name}</h1>
             {role ? <p className="mt-2 text-base font-medium text-slate-600">{role}</p> : null}
             {chip ? (
               <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white/90 px-3 py-1 text-xs font-medium leading-none text-slate-600">
