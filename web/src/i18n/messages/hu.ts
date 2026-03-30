@@ -37,6 +37,7 @@ export const huMessages: Partial<MessageCatalog> = {
   website: 'Weboldal',
   linkedIn: 'LinkedIn',
   web: 'Web',
+  revealPhone: 'Telefonszám megjelenítése',
   opensInNewTab: 'új lapon nyílik meg',
   languageExams: 'Nyelvvizsgák',
   other: 'Egyéb',

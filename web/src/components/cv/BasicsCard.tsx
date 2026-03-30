@@ -1,8 +1,9 @@
 import type { CvBasics, CvLink } from '../../types/cv'
-import type { ReactNode } from 'react'
-import { Mail, MapPin, Sparkles } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { Mail, MapPin, Phone, Sparkles } from 'lucide-react'
 import { buildPhotoSrc, parseBasicsHeadline } from '../../lib/cvPresentation'
 import { BasicsLinksRow } from './BasicsLinksRow'
+import { useI18n } from '../../lib/i18n'
 
 export function BasicsCard({
   basics,
@@ -21,8 +22,11 @@ export function BasicsCard({
   /** Shown only below GitHub/LinkedIn on narrow screens (e.g. mobile PDF download). */
   belowLinks?: ReactNode
 }) {
+  const { t } = useI18n()
   const { role, chip } = parseBasicsHeadline(basics.headline)
   const photoSrc = profilePhotoSrc ?? buildPhotoSrc(basics)
+  const [isPhoneVisible, setIsPhoneVisible] = useState(false)
+  const hasMobile = Boolean(basics.mobile?.trim())
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
@@ -73,6 +77,28 @@ export function BasicsCard({
               <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
               {basics.email}
             </a>
+          ) : null}
+
+          {hasMobile ? (
+            isPhoneVisible ? (
+              <a
+                href={`tel:${String(basics.mobile).trim()}`}
+                className="mt-2 flex w-fit items-center gap-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              >
+                <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {String(basics.mobile).trim()}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsPhoneVisible(true)}
+                className="mt-2 inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900"
+                aria-label={t('revealPhone')}
+              >
+                <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {t('revealPhone')}
+              </button>
+            )
           ) : null}
 
           {basics.summary ? (

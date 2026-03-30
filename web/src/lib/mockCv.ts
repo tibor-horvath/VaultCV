@@ -8,6 +8,7 @@ function getMockCvEn(): LocalizedCvData {
       name: 'John Doe',
       headline: 'Full‑stack Developer · React · Azure',
       email: 'john.doe@example.com',
+      mobile: '+49 1512 3456789',
       photoAlt: 'Profile photo',
       location: 'City, Country',
       summary:
@@ -126,6 +127,7 @@ function getMockCvHu(): LocalizedCvData {
       name: 'John Doe',
       headline: 'Full-stack Fejlesztő · React · Azure',
       email: 'john.doe@example.com',
+      mobile: '+36 20 123 4567',
       photoAlt: 'Profilkép',
       location: 'Város, Ország',
       summary:
@@ -244,6 +246,7 @@ function getMockCvDe(): LocalizedCvData {
       name: 'John Doe',
       headline: 'Full‑stack‑Entwickler · React · Azure',
       email: 'john.doe@example.com',
+      mobile: '+49 1512 3456789',
       photoAlt: 'Profilfoto',
       location: 'Stadt, Land',
       summary:

@@ -2,6 +2,7 @@ export type CvBasics = {
   name: string
   headline: string
   email?: string
+  mobile?: string
   // Direct URL to profile photo (e.g. Azure Blob URL with SAS query).
   photoUrl?: string
   photoAlt?: string

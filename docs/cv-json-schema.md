@@ -6,7 +6,9 @@ You control the CV content via the `PRIVATE_PROFILE_JSON_URL` environment variab
 
 Key fields:
 
-- `basics`: `{ name, headline, email?, location?, summary?, photoAlt? }`
+- `basics`: `{ name, headline, email?, mobile?, location?, summary?, photoAlt? }`
+  - `mobile` is optional; prefer international format (for example `+36...`).
+  - In the web CV view, `mobile` is hidden by default and shown only after the visitor clicks **Reveal phone**.
   - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
   - Keep photo bytes out of profile JSON files. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
@@ -29,6 +31,7 @@ Below is a single JSON object (the file content you upload to Blob and reference
     "name": "Jane Smith",
     "headline": "Senior Software Engineer · TypeScript · Azure",
     "email": "jane@example.com",
+    "mobile": "+49 1512 3456789",
     "location": "Berlin, Germany",
     "summary": "Short paragraph about your focus and what you are looking for.",
     "photoAlt": "Jane Smith professional headshot"

@@ -33,6 +33,7 @@ export function isValidCvPayload(data: unknown): data is LocalizedCvData {
   if (!isObject(data)) return false
   if (!isObject(data.basics)) return false
   if (typeof data.basics.name !== 'string' || typeof data.basics.headline !== 'string') return false
+  if (data.basics.mobile !== undefined && typeof data.basics.mobile !== 'string') return false
   if (data.skills !== undefined && !isStringArray(data.skills)) return false
   if (data.languages !== undefined && !isStringArray(data.languages)) return false
   if (data.experience !== undefined && !Array.isArray(data.experience)) return false

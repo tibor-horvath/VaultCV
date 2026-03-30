@@ -2,6 +2,8 @@
 
 After a visitor unlocks your CV, they can download a print-ready **PDF** (A4, client-side) from the **Download PDF** control in the basics card header on the main CV view. Use the same access flow as the rest of the site (for example `/?t=TOKEN` or a stored session).
 
+Contact rows in the PDF header currently include email and social/profile links. Phone reveal behavior is web-only (the PDF does not include the `basics.mobile` reveal interaction).
+
 The export is generated in the browser with **html2canvas** and **jsPDF**; link regions in the PDF are preserved where the browser capture allows.
 
 The print layout is always rasterized at a **fixed width (794px, A4 content at ~96dpi)** so page breaks match desktop even on a narrow phone. Without that, a mobile viewport would reflow the HTML much taller and inflate the PDF page count.

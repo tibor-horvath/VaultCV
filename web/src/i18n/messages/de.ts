@@ -37,6 +37,7 @@ export const deMessages: Partial<MessageCatalog> = {
   website: 'Webseite',
   linkedIn: 'LinkedIn',
   web: 'Web',
+  revealPhone: 'Telefonnummer anzeigen',
   opensInNewTab: 'öffnet sich in einem neuen Tab',
   languageExams: 'Sprachprüfungen',
   other: 'Sonstiges',

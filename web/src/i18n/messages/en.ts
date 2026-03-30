@@ -34,6 +34,7 @@ export const enMessages = {
   website: 'Website',
   linkedIn: 'LinkedIn',
   web: 'Web',
+  revealPhone: 'Reveal phone',
   opensInNewTab: 'opens in new tab',
   languageExams: 'Language Exams',
   other: 'Other',
