@@ -9,6 +9,7 @@ export const enMessages = {
   urlTokenInvalid: 'The token from your link is invalid or expired.',
   openCv: 'Open CV',
   accessDetected: 'Access detected.',
+  accessActiveBadgeHint: 'Access is active now. If it expires, reopen with the same link or QR code.',
   lockedUntilCode: 'Locked until code is provided.',
   themeSwitchToLight: 'Switch to light theme',
   themeSwitchToDark: 'Switch to dark theme',

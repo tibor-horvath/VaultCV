@@ -12,6 +12,7 @@ export const huMessages: Partial<MessageCatalog> = {
     'A linkben lévő token érvénytelen vagy lejárt.',
   openCv: 'CV megnyitása',
   accessDetected: 'Hozzáférés észlelve.',
+  accessActiveBadgeHint: 'A hozzáférés most aktív. Ha lejár, ugyanazzal a linkkel vagy QR-kóddal újranyitható.',
   lockedUntilCode: 'Zárolva, ameddig nincs kód.',
   themeSwitchToLight: 'Világos téma bekapcsolása',
   themeSwitchToDark: 'Sötét téma bekapcsolása',

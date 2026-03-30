@@ -4,6 +4,7 @@ export function SessionStatusBadge({
   isLocked,
   lockedText,
   unlockedText,
+  activeTooltipText,
   expiresInSeconds,
   size = 'sm',
   minWidthClass = 'min-w-[13.5rem]',
@@ -11,6 +12,7 @@ export function SessionStatusBadge({
   isLocked: boolean
   lockedText: string
   unlockedText: string
+  activeTooltipText?: string
   expiresInSeconds?: number
   size?: 'sm' | 'xs'
   minWidthClass?: string
@@ -40,6 +42,7 @@ export function SessionStatusBadge({
 
   return (
     <div
+      title={derivedIsLocked ? undefined : activeTooltipText}
       className={`inline-flex ${minWidthClass} items-center justify-center gap-1.5 rounded-full border font-semibold ${sizeClasses} ${
         derivedIsLocked
           ? 'border-rose-200/80 bg-rose-50/90 text-rose-700 dark:border-rose-800/70 dark:bg-rose-950/40 dark:text-rose-300'

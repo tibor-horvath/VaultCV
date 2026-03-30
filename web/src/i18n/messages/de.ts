@@ -12,6 +12,7 @@ export const deMessages: Partial<MessageCatalog> = {
     'Der Token aus deinem Link ist ungültig oder abgelaufen.',
   openCv: 'Lebenslauf öffnen',
   accessDetected: 'Zugriff erkannt.',
+  accessActiveBadgeHint: 'Der Zugriff ist jetzt aktiv. Wenn er abläuft, öffne ihn erneut mit demselben Link oder QR-Code.',
   lockedUntilCode: 'Gesperrt, bis ein Code eingegeben wird.',
   themeSwitchToLight: 'Zum hellen Design wechseln',
   themeSwitchToDark: 'Zum dunklen Design wechseln',

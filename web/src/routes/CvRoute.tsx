@@ -312,6 +312,7 @@ export function CvRoute() {
         isLocked={isSessionLocked}
         lockedText={t('lockedUntilCode')}
         unlockedText={`${t('unlockedUntil')}: ${unlockedCountdown}`}
+        activeTooltipText={t('accessActiveBadgeHint')}
         expiresInSeconds={remainingSeconds}
         size="xs"
         minWidthClass="min-w-[13.5rem]"

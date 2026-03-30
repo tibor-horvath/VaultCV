@@ -294,6 +294,7 @@ export function LandingRoute() {
               isLocked={!isAccessDetected}
               lockedText={t('lockedUntilCode')}
               unlockedText={t('accessDetected')}
+              activeTooltipText={t('accessActiveBadgeHint')}
               size="sm"
               minWidthClass="min-w-0"
             />
