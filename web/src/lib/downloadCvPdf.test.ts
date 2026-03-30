@@ -4,6 +4,7 @@ import {
   clipVerticalToPage,
   computePdfSliceEnds,
   _mapRectsToCanvas,
+  _sanitizePdfFileBaseName,
   type PdfLinkRect,
 } from './downloadCvPdf'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from './pdfCaptureLayout'
@@ -52,5 +53,19 @@ describe('_mapRectsToCanvas', () => {
       top: 40,
       bottom: 80,
     })
+  })
+})
+
+describe('_sanitizePdfFileBaseName', () => {
+  it('preserves accented characters', () => {
+    expect(_sanitizePdfFileBaseName('Horváth Ákos CV')).toBe('Horváth Ákos CV')
+  })
+
+  it('replaces forbidden filename characters', () => {
+    expect(_sanitizePdfFileBaseName('cv: senior/dev*lead?')).toBe('cv_ senior_dev_lead_')
+  })
+
+  it('falls back to cv when nothing usable remains', () => {
+    expect(_sanitizePdfFileBaseName('   ...   ')).toBe('cv')
   })
 })

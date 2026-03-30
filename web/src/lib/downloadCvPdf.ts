@@ -149,6 +149,16 @@ export type DownloadCvPdfOptions = {
   fileBaseName?: string
 }
 
+function sanitizePdfFileBaseName(fileBaseName: string): string {
+  const normalized = fileBaseName.normalize('NFKC').trim()
+  const noControls = normalized.replace(/[\u0000-\u001F\u007F]/g, '')
+  const noForbidden = noControls.replace(/[<>:"/\\|?*]+/g, '_')
+  const compacted = noForbidden.replace(/\s+/g, ' ').replace(/_+/g, '_').trim()
+  const safeEdges = compacted.replace(/[. ]+$/g, '').replace(/^[. ]+/g, '')
+  const safe = safeEdges.replace(/[^\p{L}\p{M}\p{N} _.-]+/gu, '_').replace(/_+/g, '_').trim()
+  return safe.slice(0, 80) || 'cv'
+}
+
 /** Wait until all `<img>` under `root` have finished loading (or failed). */
 export async function waitForImages(root: HTMLElement): Promise<void> {
   const imgs = Array.from(root.querySelectorAll('img'))
@@ -443,7 +453,7 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
     pageStartY = sliceEnd
   }
 
-  const safe = fileBaseName.replace(/[^\w-]+/g, '_').slice(0, 80) || 'cv'
+  const safe = sanitizePdfFileBaseName(fileBaseName)
   pdf.save(`${safe}.pdf`)
 }
 
@@ -456,4 +466,9 @@ export function _mapRectsToCanvas(
   canvasH: number,
 ): PdfLinkRect[] {
   return mapRectsToCanvas(rects, rootW, rootH, canvasW, canvasH)
+}
+
+/** @internal */
+export function _sanitizePdfFileBaseName(fileBaseName: string): string {
+  return sanitizePdfFileBaseName(fileBaseName)
 }
