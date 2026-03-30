@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { markShareLinkViewed, validateShareLink } from '../lib/shareLinksTable'
 
 type Context = {
   res?: {
@@ -13,6 +14,12 @@ type HttpRequest = {
 }
 
 const SESSION_COOKIE_NAME = 'cv_session'
+
+function isShareId(id: string) {
+  // Expect base64url(16 bytes) from `shareLinksTable.ts` (22 chars).
+  // Keep validation permissive enough for future changes.
+  return /^[A-Za-z0-9_-]{16,64}$/.test(id)
+}
 
 function jsonResponse(status: number, body: unknown) {
   return {
@@ -91,6 +98,7 @@ function buildSessionCookie(token: string, maxAgeSeconds: number) {
 export default async function (context: Context, req: HttpRequest) {
   const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
   const code = (typeof payload?.code === 'string' ? payload.code : '').trim()
+  const shareId = (typeof payload?.shareId === 'string' ? payload.shareId : typeof payload?.share === 'string' ? payload.share : '').trim()
   const expected = (process.env.CV_ACCESS_TOKEN ?? '').trim()
   const signingSecret = getSigningSecret()
 
@@ -101,25 +109,42 @@ export default async function (context: Context, req: HttpRequest) {
     return
   }
 
-  if (!isGuidN(code)) {
-    const response = jsonResponse(400, { error: 'Invalid token format.' })
-    attachDebugHeaders(response, signingSecret)
-    context.res = response
-    return
-  }
+  if (shareId) {
+    if (!isShareId(shareId)) {
+      const response = jsonResponse(400, { error: 'Invalid share id format.' })
+      attachDebugHeaders(response, signingSecret)
+      context.res = response
+      return
+    }
+    const validation = await validateShareLink(shareId)
+    if (!validation.ok) {
+      const response = jsonResponse(401, { error: 'Unauthorized' })
+      attachDebugHeaders(response, signingSecret)
+      context.res = response
+      return
+    }
+    await markShareLinkViewed(shareId)
+  } else {
+    if (!isGuidN(code)) {
+      const response = jsonResponse(400, { error: 'Invalid token format.' })
+      attachDebugHeaders(response, signingSecret)
+      context.res = response
+      return
+    }
 
-  if (!isGuidN(expected)) {
-    const response = jsonResponse(500, { error: 'Server token is invalid.' })
-    attachDebugHeaders(response, signingSecret)
-    context.res = response
-    return
-  }
+    if (!isGuidN(expected)) {
+      const response = jsonResponse(500, { error: 'Server token is invalid.' })
+      attachDebugHeaders(response, signingSecret)
+      context.res = response
+      return
+    }
 
-  if (!constantTimeEqual(code, expected)) {
-    const response = jsonResponse(401, { error: 'Unauthorized' })
-    attachDebugHeaders(response, signingSecret)
-    context.res = response
-    return
+    if (!constantTimeEqual(code, expected)) {
+      const response = jsonResponse(401, { error: 'Unauthorized' })
+      attachDebugHeaders(response, signingSecret)
+      context.res = response
+      return
+    }
   }
 
   const ttlSeconds = getSessionTtlSeconds()

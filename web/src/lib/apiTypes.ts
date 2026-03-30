@@ -46,6 +46,7 @@ export function isValidCvPayload(data: unknown): data is LocalizedCvData {
 
 export function mapServerMessageToCode(message: string): ApiErrorCode | null {
   if (message === 'Invalid token format.') return 'invalid_token_format'
+  if (message === 'Invalid share id format.') return 'invalid_token_format'
   if (message === 'Unauthorized') return 'unauthorized'
   if (message === 'Server is not configured.') return 'server_not_configured'
   if (message === 'Server token is invalid.') return 'server_token_invalid'

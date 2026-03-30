@@ -10,6 +10,8 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@azure/data-tables": "^13.3.2",
+    "@azure/storage-blob": "^12.31.0",
     "typescript": "^5.9.0",
     "vitest": "^4.1.2"
   }

@@ -325,7 +325,10 @@ export function CvRoute() {
         <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
           <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             {t('lockedHintPrefix')}{' '}
-            <span className="font-mono">/?t=TOKEN</span>
+            <span className="font-mono">/?s=SHARE_ID</span>
+            <span className="text-slate-500 dark:text-slate-400"> (or </span>
+            <span className="font-mono text-slate-700 dark:text-slate-300">/?t=TOKEN</span>
+            <span className="text-slate-500 dark:text-slate-400">)</span>
             <span className="text-slate-500 dark:text-slate-400"> ({t('lockedHintLangOptional')})</span>
           </div>
           <button

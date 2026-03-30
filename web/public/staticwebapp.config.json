@@ -3,6 +3,16 @@
     "rewrite": "/index.html",
     "exclude": ["/api/*", "/assets/*", "/*.css", "/*.js", "/*.ico", "/*.png", "/*.svg"]
   },
+  "routes": [
+    {
+      "route": "/admin/*",
+      "allowedRoles": ["admin"]
+    },
+    {
+      "route": "/api/admin/*",
+      "allowedRoles": ["admin"]
+    }
+  ],
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",

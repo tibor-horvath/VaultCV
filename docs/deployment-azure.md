@@ -98,6 +98,8 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | `PUBLIC_PROFILE_JSON_URL` | Required URL to public profile JSON blob. |
 | `PROFILE_PHOTO_URL` | Azure Blob URL of your profile photo (the part before `?` from Step 3). |
 | `PROFILE_PHOTO_SAS_TOKEN` | SAS token string from Step 3 (starting with `?` or without — both work). |
+| `AZURE_STORAGE_CONNECTION_STRING` | Required for share links (Table Storage). Connection string to the storage account where the `sharelinks` table lives. |
+| `CV_SHARELINKS_TABLE` | Optional Table Storage table name for share links. Default: `sharelinks`. |
 
 > **Tip:** Azure Static Web Apps app settings have practical size limits (around 10 KB per setting). Store profile payloads in Blob and set `PRIVATE_PROFILE_JSON_URL` / `PUBLIC_PROFILE_JSON_URL`.
 >

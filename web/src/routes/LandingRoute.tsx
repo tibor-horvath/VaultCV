@@ -24,8 +24,10 @@ export function LandingRoute() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const urlToken = params.get('t') ?? ''
-  const [urlTokenValidating, setUrlTokenValidating] = useState(() => Boolean(urlToken.trim()))
-  const [sessionProbePending, setSessionProbePending] = useState(() => !urlToken.trim())
+  const urlShare = params.get('s') ?? ''
+  const initialUrlAccess = (urlShare.trim() || urlToken.trim()).trim()
+  const [urlTokenValidating, setUrlTokenValidating] = useState(() => Boolean(initialUrlAccess))
+  const [sessionProbePending, setSessionProbePending] = useState(() => !initialUrlAccess)
   const [tokenInput, setTokenInput] = useState('')
   const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [urlTokenInvalid, setUrlTokenInvalid] = useState(false)
@@ -58,16 +60,18 @@ export function LandingRoute() {
   useDocumentFavicon(publicName)
 
   const effectiveToken = useMemo(() => {
+    const fromShare = urlShare.trim()
+    if (fromShare) return fromShare
     const fromUrl = urlToken.trim()
     if (fromUrl) return fromUrl
     const fromInput = tokenInput.trim()
     return fromInput
-  }, [tokenInput, urlToken])
+  }, [tokenInput, urlToken, urlShare])
   const isUnlocked = Boolean(effectiveToken)
-  const isAccessDetected = Boolean(urlToken.trim())
+  const isAccessDetected = Boolean(urlToken.trim() || urlShare.trim())
 
   useEffect(() => {
-    const trimmed = urlToken.trim()
+    const trimmed = initialUrlAccess
     queueMicrotask(() => {
       if (trimmed) {
         setUrlTokenValidating(true)
@@ -76,7 +80,7 @@ export function LandingRoute() {
         setUrlTokenValidating(false)
       }
     })
-  }, [urlToken])
+  }, [initialUrlAccess])
 
   useEffect(() => {
     if (!tokenInput.trim()) return
@@ -86,7 +90,7 @@ export function LandingRoute() {
   }, [tokenInput])
 
   useEffect(() => {
-    const trimmed = urlToken.trim()
+    const trimmed = initialUrlAccess
     if (!trimmed) return
     let cancelled = false
     ;(async () => {
@@ -102,16 +106,17 @@ export function LandingRoute() {
       setUrlTokenInvalid(true)
       const next = new URLSearchParams(window.location.search)
       next.delete('t')
+      next.delete('s')
       const qs = next.toString()
       navigate({ pathname: '/', search: qs ? `?${qs}` : '' }, { replace: true })
     })()
     return () => {
       cancelled = true
     }
-  }, [urlToken, openCv, navigate])
+  }, [initialUrlAccess, openCv, navigate])
 
   useEffect(() => {
-    if (urlToken.trim()) return
+    if (initialUrlAccess) return
     if (tokenInput.trim()) return
     let cancelled = false
     queueMicrotask(() => {
