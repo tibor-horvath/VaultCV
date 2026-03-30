@@ -6,6 +6,13 @@
 
 This is the fastest way to see the site running. It shows the landing page with data from `web/public/public-profile.json`.
 
+### Mock CV mode (optional)
+
+To develop the CV UI without calling the API, enable mock mode in a local-only env file (gitignored):
+
+- Copy `web/.env.local.example` to `web/.env.local`
+- Keep `VITE_USE_MOCK_CV=1`
+
 ```bash
 cd web
 npm install   # downloads dependencies (only needed once)

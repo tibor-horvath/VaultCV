@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { getBrand } from './brand'
 
 export type PdfLinkRect = {
   href: string
@@ -149,8 +150,6 @@ export type DownloadCvPdfOptions = {
   fileBaseName?: string
 }
 
-const VAULT_CV_REPO_URL = 'https://github.com/tibor-horvath/VaultCV'
-
 function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
@@ -165,12 +164,12 @@ function formatLocalTimestamp(date: Date): string {
   return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`
 }
 
-function buildPdfGeneratedAtFooter(date: Date = new Date()): string {
-  return `Generated on ${formatLocalTimestamp(date)} by VaultCV (${VAULT_CV_REPO_URL})`
+function buildPdfGeneratedAtFooter(date?: Date, brand = getBrand()): string {
+  return `Generated on ${formatLocalTimestamp(date ?? new Date())} by ${brand.name} (${brand.repoUrl})`
 }
 
-function buildPdfGeneratedAtFooterPrefix(date: Date = new Date()): string {
-  return `Generated on ${formatLocalTimestamp(date)} by VaultCV (`
+function buildPdfGeneratedAtFooterPrefix(date?: Date, brand = getBrand()): string {
+  return `Generated on ${formatLocalTimestamp(date ?? new Date())} by ${brand.name} (`
 }
 
 function sanitizePdfFileBaseName(fileBaseName: string): string {
@@ -565,8 +564,9 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
   if (pageCount > 0) {
     pdf.setPage(pageCount)
     pdf.setFontSize(8)
-    const footerPrefix = buildPdfGeneratedAtFooterPrefix()
-    const footerUrl = VAULT_CV_REPO_URL
+    const brand = getBrand()
+    const footerPrefix = buildPdfGeneratedAtFooterPrefix(undefined, brand)
+    const footerUrl = brand.repoUrl
     const footerSuffix = ')'
     const prefixW = pdf.getTextWidth(footerPrefix)
     const urlW = pdf.getTextWidth(footerUrl)

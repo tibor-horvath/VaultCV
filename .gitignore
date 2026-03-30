@@ -19,6 +19,7 @@ pnpm-debug.log*
 Thumbs.db
 .env
 .env.*
+web/.env.local
 
 # QR output
 tools/*.png

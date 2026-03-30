@@ -26,6 +26,17 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 | Mock CV for local UI testing | [docs/mock-data.md](docs/mock-data.md) |
 | PDF export (basics card; html2canvas + jsPDF) | [docs/pdf-export.md](docs/pdf-export.md) |
 
+## Customize branding (optional)
+
+The site footer (and the generated PDF footer) can be customized via public Vite environment variables:
+
+- `VITE_BRAND_NAME`
+- `VITE_BRAND_REPO_URL`
+- `VITE_BRAND_LINKEDIN_URL`
+- `VITE_BRAND_COPYRIGHT_NAME`
+
+For local dev, set these in `web/.env.local` (gitignored). For Azure Static Web Apps, set them as application settings / environment variables for the Static Web App.
+
 ## Acknowledgments
 
 Parts of this repository were developed using [Cursor](https://cursor.com) (AI-assisted editing).
