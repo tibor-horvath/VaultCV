@@ -10,14 +10,14 @@ function educationCredentialLine(e: CvEducation): string {
 export function EducationList({ items }: { items: CvEducation[] }) {
   const { t } = useI18n()
   return (
-    <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60">
+    <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60 lg:grid lg:grid-cols-2 lg:gap-4 lg:divide-y-0">
       {items.map((e) => {
         const rowKey = stableEducationKey(e)
         const credential = educationCredentialLine(e)
         const program = e.program?.trim() ? e.program.trim() : null
         const hasMetaRow = Boolean(e.start || e.end || e.location || e.gpa || e.honors)
         return (
-          <article key={rowKey} className="py-3.5">
+          <article className="py-3.5 lg:rounded-xl lg:border lg:border-slate-200/60 lg:p-3.5 dark:lg:border-slate-800/60" key={rowKey}>
             <div className="flex flex-col gap-1 sm:hidden">
               {credential ? (
                 <div className="font-semibold text-slate-900 dark:text-slate-100">{credential}</div>

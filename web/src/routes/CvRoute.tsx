@@ -402,7 +402,7 @@ export function CvRoute() {
 
           {state.cv.credentials?.length ? (
             <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
-              <div className="space-y-4">
+              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
                 {credentialIssuerOrder
                   .map((issuer) => {
                     const items = state.cv.credentials?.filter((c) => c.issuer === issuer) ?? []
