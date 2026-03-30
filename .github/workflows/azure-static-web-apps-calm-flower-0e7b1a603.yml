@@ -50,6 +50,7 @@ jobs:
         run: |
           npm ci
           npm test
+          npm run build
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -61,6 +62,7 @@ jobs:
           app_location: "./web" # App source code path
           api_location: "api" # Api source code path - optional
           output_location: "dist" # Built app content directory - optional
+          api_build_command: "npm run build"
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
 
