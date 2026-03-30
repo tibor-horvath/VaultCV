@@ -12,6 +12,8 @@
     "@types/node": "^24.0.0",
     "@azure/data-tables": "^13.3.2",
     "@azure/storage-blob": "^12.31.0",
+    "@emnapi/core": "^1.9.1",
+    "@emnapi/runtime": "^1.9.1",
     "typescript": "^5.9.0",
     "vitest": "^4.1.2"
   }
