@@ -51,9 +51,9 @@ jobs:
           npm ci
           npm test
           npm run build
-      - name: Prune API dev dependencies
+      - name: Remove API node_modules before deploy
         working-directory: api
-        run: npm prune --production
+        run: rm -rf node_modules
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

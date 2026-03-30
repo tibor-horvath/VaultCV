@@ -4,18 +4,20 @@
   "version": "0.0.0",
   "type": "commonjs",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node esbuild.config.mjs",
+    "build:tsc": "tsc -p tsconfig.json",
     "watch": "tsc -p tsconfig.json -w",
     "test": "vitest run"
   },
   "dependencies": {
     "@azure/data-tables": "^13.3.2",
-    "@azure/storage-blob": "^12.31.0",
-    "@emnapi/core": "^1.9.1",
-    "@emnapi/runtime": "^1.9.1"
+    "@azure/storage-blob": "^12.31.0"
   },
   "devDependencies": {
+    "@emnapi/core": "^1.9.1",
+    "@emnapi/runtime": "^1.9.1",
     "@types/node": "^24.0.0",
+    "esbuild": "^0.27.4",
     "typescript": "^5.9.0",
     "vitest": "^4.1.2"
   }
