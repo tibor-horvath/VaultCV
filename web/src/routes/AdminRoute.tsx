@@ -5,8 +5,12 @@ import { redirectToLogin } from '../lib/authRedirect'
 import { useI18n } from '../lib/i18n'
 
 type ClientPrincipal = {
+  identityProvider?: string
+  userId?: string
   userDetails?: string
   userRoles?: string[]
+  roles?: string[]
+  claims?: { typ: string; val: string }[]
 }
 
 type ShareLink = {
@@ -30,6 +34,24 @@ async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   } catch {
     return null
   }
+}
+
+function extractEmailFromPrincipal(principal: ClientPrincipal | null): string {
+  if (!principal) return ''
+  const claims = principal.claims ?? []
+  const byType = (t: string) =>
+    claims
+      .filter((c) => (c.typ ?? '').trim().toLowerCase() === t)
+      .map((c) => (c.val ?? '').trim())
+      .find(Boolean) ?? ''
+
+  return (
+    byType('http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress') ||
+    byType('email') ||
+    byType('emails') ||
+    byType('preferred_username') ||
+    (principal.userDetails ?? '').trim()
+  )
 }
 
 async function readJsonOrNull<T>(res: Response): Promise<T | null> {
@@ -58,6 +80,7 @@ export function AdminRoute() {
   const [showRevoked, setShowRevoked] = useState(false)
 
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
+  const signedInEmail = useMemo(() => extractEmailFromPrincipal(me), [me])
   const visibleLinks = useMemo(() => {
     if (showRevoked) return links
     return links.filter((l) => !l.revokedAtEpoch)
@@ -249,9 +272,16 @@ export function AdminRoute() {
   return (
     <div className="w-full space-y-6 py-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-slate-900 dark:text-white">
-          <Shield className="h-5 w-5" />
-          <div className="text-lg font-semibold">Admin</div>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+            <Shield className="h-5 w-5" />
+            <div className="text-lg font-semibold">Admin</div>
+          </div>
+          {signedInEmail ? (
+            <div className="text-xs text-slate-600 dark:text-slate-300">
+              Signed in as <span className="font-mono">{signedInEmail}</span>
+            </div>
+          ) : null}
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
           {localeOptions.length > 1 ? (
