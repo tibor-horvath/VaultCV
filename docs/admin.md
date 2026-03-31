@@ -1,10 +1,12 @@
-# Admin page
+# Admin pages
 
-VaultCV includes an admin-only page for managing expiring, revocable share links.
+VaultCV includes admin-only routes for dashboard, profile editing, and share-link management.
 
 ## Access
 
-- Admin UI: `/admin`
+- Admin dashboard: `/admin`
+- Admin editor: `/admin/editor`
+- Admin share tools: `/admin/share`
 - Sign in (Entra ID): `/.auth/login/aad`
 - Verify identity: `/.auth/me`
 - Sign out: `/.auth/logout`
@@ -36,7 +38,7 @@ If `CV_PROFILE_SLUG` is missing, the admin profile endpoints return an error.
 
 ## Share links
 
-The admin page creates links like:
+The share page (`/admin/share`) creates links like:
 
 - `/?s=<SHARE_ID>`
 
@@ -45,6 +47,17 @@ These links are stored in Azure Table Storage and support:
 - expiry
 - revoke
 - optional admin-only metadata (`sharedWith`, `notes`) that is never returned by public endpoints
+
+## Public visibility model
+
+The editor (`/admin/editor`) supports per-field visibility controls for fields that can be shown on the public landing page.
+
+Always-private fields are never exposed publicly:
+
+- contact details: `email`, `mobile`
+- credential dates: `dateEarned`, `dateExpires`
+- education-sensitive metadata (for example GPA/honors/thesis/advisor)
+- share-link notes and metadata
 
 ## Security notes (important)
 

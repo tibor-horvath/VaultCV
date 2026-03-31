@@ -3,8 +3,6 @@ export type LocaleItem = { locale: string; label?: string }
 export type PublicBasicsFlags = {
   name: boolean
   headline: boolean
-  email: boolean
-  mobile: boolean
   location: boolean
   summary: boolean
   photoAlt: boolean
@@ -19,7 +17,7 @@ export type LinkRow = { label: string; url: string }
 export type PublicLinkFlags = { label: boolean; url: boolean }
 
 export type CredentialRow = { issuer: string; label: string; url: string; dateEarned?: string; dateExpires?: string }
-export type PublicCredentialFlags = { issuer: boolean; label: boolean; url: boolean; dateEarned: boolean; dateExpires: boolean }
+export type PublicCredentialFlags = { issuer: boolean; label: boolean; url: boolean }
 
 export type ExperienceRow = {
   company: string
@@ -65,7 +63,6 @@ export type PublicEducationFlags = {
   start: boolean
   end: boolean
   location: boolean
-  gpa: boolean
   highlights: boolean
 }
 

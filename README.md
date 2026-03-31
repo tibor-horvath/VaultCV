@@ -2,7 +2,7 @@
 
 A modern React CV SPA where **personal CV data is never bundled into the public site**.
 
-**New to this?** VaultCV is a personal CV website you self-host on Azure. Your CV content stays private on the server — visitors only see your name and a prompt to enter an access code. You share a private link (or QR code) that contains the code, so only people you choose can read your full CV.
+**New to this?** VaultCV is a personal CV website you self-host on Azure. Your full CV content stays private on the server. Visitors can see a configurable public subset on the landing page, and use an access code link (or QR code) to unlock the full CV.
 
 - The static site (`web/`) is a "locked by default" shell.
 - The private CV JSON is returned by an API (`/api/cv`) **only** when a valid short-lived signed session token is provided.

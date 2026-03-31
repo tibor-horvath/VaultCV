@@ -35,7 +35,6 @@ export function EducationSection(props: {
                   start: false,
                   end: false,
                   location: false,
-                  gpa: false,
                   highlights: false,
                 },
               ])
@@ -237,12 +236,6 @@ export function EducationSection(props: {
                     placeholder="3.9/4.0"
                   />
                 </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.gpa)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, gpa: !x.gpa } : x)))}
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-[1fr_auto] items-start gap-2">

@@ -129,8 +129,6 @@ function focusFirstValidationIssue(validation: PublicValidation) {
   const basicsByKey: Record<keyof PublicBasicsFlags, string> = {
     name: 'basics-name',
     headline: 'basics-headline',
-    email: 'basics-email',
-    mobile: 'basics-mobile',
     location: 'basics-location',
     summary: 'basics-summary',
     photoAlt: 'basics-photo-alt',
@@ -209,8 +207,6 @@ export function AdminEditorRoute() {
   const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
     name: false,
     headline: false,
-    email: false,
-    mobile: false,
     location: false,
     summary: false,
     photoAlt: false,
@@ -423,11 +419,11 @@ export function AdminEditorRoute() {
       const nextPublicBasics = {
         name: typeof pb.name === 'string' && pb.name.trim().length > 0,
         headline: typeof pb.headline === 'string' && pb.headline.trim().length > 0,
-        email: typeof pb.email === 'string' && pb.email.trim().length > 0,
-        mobile: typeof pb.mobile === 'string' && pb.mobile.trim().length > 0,
         location: typeof pb.location === 'string' && pb.location.trim().length > 0,
         summary: typeof pb.summary === 'string' && pb.summary.trim().length > 0,
-        photoAlt: typeof pb.photoAlt === 'string' && pb.photoAlt.trim().length > 0,
+        photoAlt:
+          (typeof pb.photoAlt === 'string' && pb.photoAlt.trim().length > 0) ||
+          (typeof pb.photoUrl === 'string' && pb.photoUrl.trim().length > 0),
       }
       const nextPublicSections = {
         skills: Array.isArray(parsedPublic.value.skills) && parsedPublic.value.skills.length > 0,
@@ -464,13 +460,11 @@ export function AdminEditorRoute() {
       const nextPublicCredentials = privateCredArr.map((o) => {
           const key = `${asString(o.issuer).trim()}|${asString(o.label).trim()}|${asString(o.url).trim()}`
           const pub = publicCredByKey.get(key) ?? null
-          if (!pub) return { issuer: false, label: false, url: false, dateEarned: false, dateExpires: false }
+          if (!pub) return { issuer: false, label: false, url: false }
           return {
             issuer: typeof pub.issuer === 'string' && asString(pub.issuer).trim().length > 0,
             label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
             url: typeof pub.url === 'string' && asString(pub.url).trim().length > 0,
-            dateEarned: typeof pub.dateEarned === 'string' && asString(pub.dateEarned).trim().length > 0,
-            dateExpires: typeof pub.dateExpires === 'string' && asString(pub.dateExpires).trim().length > 0,
           }
         })
 
@@ -531,7 +525,6 @@ export function AdminEditorRoute() {
               start: false,
               end: false,
               location: false,
-              gpa: false,
               highlights: false,
             }
           return {
@@ -543,7 +536,6 @@ export function AdminEditorRoute() {
             start: typeof pub.start === 'string' && asString(pub.start).trim().length > 0,
             end: typeof pub.end === 'string' && asString(pub.end).trim().length > 0,
             location: typeof pub.location === 'string' && asString(pub.location).trim().length > 0,
-            gpa: typeof pub.gpa === 'string' && asString(pub.gpa).trim().length > 0,
             highlights: Array.isArray(pub.highlights) && pub.highlights.length > 0,
           }
         })
@@ -720,14 +712,6 @@ export function AdminEditorRoute() {
         delete nextBasics.headline
         changed = true
       }
-      if ((prev.basicsEmail !== basicsEmail || prev.publicBasics.email !== publicBasics.email) && nextBasics.email) {
-        delete nextBasics.email
-        changed = true
-      }
-      if ((prev.basicsMobile !== basicsMobile || prev.publicBasics.mobile !== publicBasics.mobile) && nextBasics.mobile) {
-        delete nextBasics.mobile
-        changed = true
-      }
       if ((prev.basicsLocation !== basicsLocation || prev.publicBasics.location !== publicBasics.location) && nextBasics.location) {
         delete nextBasics.location
         changed = true
@@ -886,8 +870,6 @@ export function AdminEditorRoute() {
 
       if (publicBasics.name && !asString(nextBasics.name).trim()) nextValidation.basics.name = 'Name is toggled public but empty.'
       if (publicBasics.headline && !asString(nextBasics.headline).trim()) nextValidation.basics.headline = 'Headline is toggled public but empty.'
-      if (publicBasics.email && !asString(nextBasics.email).trim()) nextValidation.basics.email = 'Email is toggled public but empty.'
-      if (publicBasics.mobile && !asString(nextBasics.mobile).trim()) nextValidation.basics.mobile = 'Mobile is toggled public but empty.'
       if (publicBasics.location && !asString(nextBasics.location).trim()) nextValidation.basics.location = 'Location is toggled public but empty.'
       if (publicBasics.summary && !asString(nextBasics.summary).trim()) nextValidation.basics.summary = 'Summary is toggled public but empty.'
       if (publicBasics.photoAlt && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photoAlt = 'Photo alt is toggled public but empty.'
@@ -912,12 +894,7 @@ export function AdminEditorRoute() {
         const url = (c.url ?? '').trim()
         if (!issuer || !label || !url) {
           nextValidation.credentials[idx] = 'Public credential requires issuer, label, and URL values.'
-          return
         }
-        const rowIssues: string[] = []
-        if (flags.dateEarned && !(c.dateEarned ?? '').trim()) rowIssues.push('Date earned is toggled public but empty.')
-        if (flags.dateExpires && !(c.dateExpires ?? '').trim()) rowIssues.push('Date expires is toggled public but empty.')
-        if (rowIssues.length) nextValidation.credentials[idx] = rowIssues.join(' ')
       })
 
       experience.forEach((e, idx) => {
@@ -956,7 +933,6 @@ export function AdminEditorRoute() {
         if (flags.start && !(e.start ?? '').trim()) rowIssues.push('Start is toggled public but empty.')
         if (flags.end && !(e.end ?? '').trim()) rowIssues.push('End is toggled public but empty.')
         if (flags.location && !(e.location ?? '').trim()) rowIssues.push('Location is toggled public but empty.')
-        if (flags.gpa && !(e.gpa ?? '').trim()) rowIssues.push('GPA is toggled public but empty.')
         if (flags.highlights && !(e.highlights ?? []).length) rowIssues.push('Highlights are toggled public but empty.')
         if (rowIssues.length) nextValidation.education[idx] = rowIssues.join(' ')
       })
@@ -985,11 +961,10 @@ export function AdminEditorRoute() {
       const publicBasicsObj: Record<string, unknown> = {}
       if (publicBasics.name) publicBasicsObj.name = asString(nextBasics.name)
       if (publicBasics.headline) publicBasicsObj.headline = asString(nextBasics.headline)
-      if (publicBasics.email && asString(nextBasics.email).trim()) publicBasicsObj.email = asString(nextBasics.email).trim()
-      if (publicBasics.mobile && asString(nextBasics.mobile).trim()) publicBasicsObj.mobile = asString(nextBasics.mobile).trim()
       if (publicBasics.location && asString(nextBasics.location).trim()) publicBasicsObj.location = asString(nextBasics.location).trim()
       if (publicBasics.summary && asString(nextBasics.summary).trim()) publicBasicsObj.summary = asString(nextBasics.summary).trim()
       if (publicBasics.photoAlt && asString(nextBasics.photoAlt).trim()) publicBasicsObj.photoAlt = asString(nextBasics.photoAlt).trim()
+      if (publicBasics.photoAlt && asString(nextBasics.photoUrl).trim()) publicBasicsObj.photoUrl = asString(nextBasics.photoUrl).trim()
       if (Object.keys(publicBasicsObj).length) publicNext.basics = publicBasicsObj
 
       if (publicSections.skills) publicNext.skills = nextSkills
@@ -1015,10 +990,7 @@ export function AdminEditorRoute() {
           const label = (c.label ?? '').trim()
           const url = (c.url ?? '').trim()
           if (!issuer || !label || !url) return null
-          const out: Record<string, unknown> = { issuer, label, url }
-          if (flags.dateEarned && (c.dateEarned ?? '').trim()) out.dateEarned = (c.dateEarned ?? '').trim()
-          if (flags.dateExpires && (c.dateExpires ?? '').trim()) out.dateExpires = (c.dateExpires ?? '').trim()
-          return out
+          return { issuer, label, url }
         })
         .filter(Boolean)
       if (publicCredOut.length) publicNext.credentials = publicCredOut
@@ -1059,7 +1031,6 @@ export function AdminEditorRoute() {
           if (flags.start && (e.start ?? '').trim()) out.start = (e.start ?? '').trim()
           if (flags.end && (e.end ?? '').trim()) out.end = (e.end ?? '').trim()
           if (flags.location && (e.location ?? '').trim()) out.location = (e.location ?? '').trim()
-          if (flags.gpa && (e.gpa ?? '').trim()) out.gpa = (e.gpa ?? '').trim()
           if (flags.highlights && (e.highlights ?? []).length) out.highlights = (e.highlights ?? []).filter(Boolean)
           return out
         })

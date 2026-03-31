@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight, Calendar, Eye, EyeOff, KeyRound, Moon, ShieldCheck, Sun } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, KeyRound, Moon, ShieldCheck, Sun } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
@@ -32,6 +32,16 @@ function formatCredentialIssuerLabel(issuer: string, fallbackOther: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ')
+}
+
+function sanitizePublicBasicsForLanding(input: CvData['basics'] | undefined): CvData['basics'] {
+  if (!input) return { name: '', headline: '' }
+  return {
+    ...input,
+    // Always private in public landing mode.
+    email: undefined,
+    mobile: undefined,
+  }
 }
 
 export function LandingRoute() {
@@ -155,8 +165,23 @@ export function LandingRoute() {
     )
   }
 
-  const basics = publicCv.basics ?? { name: '', headline: '' }
+  const basics = sanitizePublicBasicsForLanding(publicCv.basics)
   const links = publicCv.links ?? []
+  const publicCredentials = (publicCv.credentials ?? []).map((credential) => ({
+    ...credential,
+    // Always private on public landing.
+    dateEarned: undefined,
+    dateExpires: undefined,
+  }))
+  const publicEducation = (publicCv.education ?? []).map((entry) => ({
+    ...entry,
+    // Always private on public landing.
+    gpa: undefined,
+    honors: undefined,
+    thesisTitle: undefined,
+    advisor: undefined,
+  }))
+  const showPublicPhoto = Boolean(basics.photoAlt?.trim() || basics.photoUrl?.trim())
 
   return (
     <div className="mx-auto w-full">
@@ -176,12 +201,12 @@ export function LandingRoute() {
 
         {!publicLoading ? (
           <div className="mt-4 space-y-6">
-            <BasicsCard basics={basics} links={links} showPhoto={false} />
+            <BasicsCard basics={basics} links={links} showPhoto={showPublicPhoto} />
 
-            {publicCv.credentials?.length ? (
+            {publicCredentials.length ? (
               <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
                 <div className="space-y-3">
-                  {publicCv.credentials.map((credential) => (
+                  {publicCredentials.map((credential) => (
                     <article
                       key={`${credential.issuer}:${credential.label}:${credential.url}:${credential.dateEarned ?? ''}:${credential.dateExpires ?? ''}`}
                       className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/30"
@@ -197,22 +222,6 @@ export function LandingRoute() {
                       >
                         {credential.label}
                       </a>
-                      {credential.dateEarned || credential.dateExpires ? (
-                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
-                          {credential.dateEarned ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5 opacity-80" />
-                              {t('earned')} {credential.dateEarned}
-                            </span>
-                          ) : null}
-                          {credential.dateExpires ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5 opacity-80" />
-                              {t('expires')} {credential.dateExpires}
-                            </span>
-                          ) : null}
-                        </div>
-                      ) : null}
                     </article>
                   ))}
                 </div>
@@ -261,9 +270,9 @@ export function LandingRoute() {
               </Section>
             ) : null}
 
-            {publicCv.education?.length ? (
+            {publicEducation.length ? (
               <Section title={t('education')}>
-                <EducationList items={publicCv.education} />
+                <EducationList items={publicEducation} />
               </Section>
             ) : null}
           </div>

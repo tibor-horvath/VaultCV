@@ -106,7 +106,7 @@ function readStatusFilterFromUrl(): StatusFilter {
   return 'active'
 }
 
-export function AdminRoute() {
+export function AdminShareRoute() {
   const { localeOptions } = useI18n()
   const [me, setMe] = useState<ClientPrincipal | null>(null)
   const [meLoading, setMeLoading] = useState(true)
@@ -154,7 +154,7 @@ export function AdminRoute() {
     try {
       const res = await fetch('/api/manage/links', { credentials: 'same-origin' })
       if (res.status === 401) {
-        redirectToLogin('/admin')
+        redirectToLogin('/admin/share')
         return
       }
       const body = await readJsonOrNull<{ links?: ShareLink[]; error?: string }>(res)
@@ -205,7 +205,7 @@ export function AdminRoute() {
         }),
       })
       if (res.status === 401) {
-        redirectToLogin('/admin')
+        redirectToLogin('/admin/share')
         return
       }
       const body = await readJsonOrNull<{ id?: string; error?: string }>(res)
@@ -231,7 +231,7 @@ export function AdminRoute() {
         credentials: 'same-origin',
       })
       if (res.status === 401) {
-        redirectToLogin('/admin')
+        redirectToLogin('/admin/share')
         return
       }
       const body = await readJsonOrNull<{ ok?: boolean; error?: string }>(res)
@@ -348,7 +348,7 @@ export function AdminRoute() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white">
             <Shield className="h-5 w-5" />
-            <div className="text-lg font-semibold">Admin</div>
+            <div className="text-lg font-semibold">Share CV</div>
           </div>
           {signedInEmail ? (
             <div className="text-xs text-slate-600 dark:text-slate-300">
@@ -357,6 +357,12 @@ export function AdminRoute() {
           ) : null}
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+          >
+            <Shield className="h-3.5 w-3.5 shrink-0" /> Dashboard
+          </Link>
           {localeOptions.length > 1 ? (
             <label className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
               <Globe2 className="h-3.5 w-3.5 shrink-0" /> Share language

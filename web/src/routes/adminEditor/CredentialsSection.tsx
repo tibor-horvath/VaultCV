@@ -28,7 +28,7 @@ export function CredentialsSection(props: {
             type="button"
             onClick={() => {
               setCredentials((cur) => [...cur, { issuer: '', label: '', url: '' }])
-              setPublicCredentials((cur) => [...cur, { issuer: false, label: false, url: false, dateEarned: false, dateExpires: false }])
+              setPublicCredentials((cur) => [...cur, { issuer: false, label: false, url: false }])
             }}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
@@ -172,12 +172,6 @@ export function CredentialsSection(props: {
                     placeholder="2025-01"
                   />
                 </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicCredentials[idx]?.dateEarned)}
-                    onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, dateEarned: !x.dateEarned } : x)))}
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-[1fr_auto] items-start gap-2">
@@ -192,14 +186,6 @@ export function CredentialsSection(props: {
                     placeholder="2028-01"
                   />
                 </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicCredentials[idx]?.dateExpires)}
-                    onClick={() =>
-                      setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, dateExpires: !x.dateExpires } : x)))
-                    }
-                  />
-                </div>
               </div>
             </div>
           </details>

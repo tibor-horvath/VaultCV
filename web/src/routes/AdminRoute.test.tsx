@@ -2,8 +2,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { LocaleProvider } from '../lib/i18n'
-import { AdminRoute } from './AdminRoute'
+import { AdminDashboardRoute } from './AdminDashboardRoute'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -39,9 +38,7 @@ function renderRoute() {
   act(() => {
     mountedRoot!.render(
       <MemoryRouter>
-        <LocaleProvider>
-          <AdminRoute />
-        </LocaleProvider>
+        <AdminDashboardRoute />
       </MemoryRouter>,
     )
   })
@@ -60,41 +57,8 @@ beforeEach(() => {
         },
       })
     }
-    if (url.endsWith('/api/manage/links')) {
-      const now = Math.floor(Date.now() / 1000)
-      return jsonResponse({
-        links: [
-          {
-            rowKey: 'abc123',
-            createdAtEpoch: 1,
-            expiresAtEpoch: now + 3600,
-            viewCount: 0,
-          },
-          {
-            rowKey: 'revoked1',
-            createdAtEpoch: 1,
-            expiresAtEpoch: now + 3600,
-            revokedAtEpoch: now - 10,
-            viewCount: 3,
-          },
-          {
-            rowKey: 'expired1',
-            createdAtEpoch: 1,
-            expiresAtEpoch: now - 10,
-            viewCount: 7,
-          },
-        ],
-      })
-    }
-    if (url.includes('/api/manage/links/') && url.endsWith('/revoke')) {
-      return jsonResponse({ ok: true })
-    }
     return jsonResponse({}, 404)
   }))
-  Object.defineProperty(navigator, 'clipboard', {
-    value: { writeText: vi.fn(async () => {}) },
-    configurable: true,
-  })
 })
 
 afterEach(() => {
@@ -109,57 +73,22 @@ afterEach(() => {
   mountedContainer = null
 })
 
-describe('AdminRoute', () => {
-  it('asks for confirmation before revoking', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+describe('AdminDashboardRoute', () => {
+  it('shows editor and share tiles', async () => {
     renderRoute()
     await flushEffects()
 
-    const revokeButton = Array.from(document.querySelectorAll('button[title="Revoke"]')).find(
-      (node) => !(node as HTMLButtonElement).disabled,
-    ) as HTMLButtonElement
-    expect(revokeButton).toBeTruthy()
-
-    await act(async () => {
-      revokeButton.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
-      await Promise.resolve()
-    })
-
-    expect(confirmSpy).toHaveBeenCalledTimes(1)
-    const fetchCalls = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.map((call) => String(call[0]))
-    expect(fetchCalls.some((url) => url.includes('/revoke'))).toBe(false)
-    confirmSpy.mockRestore()
+    const links = Array.from(document.querySelectorAll('a')).map((node) => node.getAttribute('href'))
+    expect(links).toContain('/admin/editor')
+    expect(links).toContain('/admin/share')
   })
 
-  it('shows copy feedback after copying a link', async () => {
+  it('does not render share-link table on dashboard', async () => {
     renderRoute()
     await flushEffects()
 
-    const copyButton = Array.from(document.querySelectorAll('button')).find((node) => node.textContent?.trim() === 'Copy') as HTMLButtonElement
-    expect(copyButton).toBeTruthy()
-
-    await act(async () => {
-      copyButton.click()
-      await Promise.resolve()
-    })
-
-    expect(document.body.textContent).toContain('Share link copied.')
-  })
-
-  it('filters with single-select controls and syncs status in URL', async () => {
-    renderRoute()
-    await flushEffects()
-
-    expect(document.body.textContent).toContain('Showing 1 of 3 links')
-    expect(window.location.search).toContain('status=active')
-
-    const allButton = Array.from(document.querySelectorAll('button')).find((node) => node.textContent?.trim() === 'All') as HTMLButtonElement
-    await act(async () => {
-      allButton.click()
-      await Promise.resolve()
-    })
-
-    expect(document.body.textContent).toContain('Showing 3 of 3 links')
-    expect(window.location.search).toContain('status=all')
+    expect(document.body.textContent).not.toContain('Create share link')
+    expect(document.body.textContent).toContain('Edit CV')
+    expect(document.body.textContent).toContain('Share CV')
   })
 })

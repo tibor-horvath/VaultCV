@@ -91,45 +91,28 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+        <div className="grid grid-cols-1 items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Email
             <input
               id="basics-email"
               value={basicsEmail}
               onChange={(e) => setBasicsEmail(e.target.value)}
-              aria-invalid={Boolean(publicBasicsErrors?.email)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
-            {publicBasicsErrors?.email ? (
-              <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.email}</div>
-            ) : null}
           </label>
-          <div className="pt-5">
-            <ToggleButton pressed={publicBasics.email} onClick={() => setPublicBasics((cur) => ({ ...cur, email: !cur.email }))} />
-          </div>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+        <div className="grid grid-cols-1 items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Mobile
             <input
               id="basics-mobile"
               value={basicsMobile}
               onChange={(e) => setBasicsMobile(e.target.value)}
-              aria-invalid={Boolean(publicBasicsErrors?.mobile)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
-            {publicBasicsErrors?.mobile ? (
-              <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.mobile}</div>
-            ) : null}
           </label>
-          <div className="pt-5">
-            <ToggleButton
-              pressed={publicBasics.mobile}
-              onClick={() => setPublicBasics((cur) => ({ ...cur, mobile: !cur.mobile }))}
-            />
-          </div>
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
