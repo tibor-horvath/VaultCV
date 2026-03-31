@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight, Eye, EyeOff, KeyRound, Moon, Sun } from 'lucide-react'
+import { ArrowRight, Calendar, Eye, EyeOff, KeyRound, Moon, ShieldCheck, Sun } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
@@ -20,6 +20,18 @@ import type { CvData } from '../types/cv'
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
   return normalized ? normalized : fallback
+}
+
+function formatCredentialIssuerLabel(issuer: string, fallbackOther: string) {
+  const normalized = issuer.trim().toLowerCase()
+  if (!normalized) return fallbackOther
+  if (normalized === 'aws') return 'AWS'
+  if (normalized === 'cncf') return 'CNCF'
+  return normalized
+    .split(/[-_ ]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 export function LandingRoute() {
@@ -165,6 +177,47 @@ export function LandingRoute() {
         {!publicLoading ? (
           <div className="mt-4 space-y-6">
             <BasicsCard basics={basics} links={links} showPhoto={false} />
+
+            {publicCv.credentials?.length ? (
+              <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
+                <div className="space-y-3">
+                  {publicCv.credentials.map((credential) => (
+                    <article
+                      key={`${credential.issuer}:${credential.label}:${credential.url}:${credential.dateEarned ?? ''}:${credential.dateExpires ?? ''}`}
+                      className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/30"
+                    >
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {formatCredentialIssuerLabel(String(credential.issuer ?? ''), t('other'))}
+                      </div>
+                      <a
+                        className="mt-1 inline-block text-sm font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
+                        href={credential.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {credential.label}
+                      </a>
+                      {credential.dateEarned || credential.dateExpires ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
+                          {credential.dateEarned ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 opacity-80" />
+                              {t('earned')} {credential.dateEarned}
+                            </span>
+                          ) : null}
+                          {credential.dateExpires ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 opacity-80" />
+                              {t('expires')} {credential.dateExpires}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </Section>
+            ) : null}
 
             {publicCv.skills?.length ? (
               <Section title={t('skills')}>
