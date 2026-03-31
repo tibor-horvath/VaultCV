@@ -124,39 +124,41 @@ export function CredentialsSection(props: {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Label
-                  <input
-                    value={c.label}
-                    onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="Microsoft Certified: ..."
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicCredentials[idx]?.label)}
-                    onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: !x.label } : x)))}
-                  />
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Label
+                    <input
+                      value={c.label}
+                      onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="Microsoft Certified: ..."
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicCredentials[idx]?.label)}
+                      onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: !x.label } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  URL
-                  <input
-                    value={c.url}
-                    onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="https://..."
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicCredentials[idx]?.url)}
-                    onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    URL
+                    <input
+                      value={c.url}
+                      onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="https://..."
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicCredentials[idx]?.url)}
+                      onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
+                    />
+                  </div>
                 </div>
               </div>
 

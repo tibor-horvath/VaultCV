@@ -59,80 +59,82 @@ export function LinksSection(props: {
                 />
               </div>
               {rowErrors?.[idx] ? <div className="text-[11px] text-red-700 dark:text-red-300">{rowErrors[idx]}</div> : null}
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Label
-                  {(() => {
-                    const currentSelectValue = LINK_LABEL_OPTIONS.includes(l.label as (typeof LINK_LABEL_OPTIONS)[number]) ? l.label : CUSTOM_OPTION
-                    const options = [
-                      { value: '', label: 'Select label...' },
-                      { value: 'GitHub', label: 'GitHub', icon: <SiGithubIcon className="h-3.5 w-3.5" /> },
-                      { value: 'LinkedIn', label: 'LinkedIn', icon: <SiLinkedinIcon className="h-3.5 w-3.5" /> },
-                      { value: 'Portfolio', label: 'Portfolio', icon: <Globe className="h-3.5 w-3.5" /> },
-                      { value: 'Website', label: 'Website', icon: <Globe className="h-3.5 w-3.5" /> },
-                      { value: 'Blog', label: 'Blog', icon: <Globe className="h-3.5 w-3.5" /> },
-                      { value: 'Twitter/X', label: 'Twitter/X', icon: <SiXIcon className="h-3.5 w-3.5" /> },
-                      { value: 'Mastodon', label: 'Mastodon', icon: <SiMastodonIcon className="h-3.5 w-3.5" /> },
-                      { value: 'YouTube', label: 'YouTube', icon: <SiYoutubeIcon className="h-3.5 w-3.5" /> },
-                      { value: 'Email', label: 'Email', icon: <AtSign className="h-3.5 w-3.5" /> },
-                      { value: CUSTOM_OPTION, label: 'Custom' },
-                    ]
-                    return (
-                      <>
-                        <IconSelect
-                          value={currentSelectValue}
-                          onChange={(next) =>
-                            setLinks((cur) =>
-                              cur.map((x, i) => {
-                                if (i !== idx) return x
-                                if (next === CUSTOM_OPTION) {
-                                  const keepCustom = LINK_LABEL_OPTIONS.includes(x.label as (typeof LINK_LABEL_OPTIONS)[number]) ? '' : x.label
-                                  return { ...x, label: keepCustom }
-                                }
-                                if (!next) return { ...x, label: '' }
-                                return { ...x, label: next }
-                              }),
-                            )
-                          }
-                          options={options}
-                          placeholder="Select label..."
-                          ariaLabel="Link label"
-                        />
-                        {currentSelectValue === CUSTOM_OPTION ? (
-                          <input
-                            value={l.label}
-                            onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
-                            className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                            placeholder="Custom label"
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Label
+                    {(() => {
+                      const currentSelectValue = LINK_LABEL_OPTIONS.includes(l.label as (typeof LINK_LABEL_OPTIONS)[number]) ? l.label : CUSTOM_OPTION
+                      const options = [
+                        { value: '', label: 'Select label...' },
+                        { value: 'GitHub', label: 'GitHub', icon: <SiGithubIcon className="h-3.5 w-3.5" /> },
+                        { value: 'LinkedIn', label: 'LinkedIn', icon: <SiLinkedinIcon className="h-3.5 w-3.5" /> },
+                        { value: 'Portfolio', label: 'Portfolio', icon: <Globe className="h-3.5 w-3.5" /> },
+                        { value: 'Website', label: 'Website', icon: <Globe className="h-3.5 w-3.5" /> },
+                        { value: 'Blog', label: 'Blog', icon: <Globe className="h-3.5 w-3.5" /> },
+                        { value: 'Twitter/X', label: 'Twitter/X', icon: <SiXIcon className="h-3.5 w-3.5" /> },
+                        { value: 'Mastodon', label: 'Mastodon', icon: <SiMastodonIcon className="h-3.5 w-3.5" /> },
+                        { value: 'YouTube', label: 'YouTube', icon: <SiYoutubeIcon className="h-3.5 w-3.5" /> },
+                        { value: 'Email', label: 'Email', icon: <AtSign className="h-3.5 w-3.5" /> },
+                        { value: CUSTOM_OPTION, label: 'Custom' },
+                      ]
+                      return (
+                        <>
+                          <IconSelect
+                            value={currentSelectValue}
+                            onChange={(next) =>
+                              setLinks((cur) =>
+                                cur.map((x, i) => {
+                                  if (i !== idx) return x
+                                  if (next === CUSTOM_OPTION) {
+                                    const keepCustom = LINK_LABEL_OPTIONS.includes(x.label as (typeof LINK_LABEL_OPTIONS)[number]) ? '' : x.label
+                                    return { ...x, label: keepCustom }
+                                  }
+                                  if (!next) return { ...x, label: '' }
+                                  return { ...x, label: next }
+                                }),
+                              )
+                            }
+                            options={options}
+                            placeholder="Select label..."
+                            ariaLabel="Link label"
                           />
-                        ) : null}
-                      </>
-                    )
-                  })()}
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicLinks[idx]?.label)}
-                    onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: !x.label } : x)))}
-                  />
+                          {currentSelectValue === CUSTOM_OPTION ? (
+                            <input
+                              value={l.label}
+                              onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
+                              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                              placeholder="Custom label"
+                            />
+                          ) : null}
+                        </>
+                      )
+                    })()}
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicLinks[idx]?.label)}
+                      onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: !x.label } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  URL
-                  <input
-                    value={l.url}
-                    onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="https://..."
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicLinks[idx]?.url)}
-                    onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    URL
+                    <input
+                      value={l.url}
+                      onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="https://..."
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicLinks[idx]?.url)}
+                      onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
