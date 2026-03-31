@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["post"],
-      "route": "admin-share-links-revoke/{id}"
+      "route": "admin/links/{id}/revoke"
     },
     {
       "type": "http",

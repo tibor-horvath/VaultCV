@@ -21,7 +21,7 @@ type ShareLink = {
   viewCount?: number
 }
 
-const SHARE_LINKS_ENDPOINTS = ['/api/admin/share-links', '/api/admin-share-links'] as const
+const SHARE_LINKS_ENDPOINTS = ['/api/admin/links', '/api/admin/share-links', '/api/admin-share-links'] as const
 
 async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
@@ -46,22 +46,31 @@ async function readJsonOrNull<T>(res: Response): Promise<T | null> {
   }
 }
 
-async function fetchShareLinksWithFallback(init?: RequestInit) {
+async function fetchShareLinksWithFallback(init?: RequestInit): Promise<Response> {
   let lastResponse: Response | null = null
   for (const endpoint of SHARE_LINKS_ENDPOINTS) {
     const res = await fetch(endpoint, init)
     lastResponse = res
     if (res.status !== 404) return res
   }
+  if (!lastResponse) throw new Error('No response from server.')
   return lastResponse
 }
 
-async function revokeShareLinkWithFallback(id: string, init?: RequestInit) {
-  const primary = `/api/admin/share-links/${encodeURIComponent(id)}/revoke`
-  const fallback = `/api/admin-share-links-revoke/${encodeURIComponent(id)}`
-  const first = await fetch(primary, init)
-  if (first.status !== 404) return first
-  return fetch(fallback, init)
+async function revokeShareLinkWithFallback(id: string, init?: RequestInit): Promise<Response> {
+  const endpoints = [
+    `/api/admin/links/${encodeURIComponent(id)}/revoke`,
+    `/api/admin/share-links/${encodeURIComponent(id)}/revoke`,
+    `/api/admin-share-links-revoke/${encodeURIComponent(id)}`,
+  ] as const
+  let lastResponse: Response | null = null
+  for (const endpoint of endpoints) {
+    const res = await fetch(endpoint, init)
+    lastResponse = res
+    if (res.status !== 404) return res
+  }
+  if (!lastResponse) throw new Error('No response from server.')
+  return lastResponse
 }
 
 function epochToIso(epoch: number | undefined) {

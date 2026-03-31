@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["get", "post"],
-      "route": "admin-share-links"
+      "route": "admin/links"
     },
     {
       "type": "http",
