@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ExternalLink, KeyRound, LoaderCircle, Shield } from 'lucide-react'
 import { redirectToLogin } from '../lib/authRedirect'
 import { AdminEditorHeader } from './adminEditor/AdminEditorHeader'
@@ -40,8 +40,6 @@ type ClientPrincipal = {
   userDetails?: string
   userRoles?: string[]
 }
-
-type ProfileKind = 'public' | 'private'
 
 async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
@@ -122,9 +120,6 @@ function clearChangedRowErrors<T, U>(params: {
 }
 
 export function AdminEditorRoute() {
-  const { kind } = useParams()
-  const profileKind = (kind === 'public' || kind === 'private' ? kind : 'private') as ProfileKind
-
   const [me, setMe] = useState<ClientPrincipal | null>(null)
   const [meLoading, setMeLoading] = useState(true)
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
@@ -255,7 +250,7 @@ export function AdminEditorRoute() {
       const publicRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, { credentials: 'same-origin' })
 
       if (privateRes.status === 401 || publicRes.status === 401) {
-        redirectToLogin('/admin/editor/private')
+        redirectToLogin('/admin/editor')
         return
       }
 
@@ -530,7 +525,7 @@ export function AdminEditorRoute() {
       void load()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meLoading, isAdmin, profileKind, locale])
+  }, [meLoading, isAdmin, locale])
 
   useEffect(() => {
     const prev = previousBasicsSnapshotRef.current
@@ -911,7 +906,7 @@ export function AdminEditorRoute() {
           body: JSON.stringify({ json }),
         })
         if (res.status === 401) {
-          redirectToLogin('/admin/editor/private')
+          redirectToLogin('/admin/editor')
           return { ok: false as const }
         }
         const bodyResult = await readJsonResponse<{ ok?: boolean; error?: string }>(res)

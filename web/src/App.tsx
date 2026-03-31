@@ -21,7 +21,7 @@ const router = createBrowserRouter([
         element: <Outlet />,
         children: [
           { index: true, element: <AdminRoute /> },
-          { path: 'editor/:kind', element: <AdminEditorRoute /> },
+          { path: 'editor', element: <AdminEditorRoute /> },
         ],
       },
       { path: '*', element: <NotFoundRedirect /> },

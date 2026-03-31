@@ -334,7 +334,7 @@ export function AdminRoute() {
             </label>
           ) : null}
           <Link
-            to="/admin/editor/private"
+            to="/admin/editor"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <SquarePen className="h-3.5 w-3.5 shrink-0" /> Edit CV
