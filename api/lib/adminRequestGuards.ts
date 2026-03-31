@@ -2,6 +2,19 @@ import { getHeaderInsensitive } from './httpHeaders'
 
 export type GuardResult = { ok: true } | { ok: false; status: number; error: string }
 
+function splitCsv(value: string | undefined) {
+  return (value ?? '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean)
+}
+
+export function readAllowedOriginsFromEnv() {
+  // Optional allowlist to support local dev/proxies where request Host differs from browser Origin.
+  // Format: comma-separated origins, e.g. "http://localhost:5173,https://myapp.azurestaticapps.net"
+  return splitCsv(process.env.CV_ALLOWED_ORIGINS)
+}
+
 function firstHeaderValue(headers: Record<string, string | undefined> | undefined, name: string) {
   const raw = getHeaderInsensitive(headers, name)
   if (!raw?.trim()) return undefined

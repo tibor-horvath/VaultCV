@@ -1,5 +1,5 @@
 import { createShareLink, listShareLinks } from '../lib/shareLinksTable'
-import { requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
+import { readAllowedOriginsFromEnv, requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -55,7 +55,7 @@ export default async function (context: Context, req: HttpRequest) {
   }
 
   if (method === 'POST') {
-    const sameOrigin = requireSameOriginMutation(req.headers)
+    const sameOrigin = requireSameOriginMutation(req.headers, { allowedOrigins: readAllowedOriginsFromEnv() })
     if (!sameOrigin.ok) {
       context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
       return

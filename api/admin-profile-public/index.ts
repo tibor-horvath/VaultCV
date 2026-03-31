@@ -1,5 +1,5 @@
 import { readProfileJsonV2, writeProfileJsonV2 } from '../lib/profileBlobStore'
-import { requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
+import { readAllowedOriginsFromEnv, requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { getHeaderInsensitive, firstLanguageTagFromAcceptLanguage } from '../lib/httpHeaders'
 import { normalizeLocale, readSupportedLocales } from '../lib/localeRegistry'
 import { requireAdmin } from '../lib/swaAuth'
@@ -58,7 +58,7 @@ export default async function (context: Context, req: HttpRequest) {
     }
 
     if (method === 'PUT') {
-      const sameOrigin = requireSameOriginMutation(req.headers)
+      const sameOrigin = requireSameOriginMutation(req.headers, { allowedOrigins: readAllowedOriginsFromEnv() })
       if (!sameOrigin.ok) {
         context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
         return
