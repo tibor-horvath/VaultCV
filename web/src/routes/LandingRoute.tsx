@@ -214,14 +214,18 @@ export function LandingRoute() {
                       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {formatCredentialIssuerLabel(String(credential.issuer ?? ''), t('other'))}
                       </div>
-                      <a
-                        className="mt-1 inline-block text-sm font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
-                        href={credential.url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {credential.label}
-                      </a>
+                      {String(credential.url ?? '').trim() ? (
+                        <a
+                          className="mt-1 inline-block text-sm font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
+                          href={credential.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {credential.label}
+                        </a>
+                      ) : (
+                        <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{credential.label}</div>
+                      )}
                     </article>
                   ))}
                 </div>

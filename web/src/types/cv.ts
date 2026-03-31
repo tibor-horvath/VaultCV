@@ -20,7 +20,7 @@ export type CvCredentialIssuer = 'microsoft' | 'aws' | 'google' | 'school' | 'la
 export type CvCredential = {
   issuer: CvCredentialIssuer
   label: string
-  url: string
+  url?: string
   /**
    * When the certificate/credential was earned (e.g. "2024", "2024-05").
    * Optional when the source payload omits earned dates.

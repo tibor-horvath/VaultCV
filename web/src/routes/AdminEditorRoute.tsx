@@ -450,16 +450,26 @@ export function AdminEditorRoute() {
         })
 
       const publicCredArr = asArray(parsedPublic.value.credentials)
-      const publicCredByKey = new Map<string, Record<string, unknown>>()
+      const publicCredByExactKey = new Map<string, Record<string, unknown>>()
+      const publicCredByIssuerLabelKey = new Map<string, Record<string, unknown>>()
       for (const x of publicCredArr) {
         const o = asObject(x)
-        const key = `${asString(o.issuer).trim()}|${asString(o.label).trim()}|${asString(o.url).trim()}`
-        if (key !== '||') publicCredByKey.set(key, o)
+        const issuer = asString(o.issuer).trim()
+        const label = asString(o.label).trim()
+        const url = asString(o.url).trim()
+        const exactKey = `${issuer}|${label}|${url}`
+        if (exactKey !== '||') publicCredByExactKey.set(exactKey, o)
+        const issuerLabelKey = `${issuer}|${label}`
+        if (issuerLabelKey !== '|') publicCredByIssuerLabelKey.set(issuerLabelKey, o)
       }
       const privateCredArr = asArray(parsedPrivate.value.credentials).map((x) => asObject(x))
       const nextPublicCredentials = privateCredArr.map((o) => {
-          const key = `${asString(o.issuer).trim()}|${asString(o.label).trim()}|${asString(o.url).trim()}`
-          const pub = publicCredByKey.get(key) ?? null
+          const issuer = asString(o.issuer).trim()
+          const label = asString(o.label).trim()
+          const url = asString(o.url).trim()
+          const exactKey = `${issuer}|${label}|${url}`
+          const issuerLabelKey = `${issuer}|${label}`
+          const pub = publicCredByExactKey.get(exactKey) ?? publicCredByIssuerLabelKey.get(issuerLabelKey) ?? null
           if (!pub) return { issuer: false, label: false, url: false }
           return {
             issuer: typeof pub.issuer === 'string' && asString(pub.issuer).trim().length > 0,
@@ -892,9 +902,11 @@ export function AdminEditorRoute() {
         const issuer = (c.issuer ?? '').trim()
         const label = (c.label ?? '').trim()
         const url = (c.url ?? '').trim()
-        if (!issuer || !label || !url) {
-          nextValidation.credentials[idx] = 'Public credential requires issuer, label, and URL values.'
+        if (!flags?.issuer || !flags?.label || !issuer || !label) {
+          nextValidation.credentials[idx] = 'Public credential requires issuer and label, both toggled on and filled.'
+          return
         }
+        if (flags.url && !url) nextValidation.credentials[idx] = 'Credential URL is toggled public but empty.'
       })
 
       experience.forEach((e, idx) => {
@@ -989,8 +1001,9 @@ export function AdminEditorRoute() {
           const issuer = (c.issuer ?? '').trim()
           const label = (c.label ?? '').trim()
           const url = (c.url ?? '').trim()
-          if (!issuer || !label || !url) return null
-          return { issuer, label, url }
+          if (!flags?.issuer || !flags?.label || !issuer || !label) return null
+          if (flags.url && !url) return null
+          return flags.url && url ? { issuer, label, url } : { issuer, label }
         })
         .filter(Boolean)
       if (publicCredOut.length) publicNext.credentials = publicCredOut
