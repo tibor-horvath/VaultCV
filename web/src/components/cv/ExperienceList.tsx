@@ -1,6 +1,6 @@
 import type { CvExperience } from '../../types/cv'
 import { highlightChildKey, stableExperienceKey } from '../../lib/cvKeys'
-import { AtSign, Calendar, ExternalLink, MapPin } from 'lucide-react'
+import { AtSign, Calendar, ExternalLink, Globe, MapPin } from 'lucide-react'
 import { SiLinkedinIcon } from '../icons/SimpleBrandIcons'
 import { SkillsChips } from './SkillsChips'
 import { useI18n } from '../../lib/i18n'
@@ -18,7 +18,7 @@ function ExperienceLinkPills({ x }: { x: CvExperience }) {
     <>
       {links.map((link) => {
         const kind = inferLinkKind(link)
-        const Icon = kind === 'linkedin' ? SiLinkedinIcon : ExternalLink
+        const Icon = kind === 'linkedin' ? SiLinkedinIcon : kind === 'web' ? Globe : ExternalLink
         return (
         <a
           key={`${x.company}:${x.role}:${link.label}:${link.url}`}

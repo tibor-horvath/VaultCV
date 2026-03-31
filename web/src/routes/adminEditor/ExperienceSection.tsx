@@ -1,6 +1,6 @@
 import { ToggleButton } from './ToggleButton'
 import { ConfirmButton } from './ConfirmButton'
-import { BriefcaseBusiness, Link2, Plus, Trash2 } from 'lucide-react'
+import { BriefcaseBusiness, Globe, Link2, Plus, Trash2 } from 'lucide-react'
 import type { ExperienceRow, PublicExperienceFlags } from './types'
 import { stringArrayToTextAreaLines, textAreaLinesToStringArray } from './utils'
 import { IconSelect } from './IconSelect'
@@ -122,7 +122,7 @@ export function ExperienceSection(props: {
                             : CUSTOM_OPTION
                           const options = [
                             { value: '', label: 'Select label...' },
-                            { value: 'website', label: 'website' },
+                            { value: 'website', label: 'website', icon: <Globe className="h-3.5 w-3.5" /> },
                             { value: 'linkedin', label: 'linkedin', icon: <SiLinkedinIcon className="h-3.5 w-3.5" /> },
                             { value: 'github', label: 'github', icon: <SiGithubIcon className="h-3.5 w-3.5" /> },
                             { value: 'gitlab', label: 'gitlab', icon: <SiGitlabIcon className="h-3.5 w-3.5" /> },
