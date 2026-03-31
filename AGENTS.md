@@ -14,7 +14,7 @@ Both use **npm** as the package manager. Node.js 20.19+ is required (Node.js 22 
 
 | Task | Command |
 |------|---------|
-| Install deps | `npm install` in root, `web/`, and `api/` |
+| Install deps | `npm ci` in root, `web/`, and `api/` (use `npm install` only when updating deps) |
 | Web dev server | `cd web && npm run dev` (localhost:5173) |
 | Web lint | `cd web && npm run lint` |
 | Web tests | `cd web && npm run test` |
