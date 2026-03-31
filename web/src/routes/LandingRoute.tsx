@@ -164,7 +164,7 @@ export function LandingRoute() {
 
         {!publicLoading ? (
           <div className="mt-4 space-y-6">
-            <BasicsCard basics={basics} links={links} />
+            <BasicsCard basics={basics} links={links} showPhoto={false} />
 
             {publicCv.skills?.length ? (
               <Section title={t('skills')}>

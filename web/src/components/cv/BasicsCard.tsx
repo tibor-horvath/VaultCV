@@ -9,6 +9,7 @@ export function BasicsCard({
   basics,
   links,
   profilePhotoSrc,
+  showPhoto = true,
   headerRight,
   topStatus,
   belowLinks,
@@ -17,6 +18,7 @@ export function BasicsCard({
   links?: CvLink[]
   /** When set, used for the avatar `src` instead of `buildPhotoSrc(basics)` (keep in sync with PDF layout). */
   profilePhotoSrc?: string
+  showPhoto?: boolean
   headerRight?: ReactNode
   topStatus?: ReactNode
   /** Shown only below GitHub/LinkedIn on narrow screens (e.g. mobile PDF download). */
@@ -32,15 +34,17 @@ export function BasicsCard({
     <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
       {topStatus ? <div className="mb-3 flex w-full justify-center">{topStatus}</div> : null}
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <div className="mx-auto flex-shrink-0 sm:mx-0">
-          <img
-            src={photoSrc}
-            alt={basics.photoAlt ?? `${basics.name} profile photo`}
-            className="h-48 w-48 rounded-full object-cover shadow-none ring-0 sm:h-56 sm:w-56"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
+        {showPhoto ? (
+          <div className="mx-auto flex-shrink-0 sm:mx-0">
+            <img
+              src={photoSrc}
+              alt={basics.photoAlt ?? `${basics.name} profile photo`}
+              className="h-48 w-48 rounded-full object-cover shadow-none ring-0 sm:h-56 sm:w-56"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        ) : null}
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-4">
