@@ -45,13 +45,13 @@ export function BasicsSection(props: {
         <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-300">Per-field public toggle</div>
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="flex items-start justify-between gap-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Name
             <input
               value={basicsName}
               onChange={(e) => setBasicsName(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <div className="pt-5">
@@ -59,13 +59,13 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="flex items-start justify-between gap-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Headline
             <input
               value={basicsHeadline}
               onChange={(e) => setBasicsHeadline(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <div className="pt-5">
@@ -76,13 +76,13 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="flex items-start justify-between gap-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Email
             <input
               value={basicsEmail}
               onChange={(e) => setBasicsEmail(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <div className="pt-5">
@@ -90,13 +90,13 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="flex items-start justify-between gap-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Mobile
             <input
               value={basicsMobile}
               onChange={(e) => setBasicsMobile(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <div className="pt-5">
@@ -107,13 +107,13 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="flex items-start justify-between gap-2 md:col-span-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Location
             <input
               value={basicsLocation}
               onChange={(e) => setBasicsLocation(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <div className="pt-5">
@@ -124,14 +124,14 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="flex items-start justify-between gap-2 md:col-span-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Summary
             <textarea
               rows={5}
               value={basicsSummary}
               onChange={(e) => setBasicsSummary(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <div className="pt-5">
@@ -142,13 +142,13 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="flex items-start justify-between gap-2 md:col-span-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Photo alt
             <input
               value={basicsPhotoAlt}
               onChange={(e) => setBasicsPhotoAlt(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <div className="pt-5">
