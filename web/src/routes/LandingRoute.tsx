@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight, Eye, EyeOff, KeyRound, LibraryBig, MapPin, Moon, Sun, Target } from 'lucide-react'
-import { BasicsLinksRow } from '../components/cv/BasicsLinksRow'
+import { ArrowRight, Eye, EyeOff, KeyRound, Moon, Sun } from 'lucide-react'
+import { BasicsCard } from '../components/cv/BasicsCard'
+import { EducationList } from '../components/cv/EducationList'
+import { ExperienceList } from '../components/cv/ExperienceList'
+import { ProjectsGrid } from '../components/cv/ProjectsGrid'
+import { Section } from '../components/cv/Section'
 import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
-import { defaultPublicData, fetchPublicProfile, mergePublicData, type PublicData } from '../lib/publicProfile'
+import { fetchPublicCvProfile } from '../lib/publicProfile'
 import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
 import { useI18n } from '../lib/i18n'
@@ -11,6 +15,7 @@ import { LanguageSelector } from '../components/LanguageSelector'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
 import { fetchCv } from '../lib/api'
+import type { CvData } from '../types/cv'
 
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -31,15 +36,17 @@ export function LandingRoute() {
   const [tokenInput, setTokenInput] = useState('')
   const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [urlTokenInvalid, setUrlTokenInvalid] = useState(false)
-  const [publicData, setPublicData] = useState<PublicData>(defaultPublicData)
+  const [publicCv, setPublicCv] = useState<Partial<CvData>>(() => ({
+    basics: { name: '', headline: '' },
+  }))
   const [publicLoading, setPublicLoading] = useState(true)
   useEffect(() => {
     let cancelled = false
 
     async function loadPublicData() {
-      const payload = await fetchPublicProfile(locale)
+      const payload = await fetchPublicCvProfile(locale)
       if (cancelled) return
-      setPublicData((current) => mergePublicData(current, payload))
+      setPublicCv(payload)
 
       if (!cancelled) setPublicLoading(false)
     }
@@ -50,8 +57,7 @@ export function LandingRoute() {
     }
   }, [locale])
 
-  const publicName = getPublicText(import.meta.env.VITE_PUBLIC_NAME as string | undefined, publicData.name)
-  const publicTitle = getPublicText(import.meta.env.VITE_PUBLIC_TITLE as string | undefined, publicData.title)
+  const publicName = getPublicText(import.meta.env.VITE_PUBLIC_NAME as string | undefined, publicCv.basics?.name ?? 'CV')
 
   useEffect(() => {
     document.title = publicName
@@ -137,6 +143,9 @@ export function LandingRoute() {
     )
   }
 
+  const basics = publicCv.basics ?? { name: '', headline: '' }
+  const links = publicCv.links ?? []
+
   return (
     <div className="mx-auto w-full">
       <div className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-[0_30px_70px_-35px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/45 sm:p-8">
@@ -153,61 +162,63 @@ export function LandingRoute() {
           </button>
         </div>
 
-        <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-          {publicLoading ? t('loading') : publicName}
-        </h1>
-        <p className="mt-2 text-pretty text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-          {publicLoading ? '' : publicTitle}
-        </p>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45">
-            <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-              <MapPin className="h-3.5 w-3.5" />
-              {t('location')}
-            </div>
-            <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
-              {publicLoading ? t('loading') : publicData.location}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45">
-            <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-              <Target className="h-3.5 w-3.5" />
-              {t('focus')}
-            </div>
-            <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
-              {publicLoading ? t('loading') : publicData.focus}
-            </p>
-          </div>
-        </div>
-
-        <p className="mt-4 text-pretty text-sm text-slate-700 dark:text-slate-300">
-          {publicLoading ? '' : publicData.bio}
-        </p>
-
         {!publicLoading ? (
-          <>
-            <BasicsLinksRow links={publicData.links} />
+          <div className="mt-4 space-y-6">
+            <BasicsCard basics={basics} links={links} />
 
-            {publicData.skills.length ? (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  <LibraryBig className="h-3.5 w-3.5" />
-                  {t('skills')}
-                </span>
-                {publicData.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+            {publicCv.skills?.length ? (
+              <Section title={t('skills')}>
+                <div className="flex flex-wrap gap-2">
+                  {publicCv.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </Section>
             ) : null}
-          </>
-        ) : null}
+
+            {publicCv.languages?.length ? (
+              <Section title={t('languages')}>
+                <div className="flex flex-wrap gap-2">
+                  {publicCv.languages.map((lang) => (
+                    <span
+                      key={lang}
+                      className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
+                    >
+                      {lang}
+                    </span>
+                  ))}
+                </div>
+              </Section>
+            ) : null}
+
+            {publicCv.experience?.length ? (
+              <Section title={t('experience')}>
+                <ExperienceList items={publicCv.experience} />
+              </Section>
+            ) : null}
+
+            {publicCv.projects?.length ? (
+              <Section title={t('projects')}>
+                <ProjectsGrid items={publicCv.projects} />
+              </Section>
+            ) : null}
+
+            {publicCv.education?.length ? (
+              <Section title={t('education')}>
+                <EducationList items={publicCv.education} />
+              </Section>
+            ) : null}
+          </div>
+        ) : (
+          <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+            {t('loading')}
+          </h1>
+        )}
 
         <div className="mt-7 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45 sm:p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">

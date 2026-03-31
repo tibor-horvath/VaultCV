@@ -1,5 +1,6 @@
 import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
 import { normalizeLocale } from '../lib/localeRegistry'
+import { readProfileJsonV2 } from '../lib/profileBlobStore'
 import { ProfilePayloadSourceError, readLocalizedProfilePayload } from '../lib/profilePayloadSource'
 
 type Context = {
@@ -27,21 +28,43 @@ function jsonResponse(status: number, body: unknown) {
   }
 }
 
+function readServerConfiguredProfileSlug() {
+  return (process.env.CV_PROFILE_SLUG ?? '').trim()
+}
+
 export default async function (context: Context, req: HttpRequest) {
   const acceptLanguage = getHeaderInsensitive(req.headers, 'accept-language')
   const requestedLocale = normalizeLocale(firstLanguageTagFromAcceptLanguage(acceptLanguage))
   let raw = ''
   let resolvedLocale = requestedLocale
+  const slug = readServerConfiguredProfileSlug()
+
   try {
-    const payload = await readLocalizedProfilePayload('PUBLIC_PROFILE_JSON_URL', requestedLocale)
-    raw = payload.raw
-    resolvedLocale = payload.resolvedLocale
-    context.log('Loaded PUBLIC_PROFILE payload', {
-      payloadSource: payload.source,
-      localeRequested: requestedLocale,
-      localeResolved: payload.resolvedLocale,
-      fromCache: payload.fromCache,
-    })
+    if (slug) {
+      const v2 = await readProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName: slug, legacyFallback: false })
+      if (v2.trim()) {
+        raw = v2
+        resolvedLocale = requestedLocale
+        context.log('Loaded PUBLIC_PROFILE payload', {
+          payloadSource: 'blob_v2',
+          localeRequested: requestedLocale,
+          localeResolved: requestedLocale,
+          fromCache: false,
+        })
+      }
+    }
+
+    if (!raw.trim()) {
+      const payload = await readLocalizedProfilePayload('PUBLIC_PROFILE_JSON_URL', requestedLocale)
+      raw = payload.raw
+      resolvedLocale = payload.resolvedLocale
+      context.log('Loaded PUBLIC_PROFILE payload', {
+        payloadSource: payload.source,
+        localeRequested: requestedLocale,
+        localeResolved: payload.resolvedLocale,
+        fromCache: payload.fromCache,
+      })
+    }
   } catch (error) {
     if (error instanceof ProfilePayloadSourceError) {
       context.log('Failed loading PUBLIC_PROFILE payload', {
