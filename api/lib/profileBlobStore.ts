@@ -37,11 +37,6 @@ function containerName() {
   return requiredEnv('CV_PROFILE_CONTAINER', process.env.CV_PROFILE_CONTAINER)
 }
 
-function blobName(kind: 'public' | 'private') {
-  if (kind === 'public') return requiredEnv('CV_PUBLIC_PROFILE_BLOB', process.env.CV_PUBLIC_PROFILE_BLOB)
-  return requiredEnv('CV_PRIVATE_PROFILE_BLOB', process.env.CV_PRIVATE_PROFILE_BLOB)
-}
-
 function getContainerClient() {
   const service = BlobServiceClient.fromConnectionString(storageConnectionString())
   return service.getContainerClient(containerName())
@@ -49,10 +44,6 @@ function getContainerClient() {
 
 function getBlobClientByName(name: string) {
   return getContainerClient().getBlockBlobClient(name)
-}
-
-function getLegacyBlobClient(kind: 'public' | 'private') {
-  return getBlobClientByName(blobName(kind))
 }
 
 function blobNameV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string }) {
@@ -93,28 +84,21 @@ async function writeBlobText(client: ReturnType<typeof getBlobClientByName>, jso
 }
 
 export async function readProfileJson(kind: 'public' | 'private') {
-  return readBlobText(getLegacyBlobClient(kind))
+  throw new Error(`Legacy profile blob naming is no longer supported (${kind}).`)
 }
 
 export async function writeProfileJson(kind: 'public' | 'private', jsonText: string) {
-  return writeBlobText(getLegacyBlobClient(kind), jsonText)
+  throw new Error(`Legacy profile blob naming is no longer supported (${kind}).`)
 }
 
 export async function readProfileJsonV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string; legacyFallback?: boolean }) {
-  const slug = safeSlugFromName(args.slugFromName)
-  if (!slug) return readProfileJson(args.kind)
-
   const name = blobNameV2(args)
   const primary = await readBlobText(getBlobClientByName(name))
   if (primary.trim()) return primary
-  if (!args.legacyFallback) return primary
-  return readProfileJson(args.kind)
+  return primary
 }
 
 export async function writeProfileJsonV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string; jsonText: string }) {
-  const slug = safeSlugFromName(args.slugFromName)
-  if (!slug) return writeProfileJson(args.kind, args.jsonText)
-
   const name = blobNameV2(args)
   return writeBlobText(getBlobClientByName(name), args.jsonText)
 }

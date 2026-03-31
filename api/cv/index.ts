@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
 import { normalizeLocale } from '../lib/localeRegistry'
-import { ProfilePayloadSourceError, readLocalizedProfilePayload } from '../lib/profilePayloadSource'
+import { readProfileJsonV2 } from '../lib/profileBlobStore'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -32,6 +32,10 @@ type AccessTokenReadResult = {
 
 const SESSION_COOKIE_NAME = 'cv_session'
 const SESSION_EXP_HEADER = 'x-cv-session-exp'
+
+function readServerConfiguredProfileSlug() {
+  return (process.env.CV_PROFILE_SLUG ?? '').trim()
+}
 
 function constantTimeEqual(a: string, b: string) {
   const aBuf = Buffer.from(a)
@@ -237,35 +241,36 @@ export default async function (context: Context, req: HttpRequest) {
   let raw = ''
   let resolvedLocale = requestedLocale
   try {
-    const payload = await readLocalizedProfilePayload('PRIVATE_PROFILE_JSON_URL', requestedLocale)
-    raw = payload.raw
-    resolvedLocale = payload.resolvedLocale
-    context.log('Loaded PRIVATE_PROFILE payload', {
-      payloadSource: payload.source,
-      localeRequested: requestedLocale,
-      localeResolved: payload.resolvedLocale,
-      fromCache: payload.fromCache,
-    })
-  } catch (error) {
-    if (error instanceof ProfilePayloadSourceError) {
-      context.log('Failed loading PRIVATE_PROFILE payload', {
-        payloadSource: 'profile_payload_loader',
-        failureReason: error.reason,
-        payloadKey: error.key,
-        urlHost: error.urlHost,
-        httpStatus: error.httpStatus,
-      })
-      context.res = jsonResponse(error.reason === 'not_configured' ? 500 : 502, {
-        error: error.reason === 'not_configured' ? 'CV data is not configured.' : 'CV data could not be loaded.',
-      })
+    const slug = readServerConfiguredProfileSlug()
+    if (!slug) {
+      context.res = jsonResponse(500, { error: 'CV data is not configured.' })
       return
     }
+    raw = await readProfileJsonV2({ kind: 'private', locale: requestedLocale, slugFromName: slug, legacyFallback: false })
+    resolvedLocale = requestedLocale
+    context.log('Loaded PRIVATE_PROFILE payload', {
+      payloadSource: 'blob_v2',
+      localeRequested: requestedLocale,
+      localeResolved: requestedLocale,
+      fromCache: false,
+    })
+  } catch (error) {
     context.log('Failed loading PRIVATE_PROFILE payload', { failureReason: 'unexpected_loader_error' }, error)
     context.res = jsonResponse(502, { error: 'CV data could not be loaded.' })
     return
   }
 
   try {
+    if (!raw.trim()) {
+      const response = jsonResponse(200, { locale: resolvedLocale })
+      response.headers = {
+        ...(response.headers ?? {}),
+        [SESSION_EXP_HEADER]: String(tokenVerification.exp),
+      }
+      attachDebugHeaders(response, signingSecret, { 'x-cv-debug-token-source': tokenRead.source })
+      context.res = response
+      return
+    }
     const data = JSON.parse(raw) as Record<string, unknown>
 
     // Allow moving photo URL out of `PRIVATE_PROFILE_JSON`.

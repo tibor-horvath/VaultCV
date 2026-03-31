@@ -23,10 +23,8 @@ Optional branding variables (used in the site footer and PDF footer):
 
 For the rest of the public profile (location/focus/bio/links/tags), you can use either:
 
-- `PUBLIC_PROFILE_JSON_URL` (served by `/api/public-profile`, preferred in deployed environments)
-- `web/public/public-profile.json` (fallback file, useful for web-only local dev — edit this file to customise the landing page when running locally)
+- A **public profile blob** in Azure Storage, served by `GET /api/public-profile`.
 
 At runtime, the landing page loads public profile data in this order:
 
 1. `GET /api/public-profile`
-2. If unavailable, `GET /public-profile.json`

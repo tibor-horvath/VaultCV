@@ -4,7 +4,7 @@
 
 ## Web only
 
-This is the fastest way to see the site running. It shows the landing page with data from `web/public/public-profile.json`.
+This is the fastest way to see the site running. It shows the landing page UI and (if the API is running) loads public profile data from `GET /api/public-profile`.
 
 ### Mock CV mode (optional)
 
@@ -19,10 +19,7 @@ npm install   # downloads dependencies (only needed once)
 npm run dev   # starts a local dev server at http://localhost:5173
 ```
 
-In `web-only` mode, the app can still show rich landing-page details from:
-
-- `web/public/public-profile.json` (already included in this repo — edit this to customise the landing page), or
-- `VITE_PUBLIC_NAME` and `VITE_PUBLIC_TITLE` as minimal fallback text.
+In `web-only` mode (no API), the landing page can still show minimal text from `VITE_PUBLIC_NAME` and `VITE_PUBLIC_TITLE`.
 
 ## API only
 
@@ -45,7 +42,7 @@ To run the API locally with secrets, create `api/local.settings.json` (gitignore
 You can copy the committed template and edit values:
 
 - Copy `api/local.settings.example.json` to `api/local.settings.json`
-- Set `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, `PRIVATE_PROFILE_JSON_URL`, and `PUBLIC_PROFILE_JSON_URL` (plus optional photo settings).
+- Set `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING`, `CV_PROFILE_CONTAINER` (plus optional photo settings).
 
 Minimal `Values` shape:
 
@@ -57,8 +54,9 @@ Minimal `Values` shape:
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "CV_ACCESS_TOKEN": "0123456789abcdef0123456789abcdef",
     "CV_SESSION_SIGNING_KEY": "<random-secret-at-least-32-chars>",
-    "PRIVATE_PROFILE_JSON_URL": "https://<account>.blob.core.windows.net/<container>/private-profile.json?<sas>",
-    "PUBLIC_PROFILE_JSON_URL": "https://<account>.blob.core.windows.net/<container>/public-profile.json?<sas>",
+    "CV_PROFILE_SLUG": "john-doe",
+    "CV_PROFILE_STORAGE_CONNECTION_STRING": "<azure-storage-connection-string>",
+    "CV_PROFILE_CONTAINER": "profiles",
     "PROFILE_PHOTO_URL": "https://<account>.blob.core.windows.net/<container>/<blob>",
     "PROFILE_PHOTO_SAS_TOKEN": "sp=...&st=...&se=...&spr=https&sv=...&sr=b&sig=..."
   }

@@ -19,33 +19,21 @@ VaultCV supports two localization layers:
 
 ## Localized content payloads (API)
 
-The API endpoints support locale-specific environment variables:
+Profile payload localization is done via **blob filenames**.
 
-- CV endpoint (`/api/cv`)
-  - `PRIVATE_PROFILE_JSON_URL_<LOCALE>` (example: `PRIVATE_PROFILE_JSON_URL_DE`, `PRIVATE_PROFILE_JSON_URL_HU`)
-  - fallback to `PRIVATE_PROFILE_JSON_URL`
-- Public profile endpoint (`/api/public-profile`)
-  - `PUBLIC_PROFILE_JSON_URL_<LOCALE>` (example: `PUBLIC_PROFILE_JSON_URL_DE`)
-  - fallback to `PUBLIC_PROFILE_JSON_URL`
+The API selects locale from the `Accept-Language` header (normalized by `api/lib/localeRegistry.ts`) and reads:
 
-API locale resolution is centralized in `api/lib/localeRegistry.ts` and follows the same `exact -> base -> en` behavior.
+- `{CV_PROFILE_SLUG}-private-profile-{locale}.json`
+- `{CV_PROFILE_SLUG}-public-profile-{locale}.json`
 
-## Localized fallback files (web-only dev)
-
-When API/local env vars are not available, web can use static fallback files in `web/public/`:
-
-- `public-profile.en.json`
-- `public-profile.hu.json`
-- `public-profile.de.json`
-- and generic fallback `public-profile.json`
+`CV_PROFILE_SLUG` is a server-side app setting.
 
 ## Add a new locale
 
 1. Add the locale to `SUPPORTED_LOCALES` (Azure app settings).
 2. Add a UI message catalog in `web/src/i18n/messages/`.
-3. Add localized content payloads:
-   - `PRIVATE_PROFILE_JSON_URL_<LOCALE>`
-   - `PUBLIC_PROFILE_JSON_URL_<LOCALE>`
-4. Optionally add `web/public/public-profile.<locale>.json` for web-only fallback/local testing.
+3. Upload localized profile JSON blobs using the naming convention:
+   - `{slug}-private-profile-{locale}.json`
+   - `{slug}-public-profile-{locale}.json`
 
 After changing Azure settings, redeploy or restart the API so new locale env vars take effect.

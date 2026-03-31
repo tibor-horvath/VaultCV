@@ -1,6 +1,6 @@
 # CV JSON schema (overview)
 
-You control the CV content via the `PRIVATE_PROFILE_JSON_URL` environment variable (server-side). Host a JSON file in Azure Blob Storage and point this setting to that file URL (SAS or identity-based access).
+You control the CV content via Azure Blob Storage. The API reads a JSON blob selected by `{CV_PROFILE_SLUG}` + `{locale}`.
 
 > **Not familiar with JSON?** JSON is a plain-text data format that looks like `{"key": "value"}`. You can write it in any text editor. Use [jsonlint.com](https://jsonlint.com) to check your JSON for errors before pasting it into Azure.
 
@@ -23,7 +23,7 @@ Key fields:
 
 ## Example
 
-Below is a single JSON object (the file content you upload to Blob and reference from `PRIVATE_PROFILE_JSON_URL`). Omit sections you do not need. Do not put `basics.photoUrl` here unless you inject it yourself; the API normally adds it from blob settings.
+Below is a single JSON object (the file content you upload to Blob as `{slug}-private-profile-{locale}.json`). Omit sections you do not need. Do not put `basics.photoUrl` here unless you inject it yourself; the API normally adds it from blob settings.
 
 ```json
 {
@@ -107,4 +107,4 @@ Below is a single JSON object (the file content you upload to Blob and reference
 }
 ```
 
-For local development, point `PRIVATE_PROFILE_JSON_URL` to a reachable JSON payload URL.
+For local development, configure `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING`, and `CV_PROFILE_CONTAINER` (see [local-development.md](local-development.md)).

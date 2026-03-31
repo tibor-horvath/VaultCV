@@ -26,7 +26,7 @@ import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { SkillsChips } from '../components/cv/SkillsChips'
 import { SiGoogleIcon } from '../components/icons/SimpleBrandIcons'
 import { exchangeAccessCode, fetchCv, type ApiErrorCode } from '../lib/api'
-import { fetchPublicProfile } from '../lib/publicProfile'
+import { fetchPublicCvProfile } from '../lib/publicProfile'
 import type { CvCredentialIssuer, CvData } from '../types/cv'
 import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
@@ -75,8 +75,8 @@ function usePublicName(locale: string) {
     let cancelled = false
     async function loadPublicProfileName() {
       try {
-        const payload = await fetchPublicProfile(locale)
-        const name = payload.name?.trim() ?? ''
+        const payload = await fetchPublicCvProfile(locale)
+        const name = payload.basics?.name?.trim() ?? ''
         if (!name || cancelled) return
         setPublicName(name)
       } catch {

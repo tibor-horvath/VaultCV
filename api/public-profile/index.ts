@@ -1,7 +1,6 @@
 import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
 import { normalizeLocale } from '../lib/localeRegistry'
 import { readProfileJsonV2 } from '../lib/profileBlobStore'
-import { ProfilePayloadSourceError, readLocalizedProfilePayload } from '../lib/profilePayloadSource'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -40,58 +39,35 @@ export default async function (context: Context, req: HttpRequest) {
   const slug = readServerConfiguredProfileSlug()
 
   try {
-    if (slug) {
-      const v2 = await readProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName: slug, legacyFallback: false })
-      if (v2.trim()) {
-        raw = v2
-        resolvedLocale = requestedLocale
-        context.log('Loaded PUBLIC_PROFILE payload', {
-          payloadSource: 'blob_v2',
-          localeRequested: requestedLocale,
-          localeResolved: requestedLocale,
-          fromCache: false,
-        })
-      }
-    }
-
-    if (!raw.trim()) {
-      const payload = await readLocalizedProfilePayload('PUBLIC_PROFILE_JSON_URL', requestedLocale)
-      raw = payload.raw
-      resolvedLocale = payload.resolvedLocale
-      context.log('Loaded PUBLIC_PROFILE payload', {
-        payloadSource: payload.source,
-        localeRequested: requestedLocale,
-        localeResolved: payload.resolvedLocale,
-        fromCache: payload.fromCache,
-      })
-    }
-  } catch (error) {
-    if (error instanceof ProfilePayloadSourceError) {
-      context.log('Failed loading PUBLIC_PROFILE payload', {
-        payloadSource: 'profile_payload_loader',
-        failureReason: error.reason,
-        payloadKey: error.key,
-        urlHost: error.urlHost,
-        httpStatus: error.httpStatus,
-      })
-      context.res = jsonResponse(error.reason === 'not_configured' ? 404 : 502, {
-        error:
-          error.reason === 'not_configured' ? 'PUBLIC_PROFILE_JSON_URL is not configured.' : 'PUBLIC_PROFILE_JSON_URL could not be loaded.',
-      })
+    if (!slug) {
+      context.res = jsonResponse(404, { error: 'CV_PROFILE_SLUG is not configured.' })
       return
     }
+    raw = await readProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName: slug, legacyFallback: false })
+    resolvedLocale = requestedLocale
+    context.log('Loaded PUBLIC_PROFILE payload', {
+      payloadSource: 'blob_v2',
+      localeRequested: requestedLocale,
+      localeResolved: requestedLocale,
+      fromCache: false,
+    })
+  } catch (error) {
     context.log('Failed loading PUBLIC_PROFILE payload', { failureReason: 'unexpected_loader_error' }, error)
-    context.res = jsonResponse(502, { error: 'PUBLIC_PROFILE_JSON_URL could not be loaded.' })
+    context.res = jsonResponse(502, { error: 'PUBLIC_PROFILE could not be loaded.' })
     return
   }
 
   try {
+    if (!raw.trim()) {
+      context.res = jsonResponse(200, { locale: resolvedLocale })
+      return
+    }
     const data = JSON.parse(raw) as Record<string, unknown>
     if (!data.locale) data.locale = resolvedLocale
     context.res = jsonResponse(200, data)
   } catch (err) {
     context.log('Failed parsing PUBLIC_PROFILE payload JSON', err)
-    context.res = jsonResponse(500, { error: 'PUBLIC_PROFILE_JSON_URL is invalid JSON payload.' })
+    context.res = jsonResponse(500, { error: 'PUBLIC_PROFILE is invalid JSON payload.' })
   }
 }
 

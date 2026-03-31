@@ -52,7 +52,7 @@ export default async function (context: Context, req: HttpRequest) {
 
     const method = (req.method ?? '').toUpperCase()
     if (method === 'GET') {
-      const jsonText = await readProfileJsonV2({ kind: 'private', locale: requestedLocale, slugFromName, legacyFallback: true })
+      const jsonText = await readProfileJsonV2({ kind: 'private', locale: requestedLocale, slugFromName })
       context.res = jsonResponse(200, { json: jsonText })
       return
     }
