@@ -40,3 +40,21 @@ These links are stored in Azure Table Storage and support:
 - revoke
 - optional admin-only metadata (`sharedWith`, `notes`) that is never returned by public endpoints
 
+## Security notes (important)
+
+### Trust boundary for admin APIs
+
+All admin Functions use `authLevel: anonymous` and rely on Azure Static Web Apps authentication/authorization.
+
+- The Functions enforce the `admin` role based on SWA-provided identity headers.
+- The Static Web Apps config must also restrict `/api/manage/*` to the `admin` role to reduce exposure and prevent accidental misconfiguration.
+
+### Direct reachability / header spoofing risk
+
+Do **not** deploy these Functions as a separately reachable public Function App. If a client can reach the Functions host directly and inject SWA identity headers, they could bypass authz.
+
+Use one of these deployment patterns:
+
+- Preferred: SWA managed Functions (SWA front door is the only ingress)
+- If using a separate Function App: restrict ingress (private endpoint / IP restrictions / front it with a trusted reverse proxy that strips identity headers and enforces auth)
+

@@ -294,7 +294,7 @@ export function AdminEditorRoute() {
       const json = JSON.stringify(next, null, 2)
       const res = await fetch(`/api/manage/profile/${profileKind}`, {
         method: 'PUT',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        headers: { 'content-type': 'application/json', accept: 'application/json', 'x-cv-admin': '1' },
         credentials: 'same-origin',
         body: JSON.stringify({ json }),
       })

@@ -1,4 +1,5 @@
 import { createShareLink, listShareLinks } from '../lib/shareLinksTable'
+import { requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -34,6 +35,11 @@ function nowEpochSeconds() {
   return Math.floor(Date.now() / 1000)
 }
 
+function clampInt(n: number, min: number, max: number) {
+  if (!Number.isFinite(n)) return min
+  return Math.max(min, Math.min(max, Math.trunc(n)))
+}
+
 export default async function (context: Context, req: HttpRequest) {
   const auth = requireAdmin(req.headers)
   if (!auth.ok) {
@@ -49,21 +55,46 @@ export default async function (context: Context, req: HttpRequest) {
   }
 
   if (method === 'POST') {
+    const sameOrigin = requireSameOriginMutation(req.headers)
+    if (!sameOrigin.ok) {
+      context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
+      return
+    }
+    const adminHdr = requireAdminMutationHeader(req.headers)
+    if (!adminHdr.ok) {
+      context.res = jsonResponse(adminHdr.status, { error: adminHdr.error })
+      return
+    }
+    const jsonCt = requireJsonContentType(req.headers)
+    if (!jsonCt.ok) {
+      context.res = jsonResponse(jsonCt.status, { error: jsonCt.error })
+      return
+    }
+
     const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
     const notes = typeof payload?.notes === 'string' ? payload.notes : undefined
 
-    const expiresAtEpoch =
-      typeof payload?.expiresAtEpoch === 'number'
-        ? payload.expiresAtEpoch
-        : typeof payload?.expiresInDays === 'number'
-          ? nowEpochSeconds() + Math.floor(payload.expiresInDays * 24 * 60 * 60)
-          : 0
+    const now = nowEpochSeconds()
+    const maxDays = 365
+    const expiresInDays =
+      typeof payload?.expiresInDays === 'number' ? clampInt(payload.expiresInDays, 1, maxDays) : undefined
+
+    const requestedExpiresAtEpoch = typeof payload?.expiresAtEpoch === 'number' ? payload.expiresAtEpoch : undefined
+    const computedExpiresAtEpoch = expiresInDays != null ? now + expiresInDays * 24 * 60 * 60 : undefined
+    const expiresAtEpoch = requestedExpiresAtEpoch ?? computedExpiresAtEpoch ?? 0
 
     if (!expiresAtEpoch) {
       context.res = jsonResponse(400, { error: 'Missing expiresAtEpoch (or expiresInDays).' })
       return
     }
-
+    if (!Number.isFinite(expiresAtEpoch) || expiresAtEpoch <= now) {
+      context.res = jsonResponse(400, { error: 'expiresAtEpoch must be a future epoch seconds value.' })
+      return
+    }
+    if (expiresAtEpoch > now + maxDays * 24 * 60 * 60) {
+      context.res = jsonResponse(400, { error: `expiresAtEpoch must be within ${maxDays} days.` })
+      return
+    }
     const created = await createShareLink({ notes, expiresAtEpoch })
     context.res = jsonResponse(201, { id: created.id })
     return

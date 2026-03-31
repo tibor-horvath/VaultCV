@@ -21,6 +21,20 @@
       "allowedRoles": [
         "admin"
       ]
+    },
+    {
+      "route": "/api/manage/*",
+      "methods": [
+        "post",
+        "get",
+        "put",
+        "delete",
+        "patch",
+        "options"
+      ],
+      "allowedRoles": [
+        "admin"
+      ]
     }
   ],
   "responseOverrides": {

@@ -113,7 +113,7 @@ export function AdminRoute() {
     try {
       const res = await fetch('/api/manage/links', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        headers: { 'content-type': 'application/json', accept: 'application/json', 'x-cv-admin': '1' },
         credentials: 'same-origin',
         body: JSON.stringify({
           notes: notes.trim() ? notes : undefined,
@@ -141,7 +141,7 @@ export function AdminRoute() {
     try {
       const res = await fetch(`/api/manage/links/${encodeURIComponent(id)}/revoke`, {
         method: 'POST',
-        headers: { accept: 'application/json' },
+        headers: { accept: 'application/json', 'x-cv-admin': '1' },
         credentials: 'same-origin',
       })
       if (res.status === 401) {

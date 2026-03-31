@@ -1,4 +1,5 @@
 import { revokeShareLink } from '../lib/shareLinksTable'
+import { requireAdminMutationHeader, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -36,9 +37,29 @@ export default async function (context: Context, req: HttpRequest) {
     return
   }
 
+  const sameOrigin = requireSameOriginMutation(req.headers)
+  if (!sameOrigin.ok) {
+    context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
+    return
+  }
+  const adminHdr = requireAdminMutationHeader(req.headers)
+  if (!adminHdr.ok) {
+    context.res = jsonResponse(adminHdr.status, { error: adminHdr.error })
+    return
+  }
+
   const id = (req.params?.id ?? '').trim()
   if (!id) {
     context.res = jsonResponse(400, { error: 'Missing id.' })
+    return
+  }
+  if (id.length > 128) {
+    context.res = jsonResponse(400, { error: 'Invalid id.' })
+    return
+  }
+  // Share ids are base64url; accept a conservative charset.
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) {
+    context.res = jsonResponse(400, { error: 'Invalid id.' })
     return
   }
 
