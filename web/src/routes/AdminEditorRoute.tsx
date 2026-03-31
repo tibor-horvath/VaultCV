@@ -31,6 +31,14 @@ function safeJsonParse<T>(text: string): { ok: true; value: T } | { ok: false; e
   }
 }
 
+async function readJsonResponse<T>(res: Response): Promise<{ ok: true; value: T } | { ok: false; error: string; empty?: boolean }> {
+  const text = await res.text()
+  if (!text.trim()) return { ok: false, error: 'Empty response returned by server.', empty: true }
+  const parsed = safeJsonParse<T>(text)
+  if (!parsed.ok) return { ok: false, error: parsed.error }
+  return { ok: true, value: parsed.value }
+}
+
 function asString(value: unknown) {
   return typeof value === 'string' ? value : ''
 }
@@ -148,9 +156,12 @@ export function AdminEditorRoute() {
         redirectToLogin(`/admin/editor/${profileKind}`)
         return
       }
-      const body = (await res.json()) as { json?: string; error?: string }
+      const bodyResult = await readJsonResponse<{ json?: string; error?: string }>(res)
+      if (!bodyResult.ok) throw new Error(bodyResult.error)
+      const body = bodyResult.value
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
-      const jsonText = body.json ?? ''
+      const jsonText = body.json
+      if (typeof jsonText !== 'string' || !jsonText.trim()) throw new Error('Profile JSON missing from server response.')
       const parsed = safeJsonParse<Record<string, unknown>>(jsonText)
       if (!parsed.ok) throw new Error(parsed.error)
       setRaw(parsed.value)
@@ -302,7 +313,9 @@ export function AdminEditorRoute() {
         redirectToLogin(`/admin/editor/${profileKind}`)
         return
       }
-      const body = (await res.json()) as { ok?: boolean; error?: string }
+      const bodyResult = await readJsonResponse<{ ok?: boolean; error?: string }>(res)
+      if (!bodyResult.ok) throw new Error(bodyResult.error)
+      const body = bodyResult.value
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       await load()
     } catch (e: any) {

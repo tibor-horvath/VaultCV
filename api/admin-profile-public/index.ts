@@ -32,54 +32,58 @@ function jsonResponse(status: number, body: unknown) {
 }
 
 export default async function (context: Context, req: HttpRequest) {
-  const auth = requireAdmin(req.headers)
-  if (!auth.ok) {
-    context.res = jsonResponse(401, { error: 'Unauthorized' })
-    return
+  try {
+    const auth = requireAdmin(req.headers)
+    if (!auth.ok) {
+      context.res = jsonResponse(401, { error: 'Unauthorized' })
+      return
+    }
+
+    const method = (req.method ?? '').toUpperCase()
+    if (method === 'GET') {
+      const jsonText = await readProfileJson('public')
+      context.res = jsonResponse(200, { json: jsonText })
+      return
+    }
+
+    if (method === 'PUT') {
+      const sameOrigin = requireSameOriginMutation(req.headers)
+      if (!sameOrigin.ok) {
+        context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
+        return
+      }
+      const adminHdr = requireAdminMutationHeader(req.headers)
+      if (!adminHdr.ok) {
+        context.res = jsonResponse(adminHdr.status, { error: adminHdr.error })
+        return
+      }
+      const jsonCt = requireJsonContentType(req.headers)
+      if (!jsonCt.ok) {
+        context.res = jsonResponse(jsonCt.status, { error: jsonCt.error })
+        return
+      }
+
+      const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
+      const json = typeof payload?.json === 'string' ? payload.json : ''
+      const maxBytes = 256 * 1024
+      if (Buffer.byteLength(json, 'utf8') > maxBytes) {
+        context.res = jsonResponse(413, { error: 'Profile JSON too large.' })
+        return
+      }
+      try {
+        JSON.parse(json)
+      } catch {
+        context.res = jsonResponse(400, { error: 'Invalid JSON.' })
+        return
+      }
+      await writeProfileJson('public', json)
+      context.res = jsonResponse(200, { ok: true })
+      return
+    }
+
+    context.res = jsonResponse(405, { error: 'Method not allowed' })
+  } catch (e: any) {
+    context.res = jsonResponse(500, { error: e?.message ? String(e.message) : 'Internal server error.' })
   }
-
-  const method = (req.method ?? '').toUpperCase()
-  if (method === 'GET') {
-    const jsonText = await readProfileJson('public')
-    context.res = jsonResponse(200, { json: jsonText })
-    return
-  }
-
-  if (method === 'PUT') {
-    const sameOrigin = requireSameOriginMutation(req.headers)
-    if (!sameOrigin.ok) {
-      context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
-      return
-    }
-    const adminHdr = requireAdminMutationHeader(req.headers)
-    if (!adminHdr.ok) {
-      context.res = jsonResponse(adminHdr.status, { error: adminHdr.error })
-      return
-    }
-    const jsonCt = requireJsonContentType(req.headers)
-    if (!jsonCt.ok) {
-      context.res = jsonResponse(jsonCt.status, { error: jsonCt.error })
-      return
-    }
-
-    const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
-    const json = typeof payload?.json === 'string' ? payload.json : ''
-    const maxBytes = 256 * 1024
-    if (Buffer.byteLength(json, 'utf8') > maxBytes) {
-      context.res = jsonResponse(413, { error: 'Profile JSON too large.' })
-      return
-    }
-    try {
-      JSON.parse(json)
-    } catch {
-      context.res = jsonResponse(400, { error: 'Invalid JSON.' })
-      return
-    }
-    await writeProfileJson('public', json)
-    context.res = jsonResponse(200, { ok: true })
-    return
-  }
-
-  context.res = jsonResponse(405, { error: 'Method not allowed' })
 }
 
