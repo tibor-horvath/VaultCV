@@ -38,6 +38,8 @@ type ShareLink = {
   lastViewedAtEpoch?: number
   viewCount?: number
 }
+type LinkStatus = 'active' | 'revoked' | 'expired'
+type StatusFilter = LinkStatus | 'all'
 
 async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
@@ -90,6 +92,20 @@ function epochToIso(epoch: number | undefined) {
   return new Date(epoch * 1000).toISOString().slice(0, 10)
 }
 
+function classifyLinkStatus(link: ShareLink, nowEpoch: number): LinkStatus {
+  if (link.revokedAtEpoch) return 'revoked'
+  if (link.expiresAtEpoch <= nowEpoch) return 'expired'
+  return 'active'
+}
+
+function readStatusFilterFromUrl(): StatusFilter {
+  const value = new URLSearchParams(window.location.search).get('status')
+  if (value === 'active' || value === 'revoked' || value === 'expired' || value === 'all') {
+    return value
+  }
+  return 'active'
+}
+
 export function AdminRoute() {
   const { localeOptions } = useI18n()
   const [me, setMe] = useState<ClientPrincipal | null>(null)
@@ -99,18 +115,14 @@ export function AdminRoute() {
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [shareLang, setShareLang] = useState<string>('')
-  const [statusFilter, setStatusFilter] = useState<Array<'active' | 'revoked' | 'expired'>>(['active'])
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => readStatusFilterFromUrl())
 
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
   const signedInEmail = useMemo(() => extractEmailFromPrincipal(me), [me])
   const visibleLinks = useMemo(() => {
     const nowEpoch = Math.floor(Date.now() / 1000)
-    const classify = (l: ShareLink): 'active' | 'revoked' | 'expired' => {
-      if (l.revokedAtEpoch) return 'revoked'
-      if (l.expiresAtEpoch <= nowEpoch) return 'expired'
-      return 'active'
-    }
-    return links.filter((l) => statusFilter.includes(classify(l)))
+    if (statusFilter === 'all') return links
+    return links.filter((link) => classifyLinkStatus(link, nowEpoch) === statusFilter)
   }, [links, statusFilter])
   const shareLanguageOptions = useMemo(
     () => [
@@ -168,6 +180,12 @@ export function AdminRoute() {
     const timer = window.setTimeout(() => setStatus(null), 2500)
     return () => window.clearTimeout(timer)
   }, [status])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('status', statusFilter)
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+  }, [statusFilter])
 
   async function createLink(form: HTMLFormElement) {
     const fd = new FormData(form)
@@ -443,36 +461,16 @@ export function AdminRoute() {
             <Link2 className="h-4 w-4 shrink-0" /> Share links
           </div>
           <div className="flex w-full flex-wrap items-center gap-1.5 md:w-auto md:gap-2">
+            <div className="mr-2 text-[11px] text-slate-600 dark:text-slate-300">
+              Showing {visibleLinks.length} of {links.length} links
+            </div>
             <button
               type="button"
-              onClick={() => setStatusFilter(['active'])}
+              onClick={() => setStatusFilter('active')}
+              aria-pressed={statusFilter === 'active'}
               className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
-                statusFilter.length === 1 && statusFilter[0] === 'active'
+                statusFilter === 'active'
                   ? 'border-sky-400/60 bg-sky-50 text-sky-800 dark:border-sky-500/60 dark:bg-sky-950/40 dark:text-sky-200'
-                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
-              }`}
-            >
-              Only active
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter(['active', 'revoked', 'expired'])}
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
-                statusFilter.includes('active') && statusFilter.includes('revoked') && statusFilter.includes('expired')
-                  ? 'border-sky-400/60 bg-sky-50 text-sky-800 dark:border-sky-500/60 dark:bg-sky-950/40 dark:text-sky-200'
-                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setStatusFilter((cur) => (cur.includes('active') ? cur.filter((x) => x !== 'active') : [...cur, 'active']))
-              }
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
-                statusFilter.includes('active')
-                  ? 'border-emerald-400/60 bg-emerald-50 text-emerald-800 dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-200'
                   : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
               }`}
             >
@@ -480,11 +478,10 @@ export function AdminRoute() {
             </button>
             <button
               type="button"
-              onClick={() =>
-                setStatusFilter((cur) => (cur.includes('revoked') ? cur.filter((x) => x !== 'revoked') : [...cur, 'revoked']))
-              }
+              onClick={() => setStatusFilter('revoked')}
+              aria-pressed={statusFilter === 'revoked'}
               className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
-                statusFilter.includes('revoked')
+                statusFilter === 'revoked'
                   ? 'border-red-300/70 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200'
                   : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
               }`}
@@ -493,16 +490,27 @@ export function AdminRoute() {
             </button>
             <button
               type="button"
-              onClick={() =>
-                setStatusFilter((cur) => (cur.includes('expired') ? cur.filter((x) => x !== 'expired') : [...cur, 'expired']))
-              }
+              onClick={() => setStatusFilter('expired')}
+              aria-pressed={statusFilter === 'expired'}
               className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
-                statusFilter.includes('expired')
+                statusFilter === 'expired'
                   ? 'border-amber-300/70 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200'
                   : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
               }`}
             >
               <Clock3 className="h-3.5 w-3.5 shrink-0" /> Expired
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              aria-pressed={statusFilter === 'all'}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                statusFilter === 'all'
+                  ? 'border-sky-400/60 bg-sky-50 text-sky-800 dark:border-sky-500/60 dark:bg-sky-950/40 dark:text-sky-200'
+                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
+              }`}
+            >
+              All
             </button>
             {loading ? (
               <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
@@ -569,7 +577,7 @@ export function AdminRoute() {
           })}
           {visibleLinks.length === 0 ? (
             <div className="py-2 text-sm text-slate-500 dark:text-slate-400">
-              No links for selected filters.
+              No links for the selected filter.
             </div>
           ) : null}
         </div>
@@ -642,7 +650,7 @@ export function AdminRoute() {
               {visibleLinks.length === 0 ? (
                 <tr>
                   <td className="py-4 text-slate-500 dark:text-slate-400" colSpan={4}>
-                    No links for selected filters.
+                    No links for the selected filter.
                   </td>
                 </tr>
               ) : null}

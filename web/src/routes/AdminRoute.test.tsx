@@ -48,6 +48,7 @@ function renderRoute() {
 }
 
 beforeEach(() => {
+  window.history.replaceState({}, '', '/admin')
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (url.endsWith('/.auth/me')) {
@@ -60,13 +61,27 @@ beforeEach(() => {
       })
     }
     if (url.endsWith('/api/manage/links')) {
+      const now = Math.floor(Date.now() / 1000)
       return jsonResponse({
         links: [
           {
             rowKey: 'abc123',
             createdAtEpoch: 1,
-            expiresAtEpoch: Math.floor(Date.now() / 1000) + 3600,
+            expiresAtEpoch: now + 3600,
             viewCount: 0,
+          },
+          {
+            rowKey: 'revoked1',
+            createdAtEpoch: 1,
+            expiresAtEpoch: now + 3600,
+            revokedAtEpoch: now - 10,
+            viewCount: 3,
+          },
+          {
+            rowKey: 'expired1',
+            createdAtEpoch: 1,
+            expiresAtEpoch: now - 10,
+            viewCount: 7,
           },
         ],
       })
@@ -129,5 +144,22 @@ describe('AdminRoute', () => {
     })
 
     expect(document.body.textContent).toContain('Share link copied.')
+  })
+
+  it('filters with single-select controls and syncs status in URL', async () => {
+    renderRoute()
+    await flushEffects()
+
+    expect(document.body.textContent).toContain('Showing 1 of 3 links')
+    expect(window.location.search).toContain('status=active')
+
+    const allButton = Array.from(document.querySelectorAll('button')).find((node) => node.textContent?.trim() === 'All') as HTMLButtonElement
+    await act(async () => {
+      allButton.click()
+      await Promise.resolve()
+    })
+
+    expect(document.body.textContent).toContain('Showing 3 of 3 links')
+    expect(window.location.search).toContain('status=all')
   })
 })
