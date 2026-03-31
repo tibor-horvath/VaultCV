@@ -405,11 +405,11 @@ export function AdminRoute() {
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between gap-3 border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
+        <div className="sticky top-0 z-10 -mx-5 flex flex-col items-start gap-2 border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:flex-row md:items-center md:justify-between md:gap-3 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <Link2 className="h-4 w-4 shrink-0" /> Share links
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-1.5 md:w-auto md:gap-2">
             <button
               type="button"
               onClick={() => setStatusFilter(['active'])}
