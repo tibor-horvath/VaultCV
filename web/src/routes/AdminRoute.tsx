@@ -21,6 +21,8 @@ type ShareLink = {
   viewCount?: number
 }
 
+const SHARE_LINKS_ENDPOINTS = ['/api/admin/share-links', '/api/admin-share-links'] as const
+
 async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
     const res = await fetch('/.auth/me', { credentials: 'same-origin' })
@@ -42,6 +44,16 @@ async function readJsonOrNull<T>(res: Response): Promise<T | null> {
   } catch {
     return null
   }
+}
+
+async function fetchShareLinksWithFallback(init?: RequestInit) {
+  let lastResponse: Response | null = null
+  for (const endpoint of SHARE_LINKS_ENDPOINTS) {
+    const res = await fetch(endpoint, init)
+    lastResponse = res
+    if (res.status !== 404) return res
+  }
+  return lastResponse
 }
 
 function epochToIso(epoch: number | undefined) {
@@ -77,7 +89,8 @@ export function AdminRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/admin/share-links', { credentials: 'same-origin' })
+      const res = await fetchShareLinksWithFallback({ credentials: 'same-origin' })
+      if (!res) throw new Error('No response from server.')
       if (res.status === 401) {
         redirectToLogin('/admin')
         return
@@ -114,7 +127,7 @@ export function AdminRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/admin/share-links', {
+      const res = await fetchShareLinksWithFallback({
         method: 'POST',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         credentials: 'same-origin',
@@ -125,6 +138,7 @@ export function AdminRoute() {
           expiresInDays: Number.isFinite(expiresInDays) ? expiresInDays : 30,
         }),
       })
+      if (!res) throw new Error('No response from server.')
       if (res.status === 401) {
         redirectToLogin('/admin')
         return
