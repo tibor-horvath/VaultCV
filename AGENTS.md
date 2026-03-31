@@ -8,7 +8,7 @@ VaultCV is a privacy-first CV/resume web app with two packages:
 - `web/` — React 19 SPA (Vite 8, Tailwind CSS 3, TypeScript)
 - `api/` — Azure Functions v4 backend (TypeScript, esbuild)
 
-Both use **npm** as the package manager. Node.js 22 is required.
+Both use **npm** as the package manager. Node.js 20.19+ is required (Node.js 22 is used in CI and recommended).
 
 ### Quick reference
 
