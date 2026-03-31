@@ -1,4 +1,4 @@
-import { BookOpenText, ExternalLink, FlaskConical, Globe, PlayCircle, ScanSearch, Smartphone } from 'lucide-react'
+import { BookOpenText, ExternalLink, FlaskConical, Globe, ScanSearch } from 'lucide-react'
 import { inferProjectLinkLabelKind } from '../../lib/cvPresentation'
 import type { CvProject } from '../../types/cv'
 import { SiAppstoreIcon, SiGithubIcon, SiGitlabIcon, SiGoogleplayIcon, SiNpmIcon, SiPypiIcon, SiYoutubeIcon } from '../icons/SimpleBrandIcons'
