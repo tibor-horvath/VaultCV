@@ -91,7 +91,21 @@ export async function fetchPublicProfile(locale: Locale): Promise<Partial<Public
       method: 'GET',
       headers: { accept: 'application/json', 'accept-language': locale },
     })
-    if (apiRes.ok) return normalizePublicData((await apiRes.json()) as unknown)
+    if (apiRes.ok) {
+      const payload = (await apiRes.json()) as unknown
+      if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+        const obj = payload as Record<string, unknown>
+        const wrappedJson = typeof obj.json === 'string' ? obj.json : ''
+        if (wrappedJson.trim()) {
+          try {
+            return normalizePublicData(JSON.parse(wrappedJson) as unknown)
+          } catch {
+            return {}
+          }
+        }
+      }
+      return normalizePublicData(payload)
+    }
   } catch {
     // Fall through to file fallback.
   }
