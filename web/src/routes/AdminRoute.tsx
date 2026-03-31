@@ -21,8 +21,6 @@ type ShareLink = {
   viewCount?: number
 }
 
-const SHARE_LINKS_ENDPOINTS = ['/api/manage/links', '/api/admin/links', '/api/admin/share-links', '/api/admin-share-links'] as const
-
 async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
     const res = await fetch('/.auth/me', { credentials: 'same-origin' })
@@ -44,34 +42,6 @@ async function readJsonOrNull<T>(res: Response): Promise<T | null> {
   } catch {
     return null
   }
-}
-
-async function fetchShareLinksWithFallback(init?: RequestInit): Promise<Response> {
-  let lastResponse: Response | null = null
-  for (const endpoint of SHARE_LINKS_ENDPOINTS) {
-    const res = await fetch(endpoint, init)
-    lastResponse = res
-    if (res.status !== 404) return res
-  }
-  if (!lastResponse) throw new Error('No response from server.')
-  return lastResponse
-}
-
-async function revokeShareLinkWithFallback(id: string, init?: RequestInit): Promise<Response> {
-  const endpoints = [
-    `/api/manage/links/${encodeURIComponent(id)}/revoke`,
-    `/api/admin/links/${encodeURIComponent(id)}/revoke`,
-    `/api/admin/share-links/${encodeURIComponent(id)}/revoke`,
-    `/api/admin-share-links-revoke/${encodeURIComponent(id)}`,
-  ] as const
-  let lastResponse: Response | null = null
-  for (const endpoint of endpoints) {
-    const res = await fetch(endpoint, init)
-    lastResponse = res
-    if (res.status !== 404) return res
-  }
-  if (!lastResponse) throw new Error('No response from server.')
-  return lastResponse
 }
 
 function epochToIso(epoch: number | undefined) {
@@ -107,19 +77,14 @@ export function AdminRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetchShareLinksWithFallback({ credentials: 'same-origin' })
-      if (!res) throw new Error('No response from server.')
+      const res = await fetch('/api/manage/links', { credentials: 'same-origin' })
       if (res.status === 401) {
         redirectToLogin('/admin')
         return
       }
       const body = await readJsonOrNull<{ links?: ShareLink[]; error?: string }>(res)
       if (!res.ok) {
-        const hint =
-          res.status === 404
-            ? 'Check Static Web App Role assignments for the admin role (SWA may return 404 for unauthorized routes).'
-            : ''
-        throw new Error(body?.error || `Request failed (${res.status}). ${hint}`.trim())
+        throw new Error(body?.error || `Request failed (${res.status})`)
       }
       setLinks(body?.links ?? [])
     } catch (e: any) {
@@ -145,7 +110,7 @@ export function AdminRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetchShareLinksWithFallback({
+      const res = await fetch('/api/manage/links', {
         method: 'POST',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         credentials: 'same-origin',
@@ -156,7 +121,6 @@ export function AdminRoute() {
           expiresInDays: Number.isFinite(expiresInDays) ? expiresInDays : 30,
         }),
       })
-      if (!res) throw new Error('No response from server.')
       if (res.status === 401) {
         redirectToLogin('/admin')
         return
@@ -176,7 +140,7 @@ export function AdminRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await revokeShareLinkWithFallback(id, {
+      const res = await fetch(`/api/manage/links/${encodeURIComponent(id)}/revoke`, {
         method: 'POST',
         headers: { accept: 'application/json' },
         credentials: 'same-origin',

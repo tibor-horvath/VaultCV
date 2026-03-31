@@ -16,6 +16,16 @@ The admin UI and admin APIs are protected using the Static Web Apps `admin` role
 - UI routes: `/admin/*`
 - API routes: `/api/manage/*`
 
+Primary admin API endpoints:
+
+- `GET /api/manage/links`
+- `POST /api/manage/links`
+- `POST /api/manage/links/{id}/revoke`
+- `GET /api/manage/profile/private`
+- `PUT /api/manage/profile/private`
+- `GET /api/manage/profile/public`
+- `PUT /api/manage/profile/public`
+
 In the Azure Portal, open your Static Web App resource → **Role assignments** and assign yourself the `admin` role.
 
 ## Share links

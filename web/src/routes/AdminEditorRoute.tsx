@@ -58,21 +58,6 @@ function stringArrayToTextAreaLines(arr: string[]) {
   return arr.join('\n')
 }
 
-async function fetchAdminProfileWithFallback(profileKind: ProfileKind, init?: RequestInit): Promise<Response> {
-  const endpoints = [
-    `/api/manage/profile/${profileKind}`,
-    `/api/admin/profile/${profileKind}`,
-  ] as const
-  let lastResponse: Response | null = null
-  for (const endpoint of endpoints) {
-    const res = await fetch(endpoint, init)
-    lastResponse = res
-    if (res.status !== 404) return res
-  }
-  if (!lastResponse) throw new Error('No response from server.')
-  return lastResponse
-}
-
 export function AdminEditorRoute() {
   const { kind } = useParams()
   const profileKind = (kind === 'public' || kind === 'private' ? kind : null) as ProfileKind | null
@@ -158,7 +143,7 @@ export function AdminEditorRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetchAdminProfileWithFallback(profileKind, { credentials: 'same-origin' })
+      const res = await fetch(`/api/manage/profile/${profileKind}`, { credentials: 'same-origin' })
       if (res.status === 401) {
         redirectToLogin(`/admin/editor/${profileKind}`)
         return
@@ -307,7 +292,7 @@ export function AdminEditorRoute() {
         }))
 
       const json = JSON.stringify(next, null, 2)
-      const res = await fetchAdminProfileWithFallback(profileKind, {
+      const res = await fetch(`/api/manage/profile/${profileKind}`, {
         method: 'PUT',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         credentials: 'same-origin',
