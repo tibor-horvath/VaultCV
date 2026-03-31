@@ -2,9 +2,9 @@ import { ToggleButton } from './ToggleButton'
 import { ConfirmButton } from './ConfirmButton'
 import { FolderKanban, Link2, Plus, Trash2 } from 'lucide-react'
 import type { ProjectRow, PublicProjectFlags } from './types'
-import { stringArrayToTextAreaLines, textAreaLinesToStringArray } from './utils'
 import { SiAppstoreIcon, SiGithubIcon, SiGitlabIcon, SiGoogleplayIcon, SiNpmIcon, SiPypiIcon, SiYoutubeIcon } from '../../components/icons/SimpleBrandIcons'
 import { IconSelect } from './IconSelect'
+import { StringListEditor } from './StringListEditor'
 
 const PROJECT_LINK_LABEL_OPTIONS = ['demo', 'github', 'gitlab', 'docs', 'video', 'case-study', 'npm', 'pypi', 'app-store', 'play-store'] as const
 const CUSTOM_OPTION = '__custom__'
@@ -80,17 +80,14 @@ export function ProjectsSection(props: {
               </div>
 
               <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Tags (one per line)
-                  <textarea
-                    rows={3}
-                    value={stringArrayToTextAreaLines(p.tags ?? [])}
-                    onChange={(ev) =>
-                      setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, tags: textAreaLinesToStringArray(ev.target.value) } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                <div>
+                  <StringListEditor
+                    label="Tags"
+                    items={p.tags ?? []}
+                    setItems={(items) => setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, tags: items } : x)))}
+                    placeholder="Add a tag"
                   />
-                </label>
+                </div>
                 <div className="pt-5">
                   <ToggleButton
                     pressed={Boolean(publicProjects[idx]?.tags)}

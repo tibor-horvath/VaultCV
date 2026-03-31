@@ -2,7 +2,7 @@ import { ToggleButton } from './ToggleButton'
 import { ConfirmButton } from './ConfirmButton'
 import { GraduationCap, Plus, Trash2 } from 'lucide-react'
 import type { EducationRow, PublicEducationFlags } from './types'
-import { stringArrayToTextAreaLines, textAreaLinesToStringArray } from './utils'
+import { StringListEditor } from './StringListEditor'
 
 export function EducationSection(props: {
   education: EducationRow[]
@@ -239,19 +239,19 @@ export function EducationSection(props: {
               </div>
 
               <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Highlights (one per line)
-                  <textarea
-                    rows={4}
-                    value={stringArrayToTextAreaLines(e.highlights ?? [])}
-                    onChange={(ev) =>
+                <div>
+                  <StringListEditor
+                    label="Highlights"
+                    items={e.highlights ?? []}
+                    setItems={(items) =>
                       setEducation((cur) =>
-                        cur.map((x, i) => (i === idx ? { ...x, highlights: textAreaLinesToStringArray(ev.target.value) } : x)),
+                        cur.map((x, i) => (i === idx ? { ...x, highlights: items } : x)),
                       )
                     }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Add a highlight"
+                    multilineItems
                   />
-                </label>
+                </div>
                 <div className="pt-5">
                   <ToggleButton
                     pressed={Boolean(publicEducation[idx]?.highlights)}

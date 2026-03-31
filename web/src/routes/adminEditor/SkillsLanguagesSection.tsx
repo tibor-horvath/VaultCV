@@ -1,6 +1,8 @@
 import { ToggleButton } from './ToggleButton'
 import { Languages, Wrench } from 'lucide-react'
 import type { PublicSectionsFlags } from './types'
+import { StringListEditor } from './StringListEditor'
+import { stringArrayToTextAreaLines, textAreaLinesToStringArray } from './utils'
 
 export function SkillsLanguagesSection(props: {
   skillsText: string
@@ -31,42 +33,29 @@ export function SkillsLanguagesSection(props: {
           />
         </div>
       </div>
-      <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-        Skills (one per line)
-        <textarea
-          id="skills-text"
-          rows={6}
-          value={skillsText}
-          onChange={(e) => setSkillsText(e.target.value)}
-          aria-invalid={Boolean(sectionErrors?.skills)}
-          aria-describedby={sectionErrors?.skills ? 'skills-error' : undefined}
-          className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+      <StringListEditor
+        label="Skills"
+        inputId="skills-text"
+        items={textAreaLinesToStringArray(skillsText)}
+        setItems={(items) => setSkillsText(stringArrayToTextAreaLines(items))}
+        placeholder="Add a skill"
+        error={sectionErrors?.skills}
+        errorId="skills-error"
+      />
+      <div>
+        <div className="mb-1 inline-flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <Languages className="h-3.5 w-3.5 shrink-0" /> Languages
+        </div>
+        <StringListEditor
+          label="Languages"
+          inputId="languages-text"
+          items={textAreaLinesToStringArray(languagesText)}
+          setItems={(items) => setLanguagesText(stringArrayToTextAreaLines(items))}
+          placeholder="Add a language"
+          error={sectionErrors?.languages}
+          errorId="languages-error"
         />
-        {sectionErrors?.skills ? (
-          <div id="skills-error" className="text-[11px] text-red-700 dark:text-red-300">
-            {sectionErrors.skills}
-          </div>
-        ) : null}
-      </label>
-      <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-        <span className="inline-flex items-center gap-1">
-          <Languages className="h-3.5 w-3.5 shrink-0" /> Languages (one per line)
-        </span>
-        <textarea
-          id="languages-text"
-          rows={6}
-          value={languagesText}
-          onChange={(e) => setLanguagesText(e.target.value)}
-          aria-invalid={Boolean(sectionErrors?.languages)}
-          aria-describedby={sectionErrors?.languages ? 'languages-error' : undefined}
-          className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-        />
-        {sectionErrors?.languages ? (
-          <div id="languages-error" className="text-[11px] text-red-700 dark:text-red-300">
-            {sectionErrors.languages}
-          </div>
-        ) : null}
-      </label>
+      </div>
     </section>
   )
 }
