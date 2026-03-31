@@ -6,6 +6,14 @@ function requiredEnv(name: string, value: string | undefined) {
   return trimmed
 }
 
+async function streamToText(stream: NodeJS.ReadableStream) {
+  const chunks: Buffer[] = []
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  return Buffer.concat(chunks).toString('utf8')
+}
+
 function storageConnectionString() {
   const cs = (process.env.CV_PROFILE_STORAGE_CONNECTION_STRING ?? process.env.AZURE_STORAGE_CONNECTION_STRING ?? '').trim()
   return requiredEnv('CV_PROFILE_STORAGE_CONNECTION_STRING (or AZURE_STORAGE_CONNECTION_STRING)', cs)
@@ -28,10 +36,23 @@ function getBlobClient(kind: 'public' | 'private') {
 
 export async function readProfileJson(kind: 'public' | 'private') {
   const client = getBlobClient(kind)
-  const download = await client.download()
-  const body = await download.blobBody
-  if (!body) return ''
-  return await body.text()
+  try {
+    const download = await client.download()
+    // In Node (Azure Functions), `readableStreamBody` is available.
+    const nodeStream = (download as any).readableStreamBody as NodeJS.ReadableStream | undefined
+    if (nodeStream) return await streamToText(nodeStream)
+
+    // In browser-like runtimes, `blobBody` can be available.
+    const blobBody = (download as any).blobBody as Blob | undefined
+    if (blobBody) return await blobBody.text()
+
+    return ''
+  } catch (e: any) {
+    // If the blob doesn't exist yet, treat as empty profile.
+    const status = e?.statusCode ?? e?.details?.errorCode
+    if (status === 404 || e?.statusCode === 404) return ''
+    throw e
+  }
 }
 
 export async function writeProfileJson(kind: 'public' | 'private', jsonText: string) {
