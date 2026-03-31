@@ -21,8 +21,7 @@ export type PublicCredentialFlags = { issuer: boolean; label: boolean; url: bool
 
 export type ExperienceRow = {
   company: string
-  companyUrl?: string
-  companyLinkedInUrl?: string
+  links?: Array<{ label: string; url: string }>
   role: string
   start: string
   end: string
@@ -32,8 +31,7 @@ export type ExperienceRow = {
 }
 export type PublicExperienceFlags = {
   company: boolean
-  companyUrl: boolean
-  companyLinkedInUrl: boolean
+  links: boolean
   role: boolean
   start: boolean
   end: boolean

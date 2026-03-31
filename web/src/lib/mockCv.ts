@@ -63,8 +63,10 @@ function getMockCvEn(): LocalizedCvData {
       {
         id: 'exp-example-co',
         company: 'Example Co.',
-        companyUrl: 'https://example.com',
-        companyLinkedInUrl: 'https://www.linkedin.com/company/example-co/',
+        links: [
+          { label: 'website', url: 'https://example.com' },
+          { label: 'linkedin', url: 'https://www.linkedin.com/company/example-co/' },
+        ],
         skills: ['React', 'TypeScript', 'Azure'],
         role: 'Software Engineer',
         start: '2023',
@@ -78,8 +80,10 @@ function getMockCvEn(): LocalizedCvData {
       {
         id: 'exp-contoso',
         company: 'Contoso',
-        companyUrl: 'https://www.microsoft.com/',
-        companyLinkedInUrl: 'https://www.linkedin.com/company/microsoft/',
+        links: [
+          { label: 'website', url: 'https://www.microsoft.com/' },
+          { label: 'linkedin', url: 'https://www.linkedin.com/company/microsoft/' },
+        ],
         skills: ['Node.js', 'React', 'AWS'],
         role: 'Full-stack Developer',
         start: '2021',
@@ -182,8 +186,10 @@ function getMockCvHu(): LocalizedCvData {
       {
         id: 'exp-example-co',
         company: 'Example Co.',
-        companyUrl: 'https://example.com',
-        companyLinkedInUrl: 'https://www.linkedin.com/company/example-co/',
+        links: [
+          { label: 'website', url: 'https://example.com' },
+          { label: 'linkedin', url: 'https://www.linkedin.com/company/example-co/' },
+        ],
         skills: ['React', 'TypeScript', 'Azure'],
         role: 'Szoftvermérnök',
         start: '2023',
@@ -197,8 +203,10 @@ function getMockCvHu(): LocalizedCvData {
       {
         id: 'exp-contoso',
         company: 'Contoso',
-        companyUrl: 'https://www.microsoft.com/',
-        companyLinkedInUrl: 'https://www.linkedin.com/company/microsoft/',
+        links: [
+          { label: 'website', url: 'https://www.microsoft.com/' },
+          { label: 'linkedin', url: 'https://www.linkedin.com/company/microsoft/' },
+        ],
         skills: ['Node.js', 'React', 'AWS'],
         role: 'Full-stack Fejlesztő',
         start: '2021',
@@ -301,8 +309,10 @@ function getMockCvDe(): LocalizedCvData {
       {
         id: 'exp-example-co',
         company: 'Example Co.',
-        companyUrl: 'https://example.com',
-        companyLinkedInUrl: 'https://www.linkedin.com/company/example-co/',
+        links: [
+          { label: 'website', url: 'https://example.com' },
+          { label: 'linkedin', url: 'https://www.linkedin.com/company/example-co/' },
+        ],
         skills: ['React', 'TypeScript', 'Azure'],
         role: 'Softwareentwickler',
         start: '2023',
@@ -316,8 +326,10 @@ function getMockCvDe(): LocalizedCvData {
       {
         id: 'exp-contoso',
         company: 'Contoso',
-        companyUrl: 'https://www.microsoft.com/',
-        companyLinkedInUrl: 'https://www.linkedin.com/company/microsoft/',
+        links: [
+          { label: 'website', url: 'https://www.microsoft.com/' },
+          { label: 'linkedin', url: 'https://www.linkedin.com/company/microsoft/' },
+        ],
         skills: ['Node.js', 'React', 'AWS'],
         role: 'Full-Stack-Entwickler',
         start: '2021',

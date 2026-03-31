@@ -15,7 +15,7 @@ Key fields:
 - `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | school | language | other`
 - `languages`: string array, shown as chips
 - `skills`: optional top-level string array (general skill chips; separate from per-job skills on `experience`)
-- `experience`: supports `companyUrl?` to link the company name, `companyLinkedInUrl?` to show a LinkedIn icon link, and `skills?` to show per-job skill chips
+- `experience`: supports `links?` as an array of `{ label, url }` (same shape as other link collections) and `skills?` to show per-job skill chips
 - `education`: optional array of degrees — `{ school, program, ... }` with optional `schoolUrl`, `degree`, `field`, dates, `gpa`, `highlights`, etc.
 - `projects`: array of `{ name, description, links?, tags? }`. In each `links` entry, `label` + `url`:
   - Labels **`github`** and **`web`** (case-insensitive) render as a **GitHub** or **globe** icon next to the project name (icon links to `url`).
@@ -66,8 +66,10 @@ Below is a single JSON object (the file content you upload to Blob as `{slug}-pr
   "experience": [
     {
       "company": "Example Co.",
-      "companyUrl": "https://example.com",
-      "companyLinkedInUrl": "https://www.linkedin.com/company/example-co/",
+      "links": [
+        { "label": "website", "url": "https://example.com" },
+        { "label": "linkedin", "url": "https://www.linkedin.com/company/example-co/" }
+      ],
       "role": "Software Engineer",
       "start": "2022",
       "end": "2026",

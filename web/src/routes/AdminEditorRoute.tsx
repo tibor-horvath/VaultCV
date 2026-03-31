@@ -64,6 +64,19 @@ function hasAnyEnabledFlag(flags: Record<string, boolean> | undefined) {
   return Object.values(flags).some(Boolean)
 }
 
+function normalizeExperienceLinks(input: unknown): LinkRow[] {
+  const links = asArray(input)
+    .map((x) => {
+      const o = asObject(x)
+      const label = asString(o.label).trim()
+      const url = asString(o.url).trim()
+      if (!label || !url) return null
+      return { label, url }
+    })
+    .filter((x): x is LinkRow => Boolean(x))
+  return links
+}
+
 type PublicValidation = {
   basics: Partial<Record<keyof PublicBasicsFlags, string>>
   sections: Partial<Record<keyof PublicSectionsFlags, string>>
@@ -492,8 +505,7 @@ export function AdminEditorRoute() {
           if (!pub)
             return {
               company: false,
-              companyUrl: false,
-              companyLinkedInUrl: false,
+              links: false,
               role: false,
               start: false,
               end: false,
@@ -503,8 +515,7 @@ export function AdminEditorRoute() {
             }
           return {
             company: typeof pub.company === 'string' && asString(pub.company).trim().length > 0,
-            companyUrl: typeof pub.companyUrl === 'string' && asString(pub.companyUrl).trim().length > 0,
-            companyLinkedInUrl: typeof pub.companyLinkedInUrl === 'string' && asString(pub.companyLinkedInUrl).trim().length > 0,
+            links: Array.isArray(pub.links) && pub.links.length > 0,
             role: typeof pub.role === 'string' && asString(pub.role).trim().length > 0,
             start: typeof pub.start === 'string' && asString(pub.start).trim().length > 0,
             end: typeof pub.end === 'string' && asString(pub.end).trim().length > 0,
@@ -597,8 +608,7 @@ export function AdminEditorRoute() {
         const o = asObject(x)
         return {
           company: asString(o.company),
-          companyUrl: asString(o.companyUrl) || undefined,
-          companyLinkedInUrl: asString(o.companyLinkedInUrl) || undefined,
+          links: normalizeExperienceLinks(o.links),
           role: asString(o.role),
           start: asString(o.start),
           end: asString(o.end),
@@ -920,8 +930,8 @@ export function AdminEditorRoute() {
           return
         }
         const rowIssues: string[] = []
-        if (flags.companyUrl && !(e.companyUrl ?? '').trim()) rowIssues.push('Company URL is toggled public but empty.')
-        if (flags.companyLinkedInUrl && !(e.companyLinkedInUrl ?? '').trim()) rowIssues.push('Company LinkedIn URL is toggled public but empty.')
+        const visibleLinks = (e.links ?? []).filter((link) => (link.label ?? '').trim() && (link.url ?? '').trim())
+        if (flags.links && visibleLinks.length === 0) rowIssues.push('Links are toggled public but empty.')
         if (flags.end && !(e.end ?? '').trim()) rowIssues.push('End is toggled public but empty.')
         if (flags.location && !(e.location ?? '').trim()) rowIssues.push('Location is toggled public but empty.')
         if (flags.skills && !(e.skills ?? []).length) rowIssues.push('Skills are toggled public but empty.')
@@ -1020,8 +1030,12 @@ export function AdminEditorRoute() {
           const out: Record<string, unknown> = { company, role, start }
           if (flags.end && (e.end ?? '').trim()) out.end = (e.end ?? '').trim()
           if (flags.location && (e.location ?? '').trim()) out.location = (e.location ?? '').trim()
-          if (flags.companyUrl && (e.companyUrl ?? '').trim()) out.companyUrl = (e.companyUrl ?? '').trim()
-          if (flags.companyLinkedInUrl && (e.companyLinkedInUrl ?? '').trim()) out.companyLinkedInUrl = (e.companyLinkedInUrl ?? '').trim()
+          if (flags.links) {
+            const links = (e.links ?? [])
+              .map((link) => ({ label: (link.label ?? '').trim(), url: (link.url ?? '').trim() }))
+              .filter((link) => link.label && link.url)
+            if (links.length) out.links = links
+          }
           if (flags.skills && (e.skills ?? []).length) out.skills = (e.skills ?? []).filter(Boolean)
           if (flags.highlights && (e.highlights ?? []).length) out.highlights = (e.highlights ?? []).filter(Boolean)
           return out

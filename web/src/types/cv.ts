@@ -37,8 +37,7 @@ export type CvExperience = {
   /** Stable key for list rendering; optional when composite fields uniquely identify the row. */
   id?: string
   company: string
-  companyUrl?: string
-  companyLinkedInUrl?: string
+  links?: CvLink[]
   role: string
   start: string
   end?: string

@@ -335,20 +335,20 @@ export const CvPdfLayout = forwardRef<
                         </span>
                       ) : null}
                     </div>
-                    {hasPdfUrl(x.companyUrl) || hasPdfUrl(x.companyLinkedInUrl) ? (
+                    {(x.links ?? []).some((link) => hasPdfUrl(link.url) && String(link.label ?? '').trim()) ? (
                       <div className="mt-2 space-y-2">
-                        {hasPdfUrl(x.companyUrl) ? (
-                          <div className={pdfIconRowClass} data-pdf-page-break="">
-                            <Globe className={pdfLinkIconClass} aria-hidden="true" />
-                            <PdfPrintUrlLine href={x.companyUrl} className="min-w-0 flex-1" />
-                          </div>
-                        ) : null}
-                        {hasPdfUrl(x.companyLinkedInUrl) ? (
-                          <div className={pdfIconRowClass} data-pdf-page-break="">
-                            <SiLinkedinIcon className={pdfLinkIconClass} aria-hidden="true" />
-                            <PdfPrintUrlLine href={x.companyLinkedInUrl} className="min-w-0 flex-1" />
-                          </div>
-                        ) : null}
+                        {(x.links ?? [])
+                          .filter((link) => hasPdfUrl(link.url) && String(link.label ?? '').trim())
+                          .map((link) => {
+                            const kind = inferLinkKind(link)
+                            const Icon = kind === 'linkedin' ? SiLinkedinIcon : Globe
+                            return (
+                              <div key={`${x.company}:${x.role}:${link.label}:${link.url}`} className={pdfIconRowClass} data-pdf-page-break="">
+                                <Icon className={pdfLinkIconClass} aria-hidden="true" />
+                                <PdfPrintUrlLine href={link.url} className="min-w-0 flex-1" />
+                              </div>
+                            )
+                          })}
                       </div>
                     ) : null}
                     {x.highlights?.length ? (
