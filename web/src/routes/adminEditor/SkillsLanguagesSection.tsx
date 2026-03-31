@@ -9,8 +9,9 @@ export function SkillsLanguagesSection(props: {
   setLanguagesText: (v: string) => void
   publicSections: PublicSectionsFlags
   setPublicSections: (updater: (cur: PublicSectionsFlags) => PublicSectionsFlags) => void
+  sectionErrors?: Partial<Record<keyof PublicSectionsFlags, string>>
 }) {
-  const { skillsText, setSkillsText, languagesText, setLanguagesText, publicSections, setPublicSections } = props
+  const { skillsText, setSkillsText, languagesText, setLanguagesText, publicSections, setPublicSections, sectionErrors } = props
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
       <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
@@ -33,22 +34,38 @@ export function SkillsLanguagesSection(props: {
       <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
         Skills (one per line)
         <textarea
+          id="skills-text"
           rows={6}
           value={skillsText}
           onChange={(e) => setSkillsText(e.target.value)}
+          aria-invalid={Boolean(sectionErrors?.skills)}
+          aria-describedby={sectionErrors?.skills ? 'skills-error' : undefined}
           className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
         />
+        {sectionErrors?.skills ? (
+          <div id="skills-error" className="text-[11px] text-red-700 dark:text-red-300">
+            {sectionErrors.skills}
+          </div>
+        ) : null}
       </label>
       <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
         <span className="inline-flex items-center gap-1">
           <Languages className="h-3.5 w-3.5 shrink-0" /> Languages (one per line)
         </span>
         <textarea
+          id="languages-text"
           rows={6}
           value={languagesText}
           onChange={(e) => setLanguagesText(e.target.value)}
+          aria-invalid={Boolean(sectionErrors?.languages)}
+          aria-describedby={sectionErrors?.languages ? 'languages-error' : undefined}
           className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
         />
+        {sectionErrors?.languages ? (
+          <div id="languages-error" className="text-[11px] text-red-700 dark:text-red-300">
+            {sectionErrors.languages}
+          </div>
+        ) : null}
       </label>
     </section>
   )

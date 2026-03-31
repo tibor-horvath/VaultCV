@@ -97,6 +97,7 @@ export function AdminRoute() {
   const [links, setLinks] = useState<ShareLink[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
   const [shareLang, setShareLang] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<Array<'active' | 'revoked' | 'expired'>>(['active'])
 
@@ -162,12 +163,19 @@ export function AdminRoute() {
     }
   }, [meLoading, isAdmin])
 
+  useEffect(() => {
+    if (!status) return
+    const timer = window.setTimeout(() => setStatus(null), 2500)
+    return () => window.clearTimeout(timer)
+  }, [status])
+
   async function createLink(form: HTMLFormElement) {
     const fd = new FormData(form)
     const notes = String(fd.get('notes') ?? '')
     const expiresInDays = Number.parseInt(String(fd.get('expiresInDays') ?? '30'), 10)
     setLoading(true)
     setError(null)
+    setStatus(null)
     try {
       const res = await fetch('/api/manage/links', {
         method: 'POST',
@@ -186,6 +194,7 @@ export function AdminRoute() {
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
       form.reset()
+      setStatus('Share link created.')
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Failed creating share link.'))
     } finally {
@@ -196,6 +205,7 @@ export function AdminRoute() {
   async function revoke(id: string) {
     setLoading(true)
     setError(null)
+    setStatus(null)
     try {
       const res = await fetch(`/api/manage/links/${encodeURIComponent(id)}/revoke`, {
         method: 'POST',
@@ -209,10 +219,20 @@ export function AdminRoute() {
       const body = await readJsonOrNull<{ ok?: boolean; error?: string }>(res)
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
+      setStatus('Share link revoked.')
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Failed revoking share link.'))
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function copyShareUrl(shareUrl: string) {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setStatus('Share link copied.')
+    } catch {
+      setStatus('Could not copy share link.')
     }
   }
 
@@ -354,8 +374,21 @@ export function AdminRoute() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
+        >
           {error}
+        </div>
+      ) : null}
+      {status ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
+        >
+          {status}
         </div>
       ) : null}
 
@@ -505,7 +538,7 @@ export function AdminRoute() {
                   <button
                     type="button"
                     className="rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-900/60"
-                    onClick={() => void navigator.clipboard.writeText(shareUrl)}
+                    onClick={() => void copyShareUrl(shareUrl)}
                   >
                     Copy
                   </button>
@@ -521,7 +554,11 @@ export function AdminRoute() {
                     type="button"
                     disabled={loading || isRevoked}
                     className="inline-flex items-center gap-1 rounded-lg border border-red-300/70 px-2 py-1 text-[11px] text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-900/60 dark:text-red-200 dark:hover:bg-red-950/40"
-                    onClick={() => void revoke(l.rowKey)}
+                    onClick={() => {
+                      const confirmed = window.confirm('Revoke this share link? People using it will lose access immediately.')
+                      if (!confirmed) return
+                      void revoke(l.rowKey)
+                    }}
                     title="Revoke"
                   >
                     <Trash2 className="h-3.5 w-3.5" /> Revoke
@@ -572,7 +609,7 @@ export function AdminRoute() {
                         <button
                           type="button"
                           className="rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-900/60"
-                          onClick={() => void navigator.clipboard.writeText(shareUrl)}
+                          onClick={() => void copyShareUrl(shareUrl)}
                         >
                           Copy
                         </button>
@@ -588,7 +625,11 @@ export function AdminRoute() {
                           type="button"
                           disabled={loading || isRevoked}
                           className="inline-flex items-center gap-1 rounded-lg border border-red-300/70 px-2 py-1 text-[11px] text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-900/60 dark:text-red-200 dark:hover:bg-red-950/40"
-                          onClick={() => void revoke(l.rowKey)}
+                          onClick={() => {
+                            const confirmed = window.confirm('Revoke this share link? People using it will lose access immediately.')
+                            if (!confirmed) return
+                            void revoke(l.rowKey)
+                          }}
                           title="Revoke"
                         >
                           <Trash2 className="h-3.5 w-3.5" /> Revoke

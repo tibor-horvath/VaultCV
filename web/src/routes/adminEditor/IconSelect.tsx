@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 export type IconSelectOption = {
   value: string
@@ -18,6 +18,7 @@ export function IconSelect(props: {
   const { value, onChange, options, placeholder = 'Select...', ariaLabel } = props
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
+  const listboxId = useId()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
@@ -59,6 +60,7 @@ export function IconSelect(props: {
         ref={triggerRef}
         type="button"
         aria-label={ariaLabel}
+        aria-controls={open ? listboxId : undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -97,19 +99,22 @@ export function IconSelect(props: {
 
       {open ? (
         <div
+          id={listboxId}
           role="listbox"
           aria-label={ariaLabel}
-          aria-activedescendant={open ? `icon-select-option-${activeIndex}` : undefined}
+          aria-activedescendant={open ? `${listboxId}-option-${activeIndex}` : undefined}
           className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-950"
         >
           {options.map((option, index) => (
             <button
               key={option.value}
-              id={`icon-select-option-${index}`}
+              id={`${listboxId}-option-${index}`}
               ref={(node) => {
                 optionRefs.current[index] = node
               }}
               type="button"
+              role="option"
+              aria-selected={option.value === value}
               onClick={() => {
                 onChange(option.value)
                 setOpen(false)

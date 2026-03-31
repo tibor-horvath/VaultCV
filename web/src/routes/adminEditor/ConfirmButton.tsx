@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { TriangleAlert } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 export function ConfirmButton(props: {
   label: string
@@ -27,27 +27,63 @@ export function ConfirmButton(props: {
   const [open, setOpen] = useState(false)
   const titleId = useId()
   const descriptionId = useId()
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const cancelButtonRef = useRef<HTMLButtonElement | null>(null)
+  const confirmButtonRef = useRef<HTMLButtonElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    cancelButtonRef.current?.focus()
+  }, [open])
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={className}>
+      <button type="button" ref={triggerRef} onClick={() => setOpen(true)} className={className}>
         {icon ? <span className="inline-flex items-center">{icon}</span> : null}
         {label}
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button
-            type="button"
-            aria-label="Close confirmation dialog"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-950/45 backdrop-blur-[1px]"
-          />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[1px]"
+          onMouseDown={(event) => {
+            if (event.target !== event.currentTarget) return
+            setOpen(false)
+            triggerRef.current?.focus()
+          }}
+        >
           <div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
             aria-describedby={confirmDescription ? descriptionId : undefined}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault()
+                setOpen(false)
+                triggerRef.current?.focus()
+                return
+              }
+              if (event.key !== 'Tab') return
+              const focusables = [cancelButtonRef.current, confirmButtonRef.current].filter(Boolean) as HTMLButtonElement[]
+              if (!focusables.length) return
+              const currentIndex = focusables.indexOf(document.activeElement as HTMLButtonElement)
+              const first = focusables[0]
+              const last = focusables[focusables.length - 1]
+              if (event.shiftKey) {
+                if (document.activeElement === first || currentIndex === -1) {
+                  event.preventDefault()
+                  last.focus()
+                }
+                return
+              }
+              if (document.activeElement === last || currentIndex === -1) {
+                event.preventDefault()
+                first.focus()
+              }
+            }}
             className="relative w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-950"
           >
             <div id={titleId} className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -65,16 +101,22 @@ export function ConfirmButton(props: {
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false)
+                  triggerRef.current?.focus()
+                }}
+                ref={cancelButtonRef}
                 className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/60"
               >
                 {cancelLabel}
               </button>
               <button
                 type="button"
+                ref={confirmButtonRef}
                 onClick={() => {
                   onConfirm()
                   setOpen(false)
+                  triggerRef.current?.focus()
                 }}
                 className={
                   confirmClassName ??

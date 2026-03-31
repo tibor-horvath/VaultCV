@@ -66,6 +66,7 @@ function hasAnyEnabledFlag(flags: Record<string, boolean> | undefined) {
 
 type PublicValidation = {
   basics: Partial<Record<keyof PublicBasicsFlags, string>>
+  sections: Partial<Record<keyof PublicSectionsFlags, string>>
   links: string[]
   credentials: string[]
   experience: string[]
@@ -76,6 +77,7 @@ type PublicValidation = {
 function emptyPublicValidation(): PublicValidation {
   return {
     basics: {},
+    sections: {},
     links: [],
     credentials: [],
     experience: [],
@@ -87,12 +89,63 @@ function emptyPublicValidation(): PublicValidation {
 function hasPublicValidationErrors(validation: PublicValidation) {
   return (
     Object.keys(validation.basics).length > 0 ||
+    Object.keys(validation.sections).length > 0 ||
     validation.links.some(Boolean) ||
     validation.credentials.some(Boolean) ||
     validation.experience.some(Boolean) ||
     validation.education.some(Boolean) ||
     validation.projects.some(Boolean)
   )
+}
+
+function buildDraftSignature(input: {
+  basicsName: string
+  basicsHeadline: string
+  basicsEmail: string
+  basicsMobile: string
+  basicsLocation: string
+  basicsSummary: string
+  basicsPhotoAlt: string
+  skillsText: string
+  languagesText: string
+  links: LinkRow[]
+  credentials: CredentialRow[]
+  experience: ExperienceRow[]
+  education: EducationRow[]
+  projects: ProjectRow[]
+  publicBasics: PublicBasicsFlags
+  publicSections: PublicSectionsFlags
+  publicLinks: PublicLinkFlags[]
+  publicCredentials: PublicCredentialFlags[]
+  publicExperience: PublicExperienceFlags[]
+  publicEducation: PublicEducationFlags[]
+  publicProjects: PublicProjectFlags[]
+}) {
+  return JSON.stringify(input)
+}
+
+function focusFirstValidationIssue(validation: PublicValidation) {
+  const firstBasicsKey = Object.keys(validation.basics)[0] as keyof PublicBasicsFlags | undefined
+  const basicsByKey: Record<keyof PublicBasicsFlags, string> = {
+    name: 'basics-name',
+    headline: 'basics-headline',
+    email: 'basics-email',
+    mobile: 'basics-mobile',
+    location: 'basics-location',
+    summary: 'basics-summary',
+    photoAlt: 'basics-photo-alt',
+  }
+  if (firstBasicsKey) {
+    document.getElementById(basicsByKey[firstBasicsKey])?.focus()
+    return
+  }
+  if (validation.sections.skills) {
+    document.getElementById('skills-text')?.focus()
+    return
+  }
+  if (validation.sections.languages) {
+    document.getElementById('languages-text')?.focus()
+  }
 }
 
 function clearChangedRowErrors<T, U>(params: {
@@ -125,9 +178,12 @@ export function AdminEditorRoute() {
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
 
   const [loading, setLoading] = useState(false)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
   const [raw, setRaw] = useState<Record<string, unknown> | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
 
   const [locales, setLocales] = useState<LocaleItem[]>([{ locale: 'en', label: 'English' }])
   const [locale, setLocale] = useState('en')
@@ -190,6 +246,58 @@ export function AdminEditorRoute() {
   const previousPublicEducationRef = useRef(publicEducation)
   const previousProjectsRef = useRef(projects)
   const previousPublicProjectsRef = useRef(publicProjects)
+  const lastLoadedDraftSignatureRef = useRef('')
+  const suppressDirtyTrackingRef = useRef(false)
+  const errorBannerRef = useRef<HTMLDivElement | null>(null)
+  const draftSignature = useMemo(
+    () =>
+      buildDraftSignature({
+        basicsName,
+        basicsHeadline,
+        basicsEmail,
+        basicsMobile,
+        basicsLocation,
+        basicsSummary,
+        basicsPhotoAlt,
+        skillsText,
+        languagesText,
+        links,
+        credentials,
+        experience,
+        education,
+        projects,
+        publicBasics,
+        publicSections,
+        publicLinks,
+        publicCredentials,
+        publicExperience,
+        publicEducation,
+        publicProjects,
+      }),
+    [
+      basicsName,
+      basicsHeadline,
+      basicsEmail,
+      basicsMobile,
+      basicsLocation,
+      basicsSummary,
+      basicsPhotoAlt,
+      skillsText,
+      languagesText,
+      links,
+      credentials,
+      experience,
+      education,
+      projects,
+      publicBasics,
+      publicSections,
+      publicLinks,
+      publicCredentials,
+      publicExperience,
+      publicEducation,
+      publicProjects,
+    ],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -239,6 +347,41 @@ export function AdminEditorRoute() {
     return () => query.removeEventListener('change', update)
   }, [])
 
+  useEffect(() => {
+    if (suppressDirtyTrackingRef.current) {
+      if (draftSignature === lastLoadedDraftSignatureRef.current) {
+        suppressDirtyTrackingRef.current = false
+        setIsDirty(false)
+      }
+      return
+    }
+    const nextDirty = draftSignature !== lastLoadedDraftSignatureRef.current
+    setIsDirty(nextDirty)
+    if (nextDirty) setStatus(null)
+  }, [draftSignature])
+
+  useEffect(() => {
+    if (!isDirty) return
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [isDirty])
+
+  useEffect(() => {
+    if (!status) return
+    const timer = window.setTimeout(() => setStatus(null), 2500)
+    return () => window.clearTimeout(timer)
+  }, [status])
+
+  useEffect(() => {
+    if (!error) return
+    errorBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    errorBannerRef.current?.focus()
+  }, [error])
+
   async function load() {
     setLoading(true)
     setError(null)
@@ -274,8 +417,10 @@ export function AdminEditorRoute() {
       const parsedPublic = publicJsonText.trim() ? safeJsonParse<Record<string, unknown>>(publicJsonText) : { ok: true as const, value: {} }
       if (!parsedPublic.ok) throw new Error(parsedPublic.error)
 
+      suppressDirtyTrackingRef.current = true
+      setStatus(null)
       const pb = asObject(parsedPublic.value.basics)
-      setPublicBasics({
+      const nextPublicBasics = {
         name: typeof pb.name === 'string' && pb.name.trim().length > 0,
         headline: typeof pb.headline === 'string' && pb.headline.trim().length > 0,
         email: typeof pb.email === 'string' && pb.email.trim().length > 0,
@@ -283,11 +428,11 @@ export function AdminEditorRoute() {
         location: typeof pb.location === 'string' && pb.location.trim().length > 0,
         summary: typeof pb.summary === 'string' && pb.summary.trim().length > 0,
         photoAlt: typeof pb.photoAlt === 'string' && pb.photoAlt.trim().length > 0,
-      })
-      setPublicSections({
+      }
+      const nextPublicSections = {
         skills: Array.isArray(parsedPublic.value.skills) && parsedPublic.value.skills.length > 0,
         languages: Array.isArray(parsedPublic.value.languages) && parsedPublic.value.languages.length > 0,
-      })
+      }
 
       const publicLinksArr = asArray(parsedPublic.value.links)
       const publicLinksByKey = new Map<string, Record<string, unknown>>()
@@ -298,8 +443,7 @@ export function AdminEditorRoute() {
       }
 
       const privateLinksArr = asArray(parsedPrivate.value.links).map((x) => asObject(x))
-      setPublicLinks(
-        privateLinksArr.map((o) => {
+      const nextPublicLinks = privateLinksArr.map((o) => {
           const key = `${asString(o.label).trim()}|${asString(o.url).trim()}`
           const pub = publicLinksByKey.get(key) ?? null
           if (!pub) return { label: false, url: false }
@@ -307,8 +451,7 @@ export function AdminEditorRoute() {
             label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
             url: typeof pub.url === 'string' && asString(pub.url).trim().length > 0,
           }
-        }),
-      )
+        })
 
       const publicCredArr = asArray(parsedPublic.value.credentials)
       const publicCredByKey = new Map<string, Record<string, unknown>>()
@@ -318,8 +461,7 @@ export function AdminEditorRoute() {
         if (key !== '||') publicCredByKey.set(key, o)
       }
       const privateCredArr = asArray(parsedPrivate.value.credentials).map((x) => asObject(x))
-      setPublicCredentials(
-        privateCredArr.map((o) => {
+      const nextPublicCredentials = privateCredArr.map((o) => {
           const key = `${asString(o.issuer).trim()}|${asString(o.label).trim()}|${asString(o.url).trim()}`
           const pub = publicCredByKey.get(key) ?? null
           if (!pub) return { issuer: false, label: false, url: false, dateEarned: false, dateExpires: false }
@@ -330,8 +472,7 @@ export function AdminEditorRoute() {
             dateEarned: typeof pub.dateEarned === 'string' && asString(pub.dateEarned).trim().length > 0,
             dateExpires: typeof pub.dateExpires === 'string' && asString(pub.dateExpires).trim().length > 0,
           }
-        }),
-      )
+        })
 
       const publicExpArr = asArray(parsedPublic.value.experience)
       const publicExpByKey = new Map<string, Record<string, unknown>>()
@@ -341,8 +482,7 @@ export function AdminEditorRoute() {
         if (key !== '|||') publicExpByKey.set(key, o)
       }
       const privateExpArr = asArray(parsedPrivate.value.experience).map((x) => asObject(x))
-      setPublicExperience(
-        privateExpArr.map((o) => {
+      const nextPublicExperience = privateExpArr.map((o) => {
           const key = `${asString(o.company).trim()}|${asString(o.role).trim()}|${asString(o.start).trim()}|${asString(o.end).trim()}`
           const pub = publicExpByKey.get(key) ?? null
           if (!pub)
@@ -368,8 +508,7 @@ export function AdminEditorRoute() {
             skills: Array.isArray(pub.skills) && pub.skills.length > 0,
             highlights: Array.isArray(pub.highlights) && pub.highlights.length > 0,
           }
-        }),
-      )
+        })
 
       const publicEduArr = asArray(parsedPublic.value.education)
       const publicEduByKey = new Map<string, Record<string, unknown>>()
@@ -379,8 +518,7 @@ export function AdminEditorRoute() {
         if (key !== '|||') publicEduByKey.set(key, o)
       }
       const privateEduArr = asArray(parsedPrivate.value.education).map((x) => asObject(x))
-      setPublicEducation(
-        privateEduArr.map((o) => {
+      const nextPublicEducation = privateEduArr.map((o) => {
           const key = `${asString(o.school).trim()}|${asString(o.program).trim()}|${asString(o.start).trim()}|${asString(o.end).trim()}`
           const pub = publicEduByKey.get(key) ?? null
           if (!pub)
@@ -408,8 +546,7 @@ export function AdminEditorRoute() {
             gpa: typeof pub.gpa === 'string' && asString(pub.gpa).trim().length > 0,
             highlights: Array.isArray(pub.highlights) && pub.highlights.length > 0,
           }
-        }),
-      )
+        })
 
       const publicProjArr = asArray(parsedPublic.value.projects)
       const publicProjByKey = new Map<string, Record<string, unknown>>()
@@ -419,8 +556,7 @@ export function AdminEditorRoute() {
         if (key) publicProjByKey.set(key, o)
       }
       const privateProjArr = asArray(parsedPrivate.value.projects).map((x) => asObject(x))
-      setPublicProjects(
-        privateProjArr.map((o) => {
+      const nextPublicProjects = privateProjArr.map((o) => {
           const key = asString(o.name).trim()
           const pub = (key ? publicProjByKey.get(key) : null) ?? null
           if (!pub) return { name: false, tags: false, description: false }
@@ -429,95 +565,137 @@ export function AdminEditorRoute() {
             tags: Array.isArray(pub.tags) && pub.tags.length > 0,
             description: typeof pub.description === 'string' && asString(pub.description).trim().length > 0,
           }
-        }),
-      )
+        })
 
       const basics = asObject(parsedPrivate.value.basics)
-      setBasicsName(asString(basics.name))
-      setBasicsHeadline(asString(basics.headline))
-      setBasicsEmail(asString(basics.email))
-      setBasicsMobile(asString(basics.mobile))
-      setBasicsLocation(asString(basics.location))
-      setBasicsSummary(asString(basics.summary))
-      setBasicsPhotoAlt(asString(basics.photoAlt))
+      const nextBasicsName = asString(basics.name)
+      const nextBasicsHeadline = asString(basics.headline)
+      const nextBasicsEmail = asString(basics.email)
+      const nextBasicsMobile = asString(basics.mobile)
+      const nextBasicsLocation = asString(basics.location)
+      const nextBasicsSummary = asString(basics.summary)
+      const nextBasicsPhotoAlt = asString(basics.photoAlt)
+      const nextSkillsText = stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.skills))
+      const nextLanguagesText = stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.languages))
+      const nextLinks = asArray(parsedPrivate.value.links).map((x) => {
+        const o = asObject(x)
+        return { label: asString(o.label), url: asString(o.url) }
+      })
+      const nextCredentials = asArray(parsedPrivate.value.credentials).map((x) => {
+        const o = asObject(x)
+        return {
+          issuer: asString(o.issuer),
+          label: asString(o.label),
+          url: asString(o.url),
+          dateEarned: asString(o.dateEarned) || undefined,
+          dateExpires: asString(o.dateExpires) || undefined,
+        }
+      })
+      const nextExperience = asArray(parsedPrivate.value.experience).map((x) => {
+        const o = asObject(x)
+        return {
+          company: asString(o.company),
+          companyUrl: asString(o.companyUrl) || undefined,
+          companyLinkedInUrl: asString(o.companyLinkedInUrl) || undefined,
+          role: asString(o.role),
+          start: asString(o.start),
+          end: asString(o.end),
+          location: asString(o.location) || undefined,
+          skills: asStringArray(o.skills),
+          highlights: asStringArray(o.highlights),
+        }
+      })
+      const nextEducation = asArray(parsedPrivate.value.education).map((x) => {
+        const o = asObject(x)
+        return {
+          school: asString(o.school),
+          schoolUrl: asString(o.schoolUrl) || undefined,
+          degree: asString(o.degree) || undefined,
+          field: asString(o.field) || undefined,
+          program: asString(o.program) || undefined,
+          start: asString(o.start) || undefined,
+          end: asString(o.end) || undefined,
+          location: asString(o.location) || undefined,
+          gpa: asString(o.gpa) || undefined,
+          highlights: asStringArray(o.highlights),
+        }
+      })
+      const nextProjects = asArray(parsedPrivate.value.projects).map((x) => {
+        const o = asObject(x)
+        return {
+          name: asString(o.name),
+          description: asString(o.description),
+          tags: asStringArray(o.tags),
+          links: asArray(o.links).map((l) => {
+            const lo = asObject(l)
+            return { label: asString(lo.label), url: asString(lo.url) }
+          }),
+        }
+      })
 
-      setSkillsText(stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.skills)))
-      setLanguagesText(stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.languages)))
+      lastLoadedDraftSignatureRef.current = buildDraftSignature({
+        basicsName: nextBasicsName,
+        basicsHeadline: nextBasicsHeadline,
+        basicsEmail: nextBasicsEmail,
+        basicsMobile: nextBasicsMobile,
+        basicsLocation: nextBasicsLocation,
+        basicsSummary: nextBasicsSummary,
+        basicsPhotoAlt: nextBasicsPhotoAlt,
+        skillsText: nextSkillsText,
+        languagesText: nextLanguagesText,
+        links: nextLinks,
+        credentials: nextCredentials,
+        experience: nextExperience,
+        education: nextEducation,
+        projects: nextProjects,
+        publicBasics: nextPublicBasics,
+        publicSections: nextPublicSections,
+        publicLinks: nextPublicLinks,
+        publicCredentials: nextPublicCredentials,
+        publicExperience: nextPublicExperience,
+        publicEducation: nextPublicEducation,
+        publicProjects: nextPublicProjects,
+      })
 
-      setLinks(
-        asArray(parsedPrivate.value.links).map((x) => {
-          const o = asObject(x)
-          return { label: asString(o.label), url: asString(o.url) }
-        }),
-      )
-
-      setCredentials(
-        asArray(parsedPrivate.value.credentials).map((x) => {
-          const o = asObject(x)
-          return {
-            issuer: asString(o.issuer),
-            label: asString(o.label),
-            url: asString(o.url),
-            dateEarned: asString(o.dateEarned) || undefined,
-            dateExpires: asString(o.dateExpires) || undefined,
-          }
-        }),
-      )
-
-      setExperience(
-        asArray(parsedPrivate.value.experience).map((x) => {
-          const o = asObject(x)
-          return {
-            company: asString(o.company),
-            companyUrl: asString(o.companyUrl) || undefined,
-            companyLinkedInUrl: asString(o.companyLinkedInUrl) || undefined,
-            role: asString(o.role),
-            start: asString(o.start),
-            end: asString(o.end),
-            location: asString(o.location) || undefined,
-            skills: asStringArray(o.skills),
-            highlights: asStringArray(o.highlights),
-          }
-        }),
-      )
-
-      setEducation(
-        asArray(parsedPrivate.value.education).map((x) => {
-          const o = asObject(x)
-          return {
-            school: asString(o.school),
-            schoolUrl: asString(o.schoolUrl) || undefined,
-            degree: asString(o.degree) || undefined,
-            field: asString(o.field) || undefined,
-            program: asString(o.program) || undefined,
-            start: asString(o.start) || undefined,
-            end: asString(o.end) || undefined,
-            location: asString(o.location) || undefined,
-            gpa: asString(o.gpa) || undefined,
-            highlights: asStringArray(o.highlights),
-          }
-        }),
-      )
-
-      setProjects(
-        asArray(parsedPrivate.value.projects).map((x) => {
-          const o = asObject(x)
-          return {
-            name: asString(o.name),
-            description: asString(o.description),
-            tags: asStringArray(o.tags),
-            links: asArray(o.links).map((l) => {
-              const lo = asObject(l)
-              return { label: asString(lo.label), url: asString(lo.url) }
-            }),
-          }
-        }),
-      )
+      setPublicBasics(nextPublicBasics)
+      setPublicSections(nextPublicSections)
+      setPublicLinks(nextPublicLinks)
+      setPublicCredentials(nextPublicCredentials)
+      setPublicExperience(nextPublicExperience)
+      setPublicEducation(nextPublicEducation)
+      setPublicProjects(nextPublicProjects)
+      setBasicsName(nextBasicsName)
+      setBasicsHeadline(nextBasicsHeadline)
+      setBasicsEmail(nextBasicsEmail)
+      setBasicsMobile(nextBasicsMobile)
+      setBasicsLocation(nextBasicsLocation)
+      setBasicsSummary(nextBasicsSummary)
+      setBasicsPhotoAlt(nextBasicsPhotoAlt)
+      setSkillsText(nextSkillsText)
+      setLanguagesText(nextLanguagesText)
+      setLinks(nextLinks)
+      setCredentials(nextCredentials)
+      setExperience(nextExperience)
+      setEducation(nextEducation)
+      setProjects(nextProjects)
+      setPublicValidation(emptyPublicValidation())
+      setHasLoadedOnce(true)
     } catch (e: unknown) {
+      suppressDirtyTrackingRef.current = false
       setError(toErrorMessage(e, 'Failed loading profile.'))
     } finally {
+      setHasLoadedOnce(true)
       setLoading(false)
     }
+  }
+
+  function handleLocaleChange(nextLocale: string) {
+    if (nextLocale === locale) return
+    if (isDirty) {
+      const confirmed = window.confirm('You have unsaved changes. Switch locale and discard them?')
+      if (!confirmed) return
+    }
+    setLocale(nextLocale)
   }
 
   useEffect(() => {
@@ -656,6 +834,7 @@ export function AdminEditorRoute() {
   async function save() {
     setLoading(true)
     setError(null)
+    setStatus(null)
     setPublicValidation(emptyPublicValidation())
     try {
       const next: Record<string, unknown> = { ...(raw ?? {}) }
@@ -701,6 +880,8 @@ export function AdminEditorRoute() {
 
       const publicNext: Record<string, unknown> = {}
       const nextBasics = asObject(next.basics)
+      const nextSkills = asStringArray(next.skills)
+      const nextLanguages = asStringArray(next.languages)
       const nextValidation = emptyPublicValidation()
 
       if (publicBasics.name && !asString(nextBasics.name).trim()) nextValidation.basics.name = 'Name is toggled public but empty.'
@@ -710,6 +891,8 @@ export function AdminEditorRoute() {
       if (publicBasics.location && !asString(nextBasics.location).trim()) nextValidation.basics.location = 'Location is toggled public but empty.'
       if (publicBasics.summary && !asString(nextBasics.summary).trim()) nextValidation.basics.summary = 'Summary is toggled public but empty.'
       if (publicBasics.photoAlt && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photoAlt = 'Photo alt is toggled public but empty.'
+      if (publicSections.skills && nextSkills.length === 0) nextValidation.sections.skills = 'Skills are toggled public but empty.'
+      if (publicSections.languages && nextLanguages.length === 0) nextValidation.sections.languages = 'Languages are toggled public but empty.'
 
       links.forEach((l, idx) => {
         const flags = publicLinks[idx]
@@ -795,6 +978,7 @@ export function AdminEditorRoute() {
       if (hasPublicValidationErrors(nextValidation)) {
         setPublicValidation(nextValidation)
         setError('Fix the highlighted public visibility issues before saving.')
+        queueMicrotask(() => focusFirstValidationIssue(nextValidation))
         return
       }
 
@@ -808,8 +992,8 @@ export function AdminEditorRoute() {
       if (publicBasics.photoAlt && asString(nextBasics.photoAlt).trim()) publicBasicsObj.photoAlt = asString(nextBasics.photoAlt).trim()
       if (Object.keys(publicBasicsObj).length) publicNext.basics = publicBasicsObj
 
-      if (publicSections.skills) publicNext.skills = next.skills
-      if (publicSections.languages) publicNext.languages = next.languages
+      if (publicSections.skills) publicNext.skills = nextSkills
+      if (publicSections.languages) publicNext.languages = nextLanguages
 
       const publicLinksOut = links
         .map((l, idx) => {
@@ -923,6 +1107,7 @@ export function AdminEditorRoute() {
 
       await load()
       setPublicValidation(emptyPublicValidation())
+      setStatus('Profile saved.')
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Failed saving profile.'))
     } finally {
@@ -969,14 +1154,33 @@ export function AdminEditorRoute() {
 
   if (!isAdmin) {
     return (
-      <div className="w-full space-y-4 py-10">
-        <div className="flex items-center gap-2 text-slate-900 dark:text-white">
-          <Shield className="h-5 w-5" />
-          <div className="text-lg font-semibold">Admin editor</div>
-        </div>
-        <div className="text-sm text-slate-700 dark:text-slate-300">
-          Signed in as <span className="font-mono">{me.userDetails ?? 'unknown'}</span>, but you don’t have the{' '}
-          <span className="font-mono">admin</span> role.
+      <div className="w-full space-y-6 py-10">
+        <div className="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/30">
+          <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+            <Shield className="h-5 w-5" />
+            <div className="text-lg font-semibold">Admin editor</div>
+          </div>
+          <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+            Signed in as <span className="font-mono">{me.userDetails ?? 'unknown'}</span>, but you don’t have the{' '}
+            <span className="font-mono">admin</span> role yet.
+          </div>
+          <div className="mt-4 rounded-2xl border border-slate-200/70 bg-white/70 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/20 dark:text-slate-300">
+            In Azure Portal → Static Web App → Role assignments: add role <span className="font-mono">admin</span> to the
+            identity you see in <span className="font-mono">/.auth/me</span>.
+          </div>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <a
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              href="/.auth/me"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open `/.auth/me` <ExternalLink className="h-4 w-4 opacity-80" />
+            </a>
+            <a className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" href="/.auth/logout">
+              Sign out
+            </a>
+          </div>
         </div>
       </div>
     )
@@ -987,92 +1191,124 @@ export function AdminEditorRoute() {
       <AdminEditorHeader
         locale={locale}
         locales={locales}
-        setLocale={setLocale}
+        setLocale={handleLocaleChange}
+        hasUnsavedChanges={isDirty}
         loading={loading}
         onSave={() => void save()}
       />
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+        <div
+          ref={errorBannerRef}
+          tabIndex={-1}
+          role="alert"
+          aria-live="assertive"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 outline-none dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
+        >
           {error}
         </div>
       ) : null}
+      {status ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
+        >
+          {status}
+        </div>
+      ) : null}
+      {loading && !hasLoadedOnce ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+        >
+          <span className="inline-flex items-center gap-2">
+            <LoaderCircle className="h-4 w-4 animate-spin" /> Loading profile editor…
+          </span>
+        </div>
+      ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <BasicsSection
-          basicsName={basicsName}
-          setBasicsName={setBasicsName}
-          basicsHeadline={basicsHeadline}
-          setBasicsHeadline={setBasicsHeadline}
-          basicsEmail={basicsEmail}
-          setBasicsEmail={setBasicsEmail}
-          basicsMobile={basicsMobile}
-          setBasicsMobile={setBasicsMobile}
-          basicsLocation={basicsLocation}
-          setBasicsLocation={setBasicsLocation}
-          basicsSummary={basicsSummary}
-          setBasicsSummary={setBasicsSummary}
-          basicsPhotoAlt={basicsPhotoAlt}
-          setBasicsPhotoAlt={setBasicsPhotoAlt}
-          publicBasics={publicBasics}
-          setPublicBasics={setPublicBasics}
-          publicBasicsErrors={publicValidation.basics}
-        />
+      {!hasLoadedOnce ? null : (
+        <>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <BasicsSection
+              basicsName={basicsName}
+              setBasicsName={setBasicsName}
+              basicsHeadline={basicsHeadline}
+              setBasicsHeadline={setBasicsHeadline}
+              basicsEmail={basicsEmail}
+              setBasicsEmail={setBasicsEmail}
+              basicsMobile={basicsMobile}
+              setBasicsMobile={setBasicsMobile}
+              basicsLocation={basicsLocation}
+              setBasicsLocation={setBasicsLocation}
+              basicsSummary={basicsSummary}
+              setBasicsSummary={setBasicsSummary}
+              basicsPhotoAlt={basicsPhotoAlt}
+              setBasicsPhotoAlt={setBasicsPhotoAlt}
+              publicBasics={publicBasics}
+              setPublicBasics={setPublicBasics}
+              publicBasicsErrors={publicValidation.basics}
+            />
 
-        <SkillsLanguagesSection
-          skillsText={skillsText}
-          setSkillsText={setSkillsText}
-          languagesText={languagesText}
-          setLanguagesText={setLanguagesText}
-          publicSections={publicSections}
-          setPublicSections={setPublicSections}
-        />
-      </div>
+            <SkillsLanguagesSection
+              skillsText={skillsText}
+              setSkillsText={setSkillsText}
+              languagesText={languagesText}
+              setLanguagesText={setLanguagesText}
+              publicSections={publicSections}
+              setPublicSections={setPublicSections}
+              sectionErrors={publicValidation.sections}
+            />
+          </div>
 
-      <LinksSection
-        links={links}
-        setLinks={setLinks}
-        publicLinks={publicLinks}
-        setPublicLinks={setPublicLinks}
-        isMobile={isMobile}
-        rowErrors={publicValidation.links}
-      />
+          <LinksSection
+            links={links}
+            setLinks={setLinks}
+            publicLinks={publicLinks}
+            setPublicLinks={setPublicLinks}
+            isMobile={isMobile}
+            rowErrors={publicValidation.links}
+          />
 
-      <CredentialsSection
-        credentials={credentials}
-        setCredentials={setCredentials}
-        publicCredentials={publicCredentials}
-        setPublicCredentials={setPublicCredentials}
-        isMobile={isMobile}
-        rowErrors={publicValidation.credentials}
-      />
+          <CredentialsSection
+            credentials={credentials}
+            setCredentials={setCredentials}
+            publicCredentials={publicCredentials}
+            setPublicCredentials={setPublicCredentials}
+            isMobile={isMobile}
+            rowErrors={publicValidation.credentials}
+          />
 
-      <ExperienceSection
-        experience={experience}
-        setExperience={setExperience}
-        publicExperience={publicExperience}
-        setPublicExperience={setPublicExperience}
-        isMobile={isMobile}
-        rowErrors={publicValidation.experience}
-      />
+          <ExperienceSection
+            experience={experience}
+            setExperience={setExperience}
+            publicExperience={publicExperience}
+            setPublicExperience={setPublicExperience}
+            isMobile={isMobile}
+            rowErrors={publicValidation.experience}
+          />
 
-      <EducationSection
-        education={education}
-        setEducation={setEducation}
-        publicEducation={publicEducation}
-        setPublicEducation={setPublicEducation}
-        isMobile={isMobile}
-        rowErrors={publicValidation.education}
-      />
+          <EducationSection
+            education={education}
+            setEducation={setEducation}
+            publicEducation={publicEducation}
+            setPublicEducation={setPublicEducation}
+            isMobile={isMobile}
+            rowErrors={publicValidation.education}
+          />
 
-      <ProjectsSection
-        projects={projects}
-        setProjects={setProjects}
-        publicProjects={publicProjects}
-        setPublicProjects={setPublicProjects}
-        isMobile={isMobile}
-        rowErrors={publicValidation.projects}
-      />
+          <ProjectsSection
+            projects={projects}
+            setProjects={setProjects}
+            publicProjects={publicProjects}
+            setPublicProjects={setPublicProjects}
+            isMobile={isMobile}
+            rowErrors={publicValidation.projects}
+          />
+        </>
+      )}
     </div>
   )
 }

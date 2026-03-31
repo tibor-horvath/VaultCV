@@ -54,8 +54,10 @@ export function BasicsSection(props: {
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Name
             <input
+              id="basics-name"
               value={basicsName}
               onChange={(e) => setBasicsName(e.target.value)}
+              aria-invalid={Boolean(publicBasicsErrors?.name)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
             {publicBasicsErrors?.name ? (
@@ -71,8 +73,10 @@ export function BasicsSection(props: {
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Headline
             <input
+              id="basics-headline"
               value={basicsHeadline}
               onChange={(e) => setBasicsHeadline(e.target.value)}
+              aria-invalid={Boolean(publicBasicsErrors?.headline)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
             {publicBasicsErrors?.headline ? (
@@ -91,8 +95,10 @@ export function BasicsSection(props: {
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Email
             <input
+              id="basics-email"
               value={basicsEmail}
               onChange={(e) => setBasicsEmail(e.target.value)}
+              aria-invalid={Boolean(publicBasicsErrors?.email)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
             {publicBasicsErrors?.email ? (
@@ -108,8 +114,10 @@ export function BasicsSection(props: {
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Mobile
             <input
+              id="basics-mobile"
               value={basicsMobile}
               onChange={(e) => setBasicsMobile(e.target.value)}
+              aria-invalid={Boolean(publicBasicsErrors?.mobile)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
             {publicBasicsErrors?.mobile ? (
@@ -128,8 +136,10 @@ export function BasicsSection(props: {
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Location
             <input
+              id="basics-location"
               value={basicsLocation}
               onChange={(e) => setBasicsLocation(e.target.value)}
+              aria-invalid={Boolean(publicBasicsErrors?.location)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
             {publicBasicsErrors?.location ? (
@@ -148,9 +158,11 @@ export function BasicsSection(props: {
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Summary
             <textarea
+              id="basics-summary"
               rows={5}
               value={basicsSummary}
               onChange={(e) => setBasicsSummary(e.target.value)}
+              aria-invalid={Boolean(publicBasicsErrors?.summary)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
             {publicBasicsErrors?.summary ? (
@@ -169,8 +181,10 @@ export function BasicsSection(props: {
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Photo alt
             <input
+              id="basics-photo-alt"
               value={basicsPhotoAlt}
               onChange={(e) => setBasicsPhotoAlt(e.target.value)}
+              aria-invalid={Boolean(publicBasicsErrors?.photoAlt)}
               className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
             />
             {publicBasicsErrors?.photoAlt ? (

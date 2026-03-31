@@ -7,6 +7,7 @@ export function ToggleButton(props: { pressed: boolean; onClick: () => void; tit
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={pressed}
       className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold ${
         pressed
           ? 'border-emerald-400/60 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-950/60'
