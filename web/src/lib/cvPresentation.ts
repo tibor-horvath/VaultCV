@@ -80,7 +80,7 @@ export function inferLinkKind(link: LinkLike):
   if (label.includes('mail') || label.includes('email')) return 'email'
   if (label.includes('twitter') || label === 'x' || label.includes('/x')) return 'x'
   if (label.includes('mastodon')) return 'mastodon'
-  if (label.includes('website') || label.includes('portfolio') || label.includes('blog')) return 'web'
+  if (label.includes('website') || label.includes('portfolio')) return 'web'
 
   try {
     if (link.url == null || String(link.url).trim() === '') return 'other'
@@ -92,7 +92,6 @@ export function inferLinkKind(link: LinkLike):
     if (host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be') return 'youtube'
     if (host === 'x.com' || host.endsWith('.x.com') || host === 'twitter.com' || host.endsWith('.twitter.com')) return 'x'
     if (host === 'mastodon.social' || host.endsWith('.mastodon.social')) return 'mastodon'
-    if (host) return 'web'
   } catch {
     // ignore invalid URLs
   }
