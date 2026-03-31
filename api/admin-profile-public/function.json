@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["get", "put"],
-      "route": "admin/profile/public"
+      "route": "manage/profile/public"
     },
     {
       "type": "http",

@@ -58,6 +58,21 @@ function stringArrayToTextAreaLines(arr: string[]) {
   return arr.join('\n')
 }
 
+async function fetchAdminProfileWithFallback(profileKind: ProfileKind, init?: RequestInit): Promise<Response> {
+  const endpoints = [
+    `/api/manage/profile/${profileKind}`,
+    `/api/admin/profile/${profileKind}`,
+  ] as const
+  let lastResponse: Response | null = null
+  for (const endpoint of endpoints) {
+    const res = await fetch(endpoint, init)
+    lastResponse = res
+    if (res.status !== 404) return res
+  }
+  if (!lastResponse) throw new Error('No response from server.')
+  return lastResponse
+}
+
 export function AdminEditorRoute() {
   const { kind } = useParams()
   const profileKind = (kind === 'public' || kind === 'private' ? kind : null) as ProfileKind | null
@@ -143,7 +158,7 @@ export function AdminEditorRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/profile/${profileKind}`, { credentials: 'same-origin' })
+      const res = await fetchAdminProfileWithFallback(profileKind, { credentials: 'same-origin' })
       if (res.status === 401) {
         redirectToLogin(`/admin/editor/${profileKind}`)
         return
@@ -292,7 +307,7 @@ export function AdminEditorRoute() {
         }))
 
       const json = JSON.stringify(next, null, 2)
-      const res = await fetch(`/api/admin/profile/${profileKind}`, {
+      const res = await fetchAdminProfileWithFallback(profileKind, {
         method: 'PUT',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         credentials: 'same-origin',
@@ -380,7 +395,7 @@ export function AdminEditorRoute() {
             Editor: {profileKind === 'public' ? 'Public profile' : 'Private CV'}
           </div>
           <div className="text-xs text-slate-600 dark:text-slate-300">
-            This writes JSON to Blob Storage via <span className="font-mono">/api/admin/profile/{profileKind}</span>.
+            This writes JSON to Blob Storage via <span className="font-mono">/api/manage/profile/{profileKind}</span>.
           </div>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">

@@ -14,7 +14,7 @@ VaultCV includes an admin-only page for managing expiring, revocable share links
 The admin UI and admin APIs are protected using the Static Web Apps `admin` role:
 
 - UI routes: `/admin/*`
-- API routes: `/api/admin/*`
+- API routes: `/api/manage/*`
 
 In the Azure Portal, open your Static Web App resource → **Role assignments** and assign yourself the `admin` role.
 

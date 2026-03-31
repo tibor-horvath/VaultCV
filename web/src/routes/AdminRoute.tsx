@@ -21,7 +21,7 @@ type ShareLink = {
   viewCount?: number
 }
 
-const SHARE_LINKS_ENDPOINTS = ['/api/admin/links', '/api/admin/share-links', '/api/admin-share-links'] as const
+const SHARE_LINKS_ENDPOINTS = ['/api/manage/links', '/api/admin/links', '/api/admin/share-links', '/api/admin-share-links'] as const
 
 async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   try {
@@ -59,6 +59,7 @@ async function fetchShareLinksWithFallback(init?: RequestInit): Promise<Response
 
 async function revokeShareLinkWithFallback(id: string, init?: RequestInit): Promise<Response> {
   const endpoints = [
+    `/api/manage/links/${encodeURIComponent(id)}/revoke`,
     `/api/admin/links/${encodeURIComponent(id)}/revoke`,
     `/api/admin/share-links/${encodeURIComponent(id)}/revoke`,
     `/api/admin-share-links-revoke/${encodeURIComponent(id)}`,
