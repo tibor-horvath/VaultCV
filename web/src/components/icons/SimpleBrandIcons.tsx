@@ -1,5 +1,5 @@
 import type { SVGProps } from 'react'
-import { siGithub, siGoogle } from 'simple-icons'
+import { siAppstore, siGithub, siGitlab, siGoogle, siGoogleplay, siMastodon, siNpm, siPypi, siX, siYoutube } from 'simple-icons'
 
 type Props = SVGProps<SVGSVGElement>
 
@@ -21,6 +21,70 @@ export function SiGoogleIcon(props: Props) {
   return (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path fill="currentColor" d={siGoogle.path} />
+    </svg>
+  )
+}
+
+export function SiXIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siX.path} />
+    </svg>
+  )
+}
+
+export function SiYoutubeIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siYoutube.path} />
+    </svg>
+  )
+}
+
+export function SiGitlabIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siGitlab.path} />
+    </svg>
+  )
+}
+
+export function SiMastodonIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siMastodon.path} />
+    </svg>
+  )
+}
+
+export function SiNpmIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siNpm.path} />
+    </svg>
+  )
+}
+
+export function SiPypiIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siPypi.path} />
+    </svg>
+  )
+}
+
+export function SiAppstoreIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siAppstore.path} />
+    </svg>
+  )
+}
+
+export function SiGoogleplayIcon(props: Props) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path fill="currentColor" d={siGoogleplay.path} />
     </svg>
   )
 }

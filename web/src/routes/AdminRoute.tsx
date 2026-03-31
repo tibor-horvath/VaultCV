@@ -18,6 +18,7 @@ import {
 import { Link } from 'react-router-dom'
 import { redirectToLogin } from '../lib/authRedirect'
 import { useI18n } from '../lib/i18n'
+import { IconSelect } from './adminEditor/IconSelect'
 
 type ClientPrincipal = {
   identityProvider?: string
@@ -110,6 +111,16 @@ export function AdminRoute() {
     }
     return links.filter((l) => statusFilter.includes(classify(l)))
   }, [links, statusFilter])
+  const shareLanguageOptions = useMemo(
+    () => [
+      { value: '', label: 'Auto' },
+      ...localeOptions.map((o) => ({
+        value: o.code,
+        label: `${o.code.toUpperCase()} - ${o.label}`,
+      })),
+    ],
+    [localeOptions],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -311,18 +322,15 @@ export function AdminRoute() {
           {localeOptions.length > 1 ? (
             <label className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
               <Globe2 className="h-3.5 w-3.5 shrink-0" /> Share language
-              <select
-                value={shareLang}
-                onChange={(e) => setShareLang(e.target.value)}
-                className="rounded-md border border-slate-300/70 bg-white px-2 py-1 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              >
-                <option value="">Auto</option>
-                {localeOptions.map((o) => (
-                  <option key={o.code} value={o.code}>
-                    {o.code.toUpperCase()} — {o.label}
-                  </option>
-                ))}
-              </select>
+              <div className="min-w-[11rem] text-xs">
+                <IconSelect
+                  value={shareLang}
+                  onChange={setShareLang}
+                  options={shareLanguageOptions}
+                  placeholder="Auto"
+                  ariaLabel="Share language"
+                />
+              </div>
             </label>
           ) : null}
           <Link

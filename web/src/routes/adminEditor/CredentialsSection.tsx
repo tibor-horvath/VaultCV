@@ -1,7 +1,12 @@
 import { ToggleButton } from './ToggleButton'
 import { ConfirmButton } from './ConfirmButton'
-import { BadgeCheck, Plus, Trash2 } from 'lucide-react'
+import { BadgeCheck, GraduationCap, Languages, Plus, ShieldCheck, Trash2 } from 'lucide-react'
+import { SiGoogleIcon } from '../../components/icons/SimpleBrandIcons'
 import type { CredentialRow, PublicCredentialFlags } from './types'
+import { IconSelect } from './IconSelect'
+
+const ISSUER_OPTIONS = ['microsoft', 'aws', 'google', 'cisco', 'comptia', 'oracle', 'ibm', 'isc2', 'hashicorp', 'redhat', 'vmware', 'cncf'] as const
+const CUSTOM_OPTION = '__custom__'
 
 export function CredentialsSection(props: {
   credentials: CredentialRow[]
@@ -57,12 +62,59 @@ export function CredentialsSection(props: {
               <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   Issuer
-                  <input
-                    value={c.issuer}
-                    onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: e.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="microsoft | aws | google | ..."
-                  />
+                  {(() => {
+                    const currentSelectValue = ISSUER_OPTIONS.includes(c.issuer as (typeof ISSUER_OPTIONS)[number]) ? c.issuer : CUSTOM_OPTION
+                    const options = [
+                      { value: '', label: 'Select issuer...' },
+                      { value: 'microsoft', label: 'microsoft', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'aws', label: 'aws', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'google', label: 'google', icon: <SiGoogleIcon className="h-3.5 w-3.5" /> },
+                      { value: 'cisco', label: 'cisco', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'comptia', label: 'comptia', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'oracle', label: 'oracle', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'ibm', label: 'ibm', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'isc2', label: 'isc2', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'hashicorp', label: 'hashicorp', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'redhat', label: 'redhat', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'vmware', label: 'vmware', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'cncf', label: 'cncf', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'school', label: 'school', icon: <GraduationCap className="h-3.5 w-3.5" /> },
+                      { value: 'language', label: 'language', icon: <Languages className="h-3.5 w-3.5" /> },
+                      { value: 'other', label: 'other', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: CUSTOM_OPTION, label: 'Custom' },
+                    ]
+                    return (
+                      <>
+                        <IconSelect
+                          value={currentSelectValue}
+                          onChange={(next) =>
+                            setCredentials((cur) =>
+                              cur.map((x, i) => {
+                                if (i !== idx) return x
+                                if (next === CUSTOM_OPTION) {
+                                  const keepCustom = ISSUER_OPTIONS.includes(x.issuer as (typeof ISSUER_OPTIONS)[number]) ? '' : x.issuer
+                                  return { ...x, issuer: keepCustom }
+                                }
+                                if (!next) return { ...x, issuer: '' }
+                                return { ...x, issuer: next }
+                              }),
+                            )
+                          }
+                          options={options}
+                          placeholder="Select issuer..."
+                          ariaLabel="Credential issuer"
+                        />
+                        {currentSelectValue === CUSTOM_OPTION ? (
+                          <input
+                            value={c.issuer}
+                            onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: e.target.value } : x)))}
+                            className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                            placeholder="custom issuer"
+                          />
+                        ) : null}
+                      </>
+                    )
+                  })()}
                 </label>
                 <div className="pt-5">
                   <ToggleButton

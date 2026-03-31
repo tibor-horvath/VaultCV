@@ -1,7 +1,7 @@
-import { ExternalLink, Globe } from 'lucide-react'
+import { BookOpenText, ExternalLink, FlaskConical, Globe, PlayCircle, ScanSearch, Smartphone } from 'lucide-react'
 import { inferProjectLinkLabelKind } from '../../lib/cvPresentation'
 import type { CvProject } from '../../types/cv'
-import { SiGithubIcon } from '../icons/SimpleBrandIcons'
+import { SiAppstoreIcon, SiGithubIcon, SiGitlabIcon, SiGoogleplayIcon, SiNpmIcon, SiPypiIcon, SiYoutubeIcon } from '../icons/SimpleBrandIcons'
 import { SkillsChips } from './SkillsChips'
 import { useI18n } from '../../lib/i18n'
 
@@ -23,8 +23,50 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
               <div className="min-w-0 font-semibold text-slate-900 dark:text-slate-100">{p.name}</div>
               {iconLinks.map((l) => {
                 const kind = inferProjectLinkLabelKind(l)
-                const Icon = kind === 'github' ? SiGithubIcon : Globe
-                const text = kind === 'github' ? 'GitHub' : t('web')
+                const Icon =
+                  kind === 'github'
+                    ? SiGithubIcon
+                    : kind === 'gitlab'
+                      ? SiGitlabIcon
+                    : kind === 'docs'
+                      ? BookOpenText
+                      : kind === 'video'
+                        ? SiYoutubeIcon
+                        : kind === 'demo'
+                          ? FlaskConical
+                          : kind === 'case-study'
+                            ? ScanSearch
+                            : kind === 'npm'
+                              ? SiNpmIcon
+                              : kind === 'pypi'
+                                ? SiPypiIcon
+                            : kind === 'app-store' || kind === 'play-store'
+                              ? kind === 'app-store'
+                                ? SiAppstoreIcon
+                                : SiGoogleplayIcon
+                              : Globe
+                const text =
+                  kind === 'github'
+                    ? 'GitHub'
+                    : kind === 'docs'
+                      ? 'Docs'
+                      : kind === 'video'
+                        ? 'Video'
+                        : kind === 'demo'
+                          ? 'Demo'
+                          : kind === 'case-study'
+                            ? 'Case study'
+                            : kind === 'npm'
+                              ? 'NPM'
+                              : kind === 'pypi'
+                                ? 'PyPI'
+                                : kind === 'app-store'
+                                  ? 'App Store'
+                                  : kind === 'play-store'
+                                    ? 'Play Store'
+                                    : kind === 'gitlab'
+                                      ? 'GitLab'
+                                      : t('web')
                 return (
                   <a
                     key={`${p.name}:${kind}:${l.url}`}

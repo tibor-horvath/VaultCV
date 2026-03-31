@@ -27,7 +27,7 @@ import { SkillsChips } from '../components/cv/SkillsChips'
 import { SiGoogleIcon } from '../components/icons/SimpleBrandIcons'
 import { exchangeAccessCode, fetchCv, type ApiErrorCode } from '../lib/api'
 import { fetchPublicCvProfile } from '../lib/publicProfile'
-import type { CvCredentialIssuer, CvData } from '../types/cv'
+import type { CvData } from '../types/cv'
 import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
 import { useI18n } from '../lib/i18n'
@@ -50,7 +50,7 @@ type CvRouteState =
   | { kind: 'error'; messageKey: MessageKey; details?: string; status?: number }
   | { kind: 'ready'; cv: CvData; sessionExpiresAt?: string }
 
-const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'school', 'language', 'other']
+const preferredCredentialIssuerOrder = ['microsoft', 'aws', 'google', 'school', 'language', 'other'] as const
 
 function mapApiErrorToMessage(code: ApiErrorCode): MessageKey {
   if (code === 'network_error') return 'networkError'
@@ -212,7 +212,7 @@ function AwsMark({ className }: { className?: string }) {
   )
 }
 
-function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
+function CredentialIssuerIcon({ issuer }: { issuer: string }) {
   const cls = 'h-4 w-4 opacity-80'
   if (issuer === 'microsoft') return <MicrosoftMark className={cls} />
   if (issuer === 'aws') return <AwsMark className={cls} />
@@ -220,6 +220,20 @@ function CredentialIssuerIcon({ issuer }: { issuer: CvCredentialIssuer }) {
   if (issuer === 'school') return <GraduationCap className={cls} />
   if (issuer === 'language') return <Languages className={cls} />
   return <ShieldCheck className={cls} />
+}
+
+function formatCredentialIssuerLabel(issuer: string, t: (key: MessageKey) => string) {
+  if (issuer === 'language') return t('languageExams')
+  if (issuer === 'school') return t('education')
+  if (issuer === 'other') return t('other')
+  if (issuer === 'aws') return 'AWS'
+  if (issuer === 'cncf') return 'CNCF'
+  const normalized = issuer.replace(/[-_]+/g, ' ').trim()
+  if (!normalized) return t('other')
+  return normalized
+    .split(' ')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 export function CvRoute() {
@@ -407,23 +421,20 @@ export function CvRoute() {
           {state.cv.credentials?.length ? (
             <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
               <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                {credentialIssuerOrder
+                {[
+                  ...preferredCredentialIssuerOrder,
+                  ...Array.from(
+                    new Set((state.cv.credentials ?? []).map((c) => String(c.issuer ?? '').trim().toLowerCase()).filter(Boolean)),
+                  ).filter((issuer) => !preferredCredentialIssuerOrder.includes(issuer as (typeof preferredCredentialIssuerOrder)[number])),
+                ]
                   .map((issuer) => {
-                    const items = state.cv.credentials?.filter((c) => c.issuer === issuer) ?? []
+                    const items = state.cv.credentials?.filter((c) => String(c.issuer ?? '').trim().toLowerCase() === issuer) ?? []
                     if (!items.length) return null
                     return (
                       <div key={issuer}>
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
                           <CredentialIssuerIcon issuer={issuer} />
-                          {issuer === 'language'
-                            ? t('languageExams')
-                            : issuer === 'school'
-                              ? t('education')
-                            : issuer === 'other'
-                              ? t('other')
-                              : issuer === 'aws'
-                                ? 'AWS'
-                                : issuer.charAt(0).toUpperCase() + issuer.slice(1)}
+                          {formatCredentialIssuerLabel(issuer, t)}
                         </div>
                         <div className="mt-2 divide-y divide-slate-200/60 dark:divide-slate-800/60">
                           {items.map((c) => (

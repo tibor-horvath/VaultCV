@@ -74,6 +74,11 @@ describe('inferLinkKind', () => {
   it('returns other for unknown', () => {
     expect(inferLinkKind({ label: 'Blog', url: 'https://blog.example' })).toBe('other')
   })
+
+  it('detects youtube and email links', () => {
+    expect(inferLinkKind({ label: 'YouTube', url: 'https://youtube.com/@me' })).toBe('youtube')
+    expect(inferLinkKind({ label: 'Email', url: 'mailto:me@example.com' })).toBe('email')
+  })
 })
 
 describe('inferProjectLinkLabelKind', () => {
@@ -82,7 +87,14 @@ describe('inferProjectLinkLabelKind', () => {
     expect(inferProjectLinkLabelKind({ label: 'WEB', url: 'x' })).toBe('web')
   })
 
+  it('maps extended project labels', () => {
+    expect(inferProjectLinkLabelKind({ label: 'docs', url: 'x' })).toBe('docs')
+    expect(inferProjectLinkLabelKind({ label: 'video', url: 'x' })).toBe('video')
+    expect(inferProjectLinkLabelKind({ label: 'case-study', url: 'x' })).toBe('case-study')
+    expect(inferProjectLinkLabelKind({ label: 'gitlab', url: 'x' })).toBe('gitlab')
+  })
+
   it('returns other otherwise', () => {
-    expect(inferProjectLinkLabelKind({ label: 'docs', url: 'x' })).toBe('other')
+    expect(inferProjectLinkLabelKind({ label: 'repository', url: 'x' })).toBe('other')
   })
 })

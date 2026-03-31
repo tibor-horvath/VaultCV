@@ -3,6 +3,11 @@ import { ConfirmButton } from './ConfirmButton'
 import { FolderKanban, Link2, Plus, Trash2 } from 'lucide-react'
 import type { ProjectRow, PublicProjectFlags } from './types'
 import { stringArrayToTextAreaLines, textAreaLinesToStringArray } from './utils'
+import { SiAppstoreIcon, SiGithubIcon, SiGitlabIcon, SiGoogleplayIcon, SiNpmIcon, SiPypiIcon, SiYoutubeIcon } from '../../components/icons/SimpleBrandIcons'
+import { IconSelect } from './IconSelect'
+
+const PROJECT_LINK_LABEL_OPTIONS = ['demo', 'github', 'gitlab', 'docs', 'video', 'case-study', 'npm', 'pypi', 'app-store', 'play-store'] as const
+const CUSTOM_OPTION = '__custom__'
 
 export function ProjectsSection(props: {
   projects: ProjectRow[]
@@ -134,23 +139,77 @@ export function ProjectsSection(props: {
                 <div className="space-y-2">
                   {(p.links ?? []).map((link, linkIdx) => (
                     <div key={linkIdx} className="grid grid-cols-1 gap-2 rounded-lg border border-slate-200/60 p-2 dark:border-slate-800 md:grid-cols-[1fr_1fr_auto]">
-                      <input
-                        value={link.label}
-                        onChange={(ev) =>
-                          setProjects((cur) =>
-                            cur.map((x, i) =>
-                              i === idx
-                                ? {
-                                    ...x,
-                                    links: (x.links ?? []).map((lx, li) => (li === linkIdx ? { ...lx, label: ev.target.value } : lx)),
-                                  }
-                                : x,
-                            ),
-                          )
-                        }
-                        className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                        placeholder="Label"
-                      />
+                      {(() => {
+                        const currentSelectValue = PROJECT_LINK_LABEL_OPTIONS.includes(link.label as (typeof PROJECT_LINK_LABEL_OPTIONS)[number])
+                          ? link.label
+                          : CUSTOM_OPTION
+                        const options = [
+                          { value: '', label: 'Select label...' },
+                          { value: 'demo', label: 'demo' },
+                          { value: 'github', label: 'github', icon: <SiGithubIcon className="h-3.5 w-3.5" /> },
+                          { value: 'gitlab', label: 'gitlab', icon: <SiGitlabIcon className="h-3.5 w-3.5" /> },
+                          { value: 'docs', label: 'docs' },
+                          { value: 'video', label: 'video', icon: <SiYoutubeIcon className="h-3.5 w-3.5" /> },
+                          { value: 'case-study', label: 'case-study' },
+                          { value: 'npm', label: 'npm', icon: <SiNpmIcon className="h-3.5 w-3.5" /> },
+                          { value: 'pypi', label: 'pypi', icon: <SiPypiIcon className="h-3.5 w-3.5" /> },
+                          { value: 'app-store', label: 'app-store', icon: <SiAppstoreIcon className="h-3.5 w-3.5" /> },
+                          { value: 'play-store', label: 'play-store', icon: <SiGoogleplayIcon className="h-3.5 w-3.5" /> },
+                          { value: CUSTOM_OPTION, label: 'Custom' },
+                        ]
+                        return (
+                          <div className="space-y-2">
+                            <IconSelect
+                              value={currentSelectValue}
+                              onChange={(next) =>
+                                setProjects((cur) =>
+                                  cur.map((x, i) => {
+                                    if (i !== idx) return x
+                                    return {
+                                      ...x,
+                                      links: (x.links ?? []).map((lx, li) => {
+                                        if (li !== linkIdx) return lx
+                                        if (next === CUSTOM_OPTION) {
+                                          const keepCustom = PROJECT_LINK_LABEL_OPTIONS.includes(
+                                            lx.label as (typeof PROJECT_LINK_LABEL_OPTIONS)[number],
+                                          )
+                                            ? ''
+                                            : lx.label
+                                          return { ...lx, label: keepCustom }
+                                        }
+                                        if (!next) return { ...lx, label: '' }
+                                        return { ...lx, label: next }
+                                      }),
+                                    }
+                                  }),
+                                )
+                              }
+                              options={options}
+                              placeholder="Select label..."
+                              ariaLabel="Project link label"
+                            />
+                            {currentSelectValue === CUSTOM_OPTION ? (
+                              <input
+                                value={link.label}
+                                onChange={(ev) =>
+                                  setProjects((cur) =>
+                                    cur.map((x, i) =>
+                                      i === idx
+                                        ? {
+                                            ...x,
+                                            links: (x.links ?? []).map((lx, li) => (li === linkIdx ? { ...lx, label: ev.target.value } : lx)),
+                                          }
+                                        : x,
+                                    ),
+                                  )
+                                }
+                                className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                                placeholder="Custom label"
+                              />
+                            ) : null}
+                          </div>
+                        )
+                      })()}
                       <input
                         value={link.url}
                         onChange={(ev) =>

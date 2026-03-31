@@ -64,16 +64,35 @@ export function parseBasicsHeadline(headline: string | undefined | null): { role
   return { role: parts[0]!, chip: parts.slice(1).join(' · ') }
 }
 
-export function inferLinkKind(link: LinkLike): 'github' | 'linkedin' | 'other' {
+export function inferLinkKind(link: LinkLike):
+  | 'github'
+  | 'linkedin'
+  | 'youtube'
+  | 'email'
+  | 'x'
+  | 'mastodon'
+  | 'web'
+  | 'other' {
   const label = (link.label ?? '').toLowerCase()
   if (label.includes('github')) return 'github'
   if (label.includes('linkedin')) return 'linkedin'
+  if (label.includes('youtube')) return 'youtube'
+  if (label.includes('mail') || label.includes('email')) return 'email'
+  if (label.includes('twitter') || label === 'x' || label.includes('/x')) return 'x'
+  if (label.includes('mastodon')) return 'mastodon'
+  if (label.includes('website') || label.includes('portfolio') || label.includes('blog')) return 'web'
 
   try {
     if (link.url == null || String(link.url).trim() === '') return 'other'
-    const host = new URL(String(link.url)).hostname.toLowerCase()
+    const url = String(link.url).trim()
+    if (url.toLowerCase().startsWith('mailto:')) return 'email'
+    const host = new URL(url).hostname.toLowerCase()
     if (host === 'github.com' || host.endsWith('.github.com')) return 'github'
     if (host === 'linkedin.com' || host.endsWith('.linkedin.com')) return 'linkedin'
+    if (host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be') return 'youtube'
+    if (host === 'x.com' || host.endsWith('.x.com') || host === 'twitter.com' || host.endsWith('.twitter.com')) return 'x'
+    if (host === 'mastodon.social' || host.endsWith('.mastodon.social')) return 'mastodon'
+    if (host) return 'web'
   } catch {
     // ignore invalid URLs
   }
@@ -84,9 +103,30 @@ export function inferLinkKind(link: LinkLike): 'github' | 'linkedin' | 'other' {
 /**
  * Project links with labels `github` or `web` (case-insensitive) render as icons next to the project name.
  */
-export function inferProjectLinkLabelKind(link: LinkLike): 'github' | 'web' | 'other' {
+export function inferProjectLinkLabelKind(link: LinkLike):
+  | 'github'
+  | 'gitlab'
+  | 'demo'
+  | 'docs'
+  | 'video'
+  | 'case-study'
+  | 'npm'
+  | 'pypi'
+  | 'app-store'
+  | 'play-store'
+  | 'web'
+  | 'other' {
   const label = (link.label ?? '').trim().toLowerCase()
   if (label === 'github') return 'github'
+  if (label === 'gitlab') return 'gitlab'
+  if (label === 'demo') return 'demo'
+  if (label === 'docs') return 'docs'
+  if (label === 'video') return 'video'
+  if (label === 'case-study') return 'case-study'
+  if (label === 'npm') return 'npm'
+  if (label === 'pypi') return 'pypi'
+  if (label === 'app-store') return 'app-store'
+  if (label === 'play-store') return 'play-store'
   if (label === 'web') return 'web'
   return 'other'
 }

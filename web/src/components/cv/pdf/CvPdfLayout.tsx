@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import { AtSign, Calendar, Globe, Mail, MapPin, Sparkles } from 'lucide-react'
+import { AtSign, BookOpenText, Calendar, FlaskConical, Globe, Mail, MapPin, ScanSearch, Sparkles } from 'lucide-react'
 import type { CvCredentialIssuer, CvData, CvEducation } from '../../../types/cv'
 import {
   buildPhotoSrc,
@@ -11,7 +11,18 @@ import {
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../../../lib/pdfCaptureLayout'
 import { highlightChildKey, stableEducationKey, stableExperienceKey } from '../../../lib/cvKeys'
 import { useI18n } from '../../../lib/i18n'
-import { SiGithubIcon, SiLinkedinIcon } from '../../icons/SimpleBrandIcons'
+import {
+  SiAppstoreIcon,
+  SiGithubIcon,
+  SiGitlabIcon,
+  SiGoogleplayIcon,
+  SiLinkedinIcon,
+  SiMastodonIcon,
+  SiNpmIcon,
+  SiPypiIcon,
+  SiXIcon,
+  SiYoutubeIcon,
+} from '../../icons/SimpleBrandIcons'
 import { CredentialIssuerIcon } from '../CredentialIssuerIcon'
 
 const credentialIssuerOrder: CvCredentialIssuer[] = ['microsoft', 'aws', 'google', 'school', 'language', 'other']
@@ -143,7 +154,20 @@ export const CvPdfLayout = forwardRef<
                 ) : null}
                 {visibleLinks.map((l) => {
                   const kind = inferLinkKind(l)
-                  const Icon = kind === 'github' ? SiGithubIcon : kind === 'linkedin' ? SiLinkedinIcon : Globe
+                  const Icon =
+                    kind === 'github'
+                      ? SiGithubIcon
+                      : kind === 'linkedin'
+                        ? SiLinkedinIcon
+                        : kind === 'youtube'
+                          ? SiYoutubeIcon
+                          : kind === 'email'
+                            ? AtSign
+                            : kind === 'x'
+                              ? SiXIcon
+                              : kind === 'mastodon'
+                                ? SiMastodonIcon
+                                : Globe
                   return (
                     <div key={`${l.label}:${l.url}`} className={pdfIconRowClass} data-pdf-page-break="">
                       <Icon className={pdfLinkIconClass} aria-hidden="true" />
@@ -380,7 +404,28 @@ export const CvPdfLayout = forwardRef<
                       <div className="mt-2 space-y-2">
                         {projectLinks.map((l) => {
                           const kind = inferProjectLinkLabelKind(l)
-                          const Icon = kind === 'github' ? SiGithubIcon : Globe
+                          const Icon =
+                            kind === 'github'
+                              ? SiGithubIcon
+                              : kind === 'gitlab'
+                                ? SiGitlabIcon
+                              : kind === 'docs'
+                                ? BookOpenText
+                                : kind === 'video'
+                                  ? SiYoutubeIcon
+                                  : kind === 'demo'
+                                    ? FlaskConical
+                                    : kind === 'case-study'
+                                      ? ScanSearch
+                                      : kind === 'npm'
+                                        ? SiNpmIcon
+                                        : kind === 'pypi'
+                                          ? SiPypiIcon
+                                      : kind === 'app-store' || kind === 'play-store'
+                                        ? kind === 'app-store'
+                                          ? SiAppstoreIcon
+                                          : SiGoogleplayIcon
+                                        : Globe
                           return (
                             <div key={`${p.name}:${l.url}`} className={pdfIconRowClass}>
                               <Icon className={pdfLinkIconClass} aria-hidden="true" />
