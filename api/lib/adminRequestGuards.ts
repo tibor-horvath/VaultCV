@@ -52,7 +52,6 @@ export function requireSameOriginMutation(
 
   if (allowed.length === 0) return { ok: false, status: 500, error: 'Unable to determine expected origin.' }
   if (!allowed.includes(candidate.origin)) return { ok: false, status: 403, error: 'Cross-site request blocked.' }
-  }
   return { ok: true }
 }
 

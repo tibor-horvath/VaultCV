@@ -373,7 +373,7 @@ export function AdminEditorRoute() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-3 py-10 sm:px-0">
+    <div className="w-full space-y-6 py-10">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="text-lg font-semibold text-slate-900 dark:text-white">
