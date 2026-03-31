@@ -8,7 +8,7 @@ VaultCV is a privacy-first CV/resume web app with two packages:
 - `web/` — React 19 SPA (Vite 8, Tailwind CSS 3, TypeScript)
 - `api/` — Azure Functions v4 backend (TypeScript, esbuild)
 
-Both use **npm** as the package manager. Node.js 20.19+ is required (Node.js 22 is used in CI and recommended).
+Both use **npm** as the package manager. Node.js **20.19+** is required locally; CI runs on Node.js **22** (recommended).
 
 ### Quick reference
 
@@ -20,6 +20,7 @@ Both use **npm** as the package manager. Node.js 20.19+ is required (Node.js 22 
 | Web tests | `cd web && npm run test` |
 | API tests | `cd api && npm run test` |
 | All tests | `npm test` (from root) |
+| Sync SWA config manually | `npm run sync:swa-config` (from root) |
 | Web build | `cd web && npm run build` |
 | API build | `cd api && npm run build` |
 
@@ -38,6 +39,6 @@ The API requires Azure Functions Core Tools v4 (`func` CLI) to run locally. It a
 
 ### Gotchas
 
-- ESLint has 6 pre-existing errors (mostly `@typescript-eslint/no-explicit-any`) in the admin routes. These are not introduced by new changes.
+- The web lint output currently includes some pre-existing issues in admin-related routes. Treat those as baseline unless your change touches them.
 - The web app calls `/api/...` as same-origin relative URLs. Without SWA CLI or a proxy, the API won't be reachable from the Vite dev server — use mock mode for UI-only work.
 - `web/.env.local` is gitignored and must be created manually in each new environment.

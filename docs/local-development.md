@@ -1,6 +1,6 @@
 # Local development
 
-> **What you need installed:** [Node.js 20+](https://nodejs.org/) (includes `npm`). Confirm with `node -v` in a terminal. You don't need Azure tools just to run the site locally.
+> **What you need installed:** [Node.js 20.19+](https://nodejs.org/) (includes `npm`). CI runs on Node.js 22, which is also recommended locally. Confirm with `node -v` in a terminal. You don't need Azure tools just to run the site locally.
 
 ## Web only
 
@@ -12,10 +12,11 @@ To develop the CV UI without calling the API, enable mock mode in a local-only e
 
 - Copy `web/.env.local.example` to `web/.env.local`
 - Keep `VITE_USE_MOCK_CV=1`
+- Optional: copy `web/.env.example` instead if you also want local branding/public text variables pre-filled.
 
 ```bash
 cd web
-npm install   # downloads dependencies (only needed once)
+npm ci        # installs from lockfile (use `npm install` only when updating deps)
 npm run dev   # starts a local dev server at http://localhost:5173
 ```
 
@@ -30,7 +31,7 @@ Run this if you want to test the server-side token and CV data locally.
 
 ```bash
 cd api
-npm install
+npm ci
 npm run build
 func start
 ```

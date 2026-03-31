@@ -10,7 +10,7 @@ Before deploying, make sure you have:
 - **A GitHub account** — Azure SWA deploys from GitHub automatically via GitHub Actions (a built-in CI/CD pipeline). [Sign up free](https://github.com/join).
 - **This repository on GitHub** — Either fork it or push your own copy. If you're new to this, see [GitHub's guide to creating a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
 - **Azure CLI** *(optional)* — Only needed if you prefer the command-line approach (Option B below). [Install guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
-- **Node.js 20+** *(local only)* — The build runs in GitHub Actions in the cloud, so you only need this if you want to test locally first.
+- **Node.js 20.19+** *(local only; Node.js 22 recommended)* — The build runs in GitHub Actions in the cloud (Node.js 22), so you only need local Node if you want to test before pushing.
 
 ## Step 1 — Fork or push the repo to GitHub
 

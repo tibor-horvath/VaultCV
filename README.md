@@ -21,10 +21,39 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 | CV JSON schema | [docs/cv-json-schema.md](docs/cv-json-schema.md) |
 | Local development | [docs/local-development.md](docs/local-development.md) |
 | Deployment (Azure Static Web Apps) | [docs/deployment-azure.md](docs/deployment-azure.md) |
+| Admin mode (Entra roles, profile management) | [docs/admin.md](docs/admin.md) |
 | Shareable links, QR, API auth flow | [docs/qr-code-url-format.md](docs/qr-code-url-format.md) |
 | Access code rotation (~6 months) | [docs/access-code-rotation.md](docs/access-code-rotation.md) |
 | Mock CV for local UI testing | [docs/mock-data.md](docs/mock-data.md) |
 | PDF export (basics card; html2canvas + jsPDF) | [docs/pdf-export.md](docs/pdf-export.md) |
+| Contributing guide | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| License | [LICENSE](LICENSE) |
+
+## Developer quickstart
+
+Node.js **20.19+** is required locally (Node.js 22 is recommended and used in CI).
+
+```bash
+# from repo root
+npm ci
+cd web && npm ci
+cd ../api && npm ci
+```
+
+```bash
+# run web UI (mock mode optional)
+cd web
+cp .env.local.example .env.local
+npm run dev
+```
+
+```bash
+# tests
+npm test            # from repo root (web + api)
+cd web && npm run lint
+```
+
+For UI-only work without Azure/Functions, set `VITE_USE_MOCK_CV=1` in `web/.env.local`.
 
 ## Customize branding (optional)
 
