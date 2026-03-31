@@ -28,6 +28,12 @@ Primary admin API endpoints:
 
 In the Azure Portal, open your Static Web App resource → **Role assignments** and assign yourself the `admin` role.
 
+## Profile slug (important)
+
+The admin editor reads/writes profile JSON blobs using the server-side app setting **`CV_PROFILE_SLUG`** (the same slug used by the public `/api/public-profile` and `/api/cv` endpoints).
+
+If `CV_PROFILE_SLUG` is missing, the admin profile endpoints return an error.
+
 ## Share links
 
 The admin page creates links like:

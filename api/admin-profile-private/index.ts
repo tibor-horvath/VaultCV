@@ -34,6 +34,10 @@ function jsonResponse(status: number, body: unknown) {
   }
 }
 
+function readServerConfiguredProfileSlug() {
+  return (process.env.CV_PROFILE_SLUG ?? '').trim()
+}
+
 export default async function (context: Context, req: HttpRequest) {
   try {
     const auth = requireAdmin(req.headers)
@@ -48,7 +52,11 @@ export default async function (context: Context, req: HttpRequest) {
       context.res = jsonResponse(400, { error: 'Unsupported locale.' })
       return
     }
-    const slugFromName = (req.query?.slug ?? '').trim()
+    const slugFromName = readServerConfiguredProfileSlug()
+    if (!slugFromName) {
+      context.res = jsonResponse(500, { error: 'CV_PROFILE_SLUG is not configured.' })
+      return
+    }
 
     const method = (req.method ?? '').toUpperCase()
     if (method === 'GET') {

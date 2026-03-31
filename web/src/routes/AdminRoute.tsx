@@ -64,6 +64,11 @@ async function readJsonOrNull<T>(res: Response): Promise<T | null> {
   }
 }
 
+function toErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && typeof error.message === 'string' && error.message.trim()) return error.message
+  return fallback
+}
+
 function epochToIso(epoch: number | undefined) {
   if (!epoch || !Number.isFinite(epoch) || epoch <= 0) return ''
   return new Date(epoch * 1000).toISOString().slice(0, 10)
@@ -113,8 +118,8 @@ export function AdminRoute() {
         throw new Error(body?.error || `Request failed (${res.status})`)
       }
       setLinks(body?.links ?? [])
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed loading share links.')
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Failed loading share links.'))
     } finally {
       setLoading(false)
     }
@@ -124,7 +129,6 @@ export function AdminRoute() {
     if (!meLoading && isAdmin) {
       refresh()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meLoading, isAdmin])
 
   async function createLink(form: HTMLFormElement) {
@@ -151,8 +155,8 @@ export function AdminRoute() {
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
       form.reset()
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed creating share link.')
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Failed creating share link.'))
     } finally {
       setLoading(false)
     }
@@ -174,8 +178,8 @@ export function AdminRoute() {
       const body = await readJsonOrNull<{ ok?: boolean; error?: string }>(res)
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed revoking share link.')
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Failed revoking share link.'))
     } finally {
       setLoading(false)
     }

@@ -32,7 +32,6 @@ import {
   asStringArray,
   readJsonResponse,
   safeJsonParse,
-  safeSlugFromName,
   stringArrayToTextAreaLines,
   textAreaLinesToStringArray,
 } from './adminEditor/utils'
@@ -55,6 +54,11 @@ async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   } catch {
     return null
   }
+}
+
+function toErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && typeof error.message === 'string' && error.message.trim()) return error.message
+  return fallback
 }
 
 export function AdminEditorRoute() {
@@ -162,10 +166,8 @@ export function AdminEditorRoute() {
     setLoading(true)
     setError(null)
     try {
-      const slug = safeSlugFromName(basicsName)
       const qs = new URLSearchParams()
       if (locale) qs.set('locale', locale)
-      if (slug) qs.set('slug', slug)
 
       const privateRes = await fetch(`/api/manage/profile/private?${qs.toString()}`, { credentials: 'same-origin' })
       const publicRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, { credentials: 'same-origin' })
@@ -434,8 +436,8 @@ export function AdminEditorRoute() {
           }
         }),
       )
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed loading profile.')
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Failed loading profile.'))
     } finally {
       setLoading(false)
     }
@@ -621,8 +623,8 @@ export function AdminEditorRoute() {
       if (!publicPut.ok) return
 
       await load()
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed saving profile.')
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Failed saving profile.'))
     } finally {
       setLoading(false)
     }

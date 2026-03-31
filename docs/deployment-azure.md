@@ -91,7 +91,7 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | `CV_SESSION_SIGNING_KEY` | Required signing secret for short-lived session tokens. Use a different random value than `CV_ACCESS_TOKEN` (do not reuse). |
 | `CV_SESSION_TTL_SECONDS` | Optional session token lifetime in seconds. Default: `3600` (1 hour). Allowed range: `60` to `86400`. |
 | `SUPPORTED_LOCALES` | Optional comma-separated locale list exposed by `/api/locales` and used by the frontend selector (example: `en` or `en,hu,de`). Fallback: `en`. |
-| `CV_PROFILE_SLUG` | Required slug used in blob filenames (for example `john-doe`). |
+| `CV_PROFILE_SLUG` | Required slug used in blob filenames (for example `john-doe`). This is the **primary** identifier for your profile across the public site and the admin editor. |
 | `CV_PROFILE_STORAGE_CONNECTION_STRING` | Required Azure Storage connection string (or use `AZURE_STORAGE_CONNECTION_STRING`). |
 | `CV_PROFILE_CONTAINER` | Required container name that holds your profile JSON blobs. |
 | `CV_ALLOWED_ORIGINS` | Optional comma-separated origin allowlist for admin mutations (used by CSRF guard). Recommended when you have multiple domains (e.g. apex + `www`). |
@@ -104,6 +104,8 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 >
 > - `{CV_PROFILE_SLUG}-private-profile-{locale}.json`
 > - `{CV_PROFILE_SLUG}-public-profile-{locale}.json`
+>
+> The admin editor endpoints (`/api/manage/profile/*`) also use `CV_PROFILE_SLUG`.
 >
 > You can set values via Azure CLI:
 > ```bash
