@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ExternalLink, KeyRound, LoaderCircle, Save, Shield } from 'lucide-react'
+import { redirectToLogin } from '../lib/authRedirect'
 
 type ClientPrincipal = {
   userDetails?: string
@@ -68,6 +69,7 @@ export function AdminEditorRoute() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [raw, setRaw] = useState<Record<string, unknown> | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   // Hand-crafted form state (covers the full schema by section).
   const [basicsName, setBasicsName] = useState('')
@@ -128,12 +130,24 @@ export function AdminEditorRoute() {
     }
   }, [])
 
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)')
+    const update = () => setIsMobile(query.matches)
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
+
   async function load() {
     if (!profileKind) return
     setLoading(true)
     setError(null)
     try {
       const res = await fetch(`/api/admin/profile/${profileKind}`, { credentials: 'same-origin' })
+      if (res.status === 401) {
+        redirectToLogin(`/admin/editor/${profileKind}`)
+        return
+      }
       const body = (await res.json()) as { json?: string; error?: string }
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       const jsonText = body.json ?? ''
@@ -284,6 +298,10 @@ export function AdminEditorRoute() {
         credentials: 'same-origin',
         body: JSON.stringify({ json }),
       })
+      if (res.status === 401) {
+        redirectToLogin(`/admin/editor/${profileKind}`)
+        return
+      }
       const body = (await res.json()) as { ok?: boolean; error?: string }
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       await load()
@@ -355,8 +373,8 @@ export function AdminEditorRoute() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 py-10">
-      <div className="flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-5xl space-y-6 px-3 py-10 sm:px-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="text-lg font-semibold text-slate-900 dark:text-white">
             Editor: {profileKind === 'public' ? 'Public profile' : 'Private CV'}
@@ -365,7 +383,7 @@ export function AdminEditorRoute() {
             This writes JSON to Blob Storage via <span className="font-mono">/api/admin/profile/{profileKind}</span>.
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
           <Link className="text-xs font-medium text-slate-600 underline dark:text-slate-300" to="/admin">
             Back to admin
           </Link>
@@ -373,7 +391,7 @@ export function AdminEditorRoute() {
             type="button"
             disabled={loading}
             onClick={() => void save()}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 sm:w-auto dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
             <Save className="h-4 w-4" /> Save
           </button>
@@ -403,7 +421,9 @@ export function AdminEditorRoute() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Basics</div>
+          <div className="sticky top-0 z-10 -mx-5 border-b border-slate-200/70 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-white md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
+            Basics
+          </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
               Name
@@ -466,7 +486,9 @@ export function AdminEditorRoute() {
         </section>
 
         <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Skills & languages</div>
+          <div className="sticky top-0 z-10 -mx-5 border-b border-slate-200/70 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-white md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
+            Skills & languages
+          </div>
           <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Skills (one per line)
             <textarea
@@ -489,7 +511,7 @@ export function AdminEditorRoute() {
       </div>
 
       <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white">Links</div>
           <button
             type="button"
@@ -501,28 +523,34 @@ export function AdminEditorRoute() {
         </div>
         <div className="space-y-2">
           {links.map((l, idx) => (
-            <div key={idx} className="grid grid-cols-1 gap-2 md:grid-cols-3">
-              <input
-                value={l.label}
-                onChange={(e) =>
-                  setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))
-                }
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                placeholder="Label"
-              />
-              <input
-                value={l.url}
-                onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                placeholder="https://..."
-              />
-            </div>
+            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
+                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
+                Link {idx + 1}: {(l.label || l.url || 'Untitled').slice(0, 60)}
+              </summary>
+              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-3">
+                <input
+                  value={l.label}
+                  onChange={(e) =>
+                    setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))
+                  }
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="Label"
+                />
+                <input
+                  value={l.url}
+                  onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
+                  placeholder="https://..."
+                />
+              </div>
+            </details>
           ))}
         </div>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white">Credentials</div>
           <button
             type="button"
@@ -534,40 +562,46 @@ export function AdminEditorRoute() {
         </div>
         <div className="space-y-2">
           {credentials.map((c, idx) => (
-            <div key={idx} className="grid grid-cols-1 gap-2 md:grid-cols-6">
-              <input
-                value={c.issuer}
-                onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: e.target.value } : x)))}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                placeholder="issuer"
-              />
-              <input
-                value={c.label}
-                onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                placeholder="label"
-              />
-              <input
-                value={c.url}
-                onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                placeholder="https://..."
-              />
-              <input
-                value={c.dateEarned ?? ''}
-                onChange={(e) =>
-                  setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, dateEarned: e.target.value || undefined } : x)))
-                }
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                placeholder="earned (YYYY-MM)"
-              />
-            </div>
+            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
+                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
+                Credential {idx + 1}: {(c.label || c.issuer || 'Untitled').slice(0, 60)}
+              </summary>
+              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-6">
+                <input
+                  value={c.issuer}
+                  onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: e.target.value } : x)))}
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="issuer"
+                />
+                <input
+                  value={c.label}
+                  onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
+                  placeholder="label"
+                />
+                <input
+                  value={c.url}
+                  onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
+                  placeholder="https://..."
+                />
+                <input
+                  value={c.dateEarned ?? ''}
+                  onChange={(e) =>
+                    setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, dateEarned: e.target.value || undefined } : x)))
+                  }
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="earned (YYYY-MM)"
+                />
+              </div>
+            </details>
           ))}
         </div>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white">Experience</div>
           <button
             type="button"
@@ -584,8 +618,12 @@ export function AdminEditorRoute() {
         </div>
         <div className="space-y-4">
           {experience.map((e, idx) => (
-            <div key={idx} className="rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
+              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
+                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
+                Experience {idx + 1}: {(e.company || e.role || 'Untitled').slice(0, 60)}
+              </summary>
+              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-2">
                 <input
                   value={e.company}
                   onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, company: ev.target.value } : x)))}
@@ -643,13 +681,13 @@ export function AdminEditorRoute() {
                   />
                 </label>
               </div>
-            </div>
+            </details>
           ))}
         </div>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white">Education</div>
           <button
             type="button"
@@ -661,28 +699,34 @@ export function AdminEditorRoute() {
         </div>
         <div className="space-y-2">
           {education.map((e, idx) => (
-            <div key={idx} className="grid grid-cols-1 gap-2 md:grid-cols-3">
-              <input
-                value={e.school}
-                onChange={(ev) => setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: ev.target.value } : x)))}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                placeholder="School"
-              />
-              <input
-                value={e.program ?? ''}
-                onChange={(ev) =>
-                  setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, program: ev.target.value || undefined } : x)))
-                }
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                placeholder="Program"
-              />
-            </div>
+            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
+                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
+                Education {idx + 1}: {(e.school || e.program || 'Untitled').slice(0, 60)}
+              </summary>
+              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-3">
+                <input
+                  value={e.school}
+                  onChange={(ev) => setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: ev.target.value } : x)))}
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="School"
+                />
+                <input
+                  value={e.program ?? ''}
+                  onChange={(ev) =>
+                    setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, program: ev.target.value || undefined } : x)))
+                  }
+                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
+                  placeholder="Program"
+                />
+              </div>
+            </details>
           ))}
         </div>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white">Projects</div>
           <button
             type="button"
@@ -694,8 +738,12 @@ export function AdminEditorRoute() {
         </div>
         <div className="space-y-4">
           {projects.map((p, idx) => (
-            <div key={idx} className="rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
+              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
+                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
+                Project {idx + 1}: {(p.name || 'Untitled').slice(0, 60)}
+              </summary>
+              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-2">
                 <input
                   value={p.name}
                   onChange={(ev) => setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, name: ev.target.value } : x)))}
@@ -727,7 +775,7 @@ export function AdminEditorRoute() {
                   />
                 </label>
               </div>
-            </div>
+            </details>
           ))}
         </div>
       </section>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ExternalLink, KeyRound, Link2, LoaderCircle, Pencil, Shield, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { redirectToLogin } from '../lib/authRedirect'
 import { useI18n } from '../lib/i18n'
 
 type ClientPrincipal = {
@@ -77,6 +78,10 @@ export function AdminRoute() {
     setError(null)
     try {
       const res = await fetch('/api/admin/share-links', { credentials: 'same-origin' })
+      if (res.status === 401) {
+        redirectToLogin('/admin')
+        return
+      }
       const body = await readJsonOrNull<{ links?: ShareLink[]; error?: string }>(res)
       if (!res.ok) {
         const hint =
@@ -120,6 +125,10 @@ export function AdminRoute() {
           expiresInDays: Number.isFinite(expiresInDays) ? expiresInDays : 30,
         }),
       })
+      if (res.status === 401) {
+        redirectToLogin('/admin')
+        return
+      }
       const body = await readJsonOrNull<{ id?: string; error?: string }>(res)
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
@@ -140,6 +149,10 @@ export function AdminRoute() {
         headers: { accept: 'application/json' },
         credentials: 'same-origin',
       })
+      if (res.status === 401) {
+        redirectToLogin('/admin')
+        return
+      }
       const body = await readJsonOrNull<{ ok?: boolean; error?: string }>(res)
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
@@ -239,13 +252,13 @@ export function AdminRoute() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 py-10">
-      <div className="flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-5xl space-y-6 px-3 py-10 sm:px-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-slate-900 dark:text-white">
           <Shield className="h-5 w-5" />
           <div className="text-lg font-semibold">Admin</div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
           {localeOptions.length > 1 ? (
             <label className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
               Share language
@@ -290,7 +303,9 @@ export function AdminRoute() {
       ) : null}
 
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="text-sm font-semibold text-slate-900 dark:text-white">Create share link</div>
+        <div className="sticky top-0 z-10 -mx-5 border-b border-slate-200/70 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-white md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
+          Create share link
+        </div>
         <form
           className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"
           onSubmit={(e) => {
@@ -348,7 +363,7 @@ export function AdminRoute() {
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="flex items-center justify-between gap-3">
+        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between gap-3 border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white">Share links</div>
           {loading ? (
             <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
@@ -357,8 +372,61 @@ export function AdminRoute() {
           ) : null}
         </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[52rem] text-left text-xs">
+        <div className="mt-4 space-y-3 md:hidden">
+          {links.map((l) => {
+            const isRevoked = Boolean(l.revokedAtEpoch)
+            const shareUrlBase = `${window.location.origin}/?s=${encodeURIComponent(l.rowKey)}`
+            const shareUrl = shareLang ? `${shareUrlBase}&lang=${encodeURIComponent(shareLang)}` : shareUrlBase
+            return (
+              <div key={l.rowKey} className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-semibold">{l.label}</div>
+                    {isRevoked ? <div className="text-[11px] text-red-700 dark:text-red-300">Revoked</div> : null}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">Expires: {epochToIso(l.expiresAtEpoch)}</div>
+                </div>
+                <div className="mt-2 text-[11px] text-slate-600 dark:text-slate-300">Shared with: {l.sharedWith ?? '-'}</div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">
+                  Views: {l.viewCount ?? 0} ({epochToIso(l.lastViewedAtEpoch) || 'never'})
+                </div>
+                <a className="mt-2 inline-block break-all font-mono text-[11px] underline" href={shareUrl} target="_blank" rel="noreferrer">
+                  /?s={l.rowKey}
+                </a>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-900/60"
+                    onClick={() => void navigator.clipboard.writeText(shareUrl)}
+                  >
+                    Copy
+                  </button>
+                  <a
+                    className="rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
+                    href={shareUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open <ExternalLink className="inline h-3.5 w-3.5" />
+                  </a>
+                  <button
+                    type="button"
+                    disabled={loading || isRevoked}
+                    className="inline-flex items-center gap-1 rounded-lg border border-red-300/70 px-2 py-1 text-[11px] text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-900/60 dark:text-red-200 dark:hover:bg-red-950/40"
+                    onClick={() => void revoke(l.rowKey)}
+                    title="Revoke"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Revoke
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+          {links.length === 0 ? <div className="py-2 text-sm text-slate-500 dark:text-slate-400">No links yet.</div> : null}
+        </div>
+
+        <div className="mt-4 hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[44rem] text-left text-xs">
             <thead className="text-slate-500 dark:text-slate-400">
               <tr className="border-b border-slate-200/70 dark:border-slate-800">
                 <th className="py-2 pr-3">Label</th>
