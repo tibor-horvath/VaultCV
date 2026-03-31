@@ -10,7 +10,7 @@ import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
-import { exchangeAccessCode, fetchCv } from '../lib/api'
+import { fetchCv } from '../lib/api'
 
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -92,27 +92,11 @@ export function LandingRoute() {
   useEffect(() => {
     const trimmed = initialUrlAccess
     if (!trimmed) return
-    let cancelled = false
-    ;(async () => {
-      const res = await exchangeAccessCode(trimmed)
-      if (cancelled) return
-      if (res.ok) {
-        setStoredAccessCode(trimmed)
-        openCv()
-        return
-      }
-      setUrlTokenValidating(false)
-      setTokenInput(trimmed)
-      setUrlTokenInvalid(true)
-      const next = new URLSearchParams(window.location.search)
-      next.delete('t')
-      next.delete('s')
-      const qs = next.toString()
-      navigate({ pathname: '/', search: qs ? `?${qs}` : '' }, { replace: true })
-    })()
-    return () => {
-      cancelled = true
-    }
+
+    // IMPORTANT: do not "pre-validate" by calling `/api/auth` here.
+    // `CvRoute` exchanges the token; doing it here too doubles share-link view counts.
+    setStoredAccessCode(trimmed)
+    openCv()
   }, [initialUrlAccess, openCv, navigate])
 
   useEffect(() => {
