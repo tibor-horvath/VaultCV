@@ -2,26 +2,21 @@ import { Save } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { LocaleItem } from './types'
 
-type ProfileKind = 'public' | 'private'
-
 export function AdminEditorHeader(props: {
-  profileKind: ProfileKind
   locale: string
   locales: LocaleItem[]
   setLocale: (locale: string) => void
   loading: boolean
   onSave: () => void
 }) {
-  const { profileKind, locale, locales, setLocale, loading, onSave } = props
+  const { locale, locales, setLocale, loading, onSave } = props
   return (
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <div className="text-lg font-semibold text-slate-900 dark:text-white">
-            Editor: {profileKind === 'public' ? 'Public profile' : 'Private CV'}
-          </div>
+          <div className="text-lg font-semibold text-slate-900 dark:text-white">Profile editor</div>
           <div className="text-xs text-slate-600 dark:text-slate-300">
-            This writes JSON to Blob Storage via <span className="font-mono">/api/manage/profile/{profileKind}</span>.
+            Save writes <span className="font-mono">private</span> (full) and <span className="font-mono">public</span> (filtered) JSON.
           </div>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
@@ -51,29 +46,6 @@ export function AdminEditorHeader(props: {
             <Save className="h-4 w-4" /> Save
           </button>
         </div>
-      </div>
-
-      <div className="flex gap-3 text-xs">
-        <Link
-          to="/admin/editor/public"
-          className={`rounded-lg border px-3 py-1.5 ${
-            profileKind === 'public'
-              ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white'
-              : 'border-slate-300/70 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
-          }`}
-        >
-          Public
-        </Link>
-        <Link
-          to="/admin/editor/private"
-          className={`rounded-lg border px-3 py-1.5 ${
-            profileKind === 'private'
-              ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white'
-              : 'border-slate-300/70 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
-          }`}
-        >
-          Private
-        </Link>
       </div>
     </>
   )

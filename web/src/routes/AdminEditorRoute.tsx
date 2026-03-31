@@ -59,7 +59,7 @@ async function fetchAuthMe(): Promise<ClientPrincipal | null> {
 
 export function AdminEditorRoute() {
   const { kind } = useParams()
-  const profileKind = (kind === 'public' || kind === 'private' ? kind : null) as ProfileKind | null
+  const profileKind = (kind === 'public' || kind === 'private' ? kind : 'private') as ProfileKind
 
   const [me, setMe] = useState<ClientPrincipal | null>(null)
   const [meLoading, setMeLoading] = useState(true)
@@ -159,7 +159,6 @@ export function AdminEditorRoute() {
   }, [])
 
   async function load() {
-    if (!profileKind) return
     setLoading(true)
     setError(null)
     try {
@@ -172,7 +171,7 @@ export function AdminEditorRoute() {
       const publicRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, { credentials: 'same-origin' })
 
       if (privateRes.status === 401 || publicRes.status === 401) {
-        redirectToLogin(`/admin/editor/${profileKind}`)
+        redirectToLogin('/admin/editor/private')
         return
       }
 
@@ -450,7 +449,6 @@ export function AdminEditorRoute() {
   }, [meLoading, isAdmin, profileKind, locale])
 
   async function save() {
-    if (!profileKind) return
     setLoading(true)
     setError(null)
     try {
@@ -607,7 +605,7 @@ export function AdminEditorRoute() {
           body: JSON.stringify({ json }),
         })
         if (res.status === 401) {
-          redirectToLogin(`/admin/editor/${profileKind}`)
+          redirectToLogin('/admin/editor/private')
           return { ok: false as const }
         }
         const bodyResult = await readJsonResponse<{ ok?: boolean; error?: string }>(res)
@@ -630,14 +628,6 @@ export function AdminEditorRoute() {
     }
   }
 
-  if (!profileKind) {
-    return (
-      <div className="w-full space-y-4 py-10 text-sm text-slate-700 dark:text-slate-300">
-        Unknown editor route.
-      </div>
-    )
-  }
-
   if (meLoading) {
     return (
       <div className="w-full space-y-4 py-10">
@@ -657,7 +647,7 @@ export function AdminEditorRoute() {
             <div className="text-lg font-semibold">Admin editor</div>
           </div>
           <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-            Sign in with Entra ID to edit your {profileKind === 'public' ? 'public profile' : 'private CV'}.
+            Sign in with Entra ID to edit your profile.
           </div>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <a
@@ -693,7 +683,6 @@ export function AdminEditorRoute() {
   return (
     <div className="w-full space-y-6 py-10">
       <AdminEditorHeader
-        profileKind={profileKind}
         locale={locale}
         locales={locales}
         setLocale={setLocale}
