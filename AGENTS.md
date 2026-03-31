@@ -38,6 +38,6 @@ The API requires Azure Functions Core Tools v4 (`func` CLI) to run locally. It a
 
 ### Gotchas
 
-- ESLint has 6 pre-existing errors (mostly `@typescript-eslint/no-explicit-any`) in `AdminEditorRoute.tsx`, `AdminRoute.tsx`, and `downloadCvPdf.ts`. These are not introduced by new changes.
+- ESLint has 6 pre-existing errors (mostly `@typescript-eslint/no-explicit-any`) in the admin routes. These are not introduced by new changes.
 - The web app calls `/api/...` as same-origin relative URLs. Without SWA CLI or a proxy, the API won't be reachable from the Vite dev server — use mock mode for UI-only work.
 - `web/.env.local` is gitignored and must be created manually in each new environment.
