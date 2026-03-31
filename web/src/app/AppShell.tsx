@@ -9,7 +9,8 @@ export function AppShell() {
   const { t } = useI18n()
   const { pathname } = useLocation()
   const isPdfExport = pathname === '/cv/pdf'
-  const contentMaxClass = isPdfExport ? 'max-w-6xl' : view === 'landing' ? 'max-w-3xl' : 'max-w-6xl'
+  const isAdmin = pathname === '/admin' || pathname.startsWith('/admin/')
+  const contentMaxClass = isPdfExport ? 'max-w-6xl' : isAdmin ? 'max-w-[96rem]' : view === 'landing' ? 'max-w-3xl' : 'max-w-6xl'
   const currentYear = new Date().getFullYear()
   const brand = getBrand()
 

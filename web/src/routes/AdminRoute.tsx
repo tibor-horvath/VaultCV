@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ExternalLink, KeyRound, Link2, LoaderCircle, Pencil, Shield, Trash2 } from 'lucide-react'
+import {
+  Ban,
+  CheckCircle2,
+  Clock3,
+  ExternalLink,
+  Globe2,
+  KeyRound,
+  Link2,
+  LoaderCircle,
+  LogOut,
+  PlusCircle,
+  RefreshCw,
+  Shield,
+  SquarePen,
+  Trash2,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { redirectToLogin } from '../lib/authRedirect'
 import { useI18n } from '../lib/i18n'
@@ -82,14 +97,19 @@ export function AdminRoute() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [shareLang, setShareLang] = useState<string>('')
-  const [showRevoked, setShowRevoked] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<Array<'active' | 'revoked' | 'expired'>>(['active'])
 
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
   const signedInEmail = useMemo(() => extractEmailFromPrincipal(me), [me])
   const visibleLinks = useMemo(() => {
-    if (showRevoked) return links
-    return links.filter((l) => !l.revokedAtEpoch)
-  }, [links, showRevoked])
+    const nowEpoch = Math.floor(Date.now() / 1000)
+    const classify = (l: ShareLink): 'active' | 'revoked' | 'expired' => {
+      if (l.revokedAtEpoch) return 'revoked'
+      if (l.expiresAtEpoch <= nowEpoch) return 'expired'
+      return 'active'
+    }
+    return links.filter((l) => statusFilter.includes(classify(l)))
+  }, [links, statusFilter])
 
   useEffect(() => {
     let cancelled = false
@@ -290,7 +310,7 @@ export function AdminRoute() {
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
           {localeOptions.length > 1 ? (
             <label className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
-              Share language
+              <Globe2 className="h-3.5 w-3.5 shrink-0" /> Share language
               <select
                 value={shareLang}
                 onChange={(e) => setShareLang(e.target.value)}
@@ -309,18 +329,18 @@ export function AdminRoute() {
             to="/admin/editor/private"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
-            <Pencil className="h-3.5 w-3.5" /> Edit CV
+            <SquarePen className="h-3.5 w-3.5 shrink-0" /> Edit CV
           </Link>
           <button
             type="button"
             disabled={loading}
             onClick={() => refresh()}
-            className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
-            Refresh
+            <RefreshCw className="h-3.5 w-3.5 shrink-0" /> Refresh
           </button>
-          <a className="text-xs font-medium text-slate-600 underline dark:text-slate-300" href="/.auth/logout">
-            Sign out
+          <a className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 underline dark:text-slate-300" href="/.auth/logout">
+            <LogOut className="h-3.5 w-3.5 shrink-0" /> Sign out
           </a>
         </div>
       </div>
@@ -333,7 +353,9 @@ export function AdminRoute() {
 
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
         <div className="sticky top-0 z-10 -mx-5 border-b border-slate-200/70 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-white md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-          Create share link
+          <span className="inline-flex items-center gap-2">
+            <PlusCircle className="h-4 w-4 shrink-0" /> Create share link
+          </span>
         </div>
         <form
           className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"
@@ -376,17 +398,71 @@ export function AdminRoute() {
 
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
         <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between gap-3 border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Share links</div>
-          <div className="flex items-center gap-3">
-            <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={showRevoked}
-                onChange={(e) => setShowRevoked(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border border-slate-300/70 text-slate-900 dark:border-slate-700"
-              />
-              Show revoked
-            </label>
+          <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+            <Link2 className="h-4 w-4 shrink-0" /> Share links
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStatusFilter(['active'])}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                statusFilter.length === 1 && statusFilter[0] === 'active'
+                  ? 'border-sky-400/60 bg-sky-50 text-sky-800 dark:border-sky-500/60 dark:bg-sky-950/40 dark:text-sky-200'
+                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
+              }`}
+            >
+              Only active
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter(['active', 'revoked', 'expired'])}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                statusFilter.includes('active') && statusFilter.includes('revoked') && statusFilter.includes('expired')
+                  ? 'border-sky-400/60 bg-sky-50 text-sky-800 dark:border-sky-500/60 dark:bg-sky-950/40 dark:text-sky-200'
+                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setStatusFilter((cur) => (cur.includes('active') ? cur.filter((x) => x !== 'active') : [...cur, 'active']))
+              }
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                statusFilter.includes('active')
+                  ? 'border-emerald-400/60 bg-emerald-50 text-emerald-800 dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-200'
+                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> Active
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setStatusFilter((cur) => (cur.includes('revoked') ? cur.filter((x) => x !== 'revoked') : [...cur, 'revoked']))
+              }
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                statusFilter.includes('revoked')
+                  ? 'border-red-300/70 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200'
+                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
+              }`}
+            >
+              <Ban className="h-3.5 w-3.5 shrink-0" /> Revoked
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setStatusFilter((cur) => (cur.includes('expired') ? cur.filter((x) => x !== 'expired') : [...cur, 'expired']))
+              }
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                statusFilter.includes('expired')
+                  ? 'border-amber-300/70 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200'
+                  : 'border-slate-300/70 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'
+              }`}
+            >
+              <Clock3 className="h-3.5 w-3.5 shrink-0" /> Expired
+            </button>
             {loading ? (
               <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> Working…
@@ -398,6 +474,7 @@ export function AdminRoute() {
         <div className="mt-4 space-y-3 md:hidden">
           {visibleLinks.map((l) => {
             const isRevoked = Boolean(l.revokedAtEpoch)
+            const isExpired = !isRevoked && l.expiresAtEpoch <= Math.floor(Date.now() / 1000)
             const shareUrlBase = `${window.location.origin}/?s=${encodeURIComponent(l.rowKey)}`
             const shareUrl = shareLang ? `${shareUrlBase}&lang=${encodeURIComponent(shareLang)}` : shareUrlBase
             return (
@@ -406,6 +483,7 @@ export function AdminRoute() {
                   <div>
                     <div className="text-sm font-semibold">Link</div>
                     {isRevoked ? <div className="text-[11px] text-red-700 dark:text-red-300">Revoked</div> : null}
+                    {isExpired ? <div className="text-[11px] text-amber-700 dark:text-amber-300">Expired</div> : null}
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">Expires: {epochToIso(l.expiresAtEpoch)}</div>
                 </div>
@@ -446,7 +524,7 @@ export function AdminRoute() {
           })}
           {visibleLinks.length === 0 ? (
             <div className="py-2 text-sm text-slate-500 dark:text-slate-400">
-              {showRevoked ? 'No links yet.' : 'No active links.'}
+              No links for selected filters.
             </div>
           ) : null}
         </div>
@@ -464,6 +542,7 @@ export function AdminRoute() {
             <tbody className="text-slate-800 dark:text-slate-200">
               {visibleLinks.map((l) => {
                 const isRevoked = Boolean(l.revokedAtEpoch)
+                const isExpired = !isRevoked && l.expiresAtEpoch <= Math.floor(Date.now() / 1000)
                 const shareUrlBase = `${window.location.origin}/?s=${encodeURIComponent(l.rowKey)}`
                 const shareUrl = shareLang ? `${shareUrlBase}&lang=${encodeURIComponent(shareLang)}` : shareUrlBase
                 return (
@@ -478,6 +557,7 @@ export function AdminRoute() {
                         /?s={l.rowKey}
                       </a>
                       {isRevoked ? <div className="mt-0.5 text-[11px] text-red-700 dark:text-red-300">Revoked</div> : null}
+                      {isExpired ? <div className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">Expired</div> : null}
                     </td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
@@ -513,7 +593,7 @@ export function AdminRoute() {
               {visibleLinks.length === 0 ? (
                 <tr>
                   <td className="py-4 text-slate-500 dark:text-slate-400" colSpan={4}>
-                    {showRevoked ? 'No links yet.' : 'No active links.'}
+                    No links for selected filters.
                   </td>
                 </tr>
               ) : null}

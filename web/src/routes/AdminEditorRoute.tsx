@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ExternalLink, KeyRound, LoaderCircle, Shield } from 'lucide-react'
 import { redirectToLogin } from '../lib/authRedirect'
@@ -61,6 +61,66 @@ function toErrorMessage(error: unknown, fallback: string) {
   return fallback
 }
 
+function hasAnyEnabledFlag(flags: Record<string, boolean> | undefined) {
+  if (!flags) return false
+  return Object.values(flags).some(Boolean)
+}
+
+type PublicValidation = {
+  basics: Partial<Record<keyof PublicBasicsFlags, string>>
+  links: string[]
+  credentials: string[]
+  experience: string[]
+  education: string[]
+  projects: string[]
+}
+
+function emptyPublicValidation(): PublicValidation {
+  return {
+    basics: {},
+    links: [],
+    credentials: [],
+    experience: [],
+    education: [],
+    projects: [],
+  }
+}
+
+function hasPublicValidationErrors(validation: PublicValidation) {
+  return (
+    Object.keys(validation.basics).length > 0 ||
+    validation.links.some(Boolean) ||
+    validation.credentials.some(Boolean) ||
+    validation.experience.some(Boolean) ||
+    validation.education.some(Boolean) ||
+    validation.projects.some(Boolean)
+  )
+}
+
+function clearChangedRowErrors<T, U>(params: {
+  previousRows: T[]
+  nextRows: T[]
+  previousFlags: U[]
+  nextFlags: U[]
+  currentErrors: string[]
+}) {
+  const { previousRows, nextRows, previousFlags, nextFlags, currentErrors } = params
+  if (!currentErrors.some(Boolean)) return null
+
+  const max = Math.max(previousRows.length, nextRows.length, previousFlags.length, nextFlags.length, currentErrors.length)
+  let changed = false
+  const nextErrors = [...currentErrors]
+  for (let idx = 0; idx < max; idx += 1) {
+    const rowChanged = previousRows[idx] !== nextRows[idx]
+    const flagsChanged = previousFlags[idx] !== nextFlags[idx]
+    if ((rowChanged || flagsChanged) && nextErrors[idx]) {
+      nextErrors[idx] = ''
+      changed = true
+    }
+  }
+  return changed ? nextErrors : null
+}
+
 export function AdminEditorRoute() {
   const { kind } = useParams()
   const profileKind = (kind === 'public' || kind === 'private' ? kind : 'private') as ProfileKind
@@ -93,6 +153,7 @@ export function AdminEditorRoute() {
   const [experience, setExperience] = useState<ExperienceRow[]>([])
   const [education, setEducation] = useState<EducationRow[]>([])
   const [projects, setProjects] = useState<ProjectRow[]>([])
+  const [publicValidation, setPublicValidation] = useState<PublicValidation>(emptyPublicValidation())
 
   const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
     name: false,
@@ -113,6 +174,27 @@ export function AdminEditorRoute() {
   const [publicExperience, setPublicExperience] = useState<PublicExperienceFlags[]>([])
   const [publicEducation, setPublicEducation] = useState<PublicEducationFlags[]>([])
   const [publicProjects, setPublicProjects] = useState<PublicProjectFlags[]>([])
+
+  const previousBasicsSnapshotRef = useRef({
+    basicsName,
+    basicsHeadline,
+    basicsEmail,
+    basicsMobile,
+    basicsLocation,
+    basicsSummary,
+    basicsPhotoAlt,
+    publicBasics,
+  })
+  const previousLinksRef = useRef(links)
+  const previousPublicLinksRef = useRef(publicLinks)
+  const previousCredentialsRef = useRef(credentials)
+  const previousPublicCredentialsRef = useRef(publicCredentials)
+  const previousExperienceRef = useRef(experience)
+  const previousPublicExperienceRef = useRef(publicExperience)
+  const previousEducationRef = useRef(education)
+  const previousPublicEducationRef = useRef(publicEducation)
+  const previousProjectsRef = useRef(projects)
+  const previousPublicProjectsRef = useRef(publicProjects)
 
   useEffect(() => {
     let cancelled = false
@@ -450,9 +532,136 @@ export function AdminEditorRoute() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meLoading, isAdmin, profileKind, locale])
 
+  useEffect(() => {
+    const prev = previousBasicsSnapshotRef.current
+    setPublicValidation((cur) => {
+      if (Object.keys(cur.basics).length === 0) return cur
+      const nextBasics = { ...cur.basics }
+      let changed = false
+
+      if ((prev.basicsName !== basicsName || prev.publicBasics.name !== publicBasics.name) && nextBasics.name) {
+        delete nextBasics.name
+        changed = true
+      }
+      if ((prev.basicsHeadline !== basicsHeadline || prev.publicBasics.headline !== publicBasics.headline) && nextBasics.headline) {
+        delete nextBasics.headline
+        changed = true
+      }
+      if ((prev.basicsEmail !== basicsEmail || prev.publicBasics.email !== publicBasics.email) && nextBasics.email) {
+        delete nextBasics.email
+        changed = true
+      }
+      if ((prev.basicsMobile !== basicsMobile || prev.publicBasics.mobile !== publicBasics.mobile) && nextBasics.mobile) {
+        delete nextBasics.mobile
+        changed = true
+      }
+      if ((prev.basicsLocation !== basicsLocation || prev.publicBasics.location !== publicBasics.location) && nextBasics.location) {
+        delete nextBasics.location
+        changed = true
+      }
+      if ((prev.basicsSummary !== basicsSummary || prev.publicBasics.summary !== publicBasics.summary) && nextBasics.summary) {
+        delete nextBasics.summary
+        changed = true
+      }
+      if ((prev.basicsPhotoAlt !== basicsPhotoAlt || prev.publicBasics.photoAlt !== publicBasics.photoAlt) && nextBasics.photoAlt) {
+        delete nextBasics.photoAlt
+        changed = true
+      }
+
+      return changed ? { ...cur, basics: nextBasics } : cur
+    })
+
+    previousBasicsSnapshotRef.current = {
+      basicsName,
+      basicsHeadline,
+      basicsEmail,
+      basicsMobile,
+      basicsLocation,
+      basicsSummary,
+      basicsPhotoAlt,
+      publicBasics,
+    }
+  }, [basicsName, basicsHeadline, basicsEmail, basicsMobile, basicsLocation, basicsSummary, basicsPhotoAlt, publicBasics])
+
+  useEffect(() => {
+    setPublicValidation((cur) => {
+      const nextErrors = clearChangedRowErrors({
+        previousRows: previousLinksRef.current,
+        nextRows: links,
+        previousFlags: previousPublicLinksRef.current,
+        nextFlags: publicLinks,
+        currentErrors: cur.links,
+      })
+      return nextErrors ? { ...cur, links: nextErrors } : cur
+    })
+    previousLinksRef.current = links
+    previousPublicLinksRef.current = publicLinks
+  }, [links, publicLinks])
+
+  useEffect(() => {
+    setPublicValidation((cur) => {
+      const nextErrors = clearChangedRowErrors({
+        previousRows: previousCredentialsRef.current,
+        nextRows: credentials,
+        previousFlags: previousPublicCredentialsRef.current,
+        nextFlags: publicCredentials,
+        currentErrors: cur.credentials,
+      })
+      return nextErrors ? { ...cur, credentials: nextErrors } : cur
+    })
+    previousCredentialsRef.current = credentials
+    previousPublicCredentialsRef.current = publicCredentials
+  }, [credentials, publicCredentials])
+
+  useEffect(() => {
+    setPublicValidation((cur) => {
+      const nextErrors = clearChangedRowErrors({
+        previousRows: previousExperienceRef.current,
+        nextRows: experience,
+        previousFlags: previousPublicExperienceRef.current,
+        nextFlags: publicExperience,
+        currentErrors: cur.experience,
+      })
+      return nextErrors ? { ...cur, experience: nextErrors } : cur
+    })
+    previousExperienceRef.current = experience
+    previousPublicExperienceRef.current = publicExperience
+  }, [experience, publicExperience])
+
+  useEffect(() => {
+    setPublicValidation((cur) => {
+      const nextErrors = clearChangedRowErrors({
+        previousRows: previousEducationRef.current,
+        nextRows: education,
+        previousFlags: previousPublicEducationRef.current,
+        nextFlags: publicEducation,
+        currentErrors: cur.education,
+      })
+      return nextErrors ? { ...cur, education: nextErrors } : cur
+    })
+    previousEducationRef.current = education
+    previousPublicEducationRef.current = publicEducation
+  }, [education, publicEducation])
+
+  useEffect(() => {
+    setPublicValidation((cur) => {
+      const nextErrors = clearChangedRowErrors({
+        previousRows: previousProjectsRef.current,
+        nextRows: projects,
+        previousFlags: previousPublicProjectsRef.current,
+        nextFlags: publicProjects,
+        currentErrors: cur.projects,
+      })
+      return nextErrors ? { ...cur, projects: nextErrors } : cur
+    })
+    previousProjectsRef.current = projects
+    previousPublicProjectsRef.current = publicProjects
+  }, [projects, publicProjects])
+
   async function save() {
     setLoading(true)
     setError(null)
+    setPublicValidation(emptyPublicValidation())
     try {
       const next: Record<string, unknown> = { ...(raw ?? {}) }
       next.basics = {
@@ -497,6 +706,103 @@ export function AdminEditorRoute() {
 
       const publicNext: Record<string, unknown> = {}
       const nextBasics = asObject(next.basics)
+      const nextValidation = emptyPublicValidation()
+
+      if (publicBasics.name && !asString(nextBasics.name).trim()) nextValidation.basics.name = 'Name is toggled public but empty.'
+      if (publicBasics.headline && !asString(nextBasics.headline).trim()) nextValidation.basics.headline = 'Headline is toggled public but empty.'
+      if (publicBasics.email && !asString(nextBasics.email).trim()) nextValidation.basics.email = 'Email is toggled public but empty.'
+      if (publicBasics.mobile && !asString(nextBasics.mobile).trim()) nextValidation.basics.mobile = 'Mobile is toggled public but empty.'
+      if (publicBasics.location && !asString(nextBasics.location).trim()) nextValidation.basics.location = 'Location is toggled public but empty.'
+      if (publicBasics.summary && !asString(nextBasics.summary).trim()) nextValidation.basics.summary = 'Summary is toggled public but empty.'
+      if (publicBasics.photoAlt && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photoAlt = 'Photo alt is toggled public but empty.'
+
+      links.forEach((l, idx) => {
+        const flags = publicLinks[idx]
+        if (!hasAnyEnabledFlag(flags)) return
+        const label = (l.label ?? '').trim()
+        const url = (l.url ?? '').trim()
+        if (!flags?.label || !flags?.url || !label || !url) {
+          nextValidation.links[idx] = 'Public link requires label and URL, both toggled on and filled.'
+        }
+      })
+
+      credentials.forEach((c, idx) => {
+        const flags = publicCredentials[idx]
+        if (!hasAnyEnabledFlag(flags)) return
+        const issuer = (c.issuer ?? '').trim()
+        const label = (c.label ?? '').trim()
+        const url = (c.url ?? '').trim()
+        if (!flags?.issuer || !flags?.label || !flags?.url || !issuer || !label || !url) {
+          nextValidation.credentials[idx] = 'Public credential requires issuer, label, and URL, all toggled on and filled.'
+          return
+        }
+        const rowIssues: string[] = []
+        if (flags.dateEarned && !(c.dateEarned ?? '').trim()) rowIssues.push('Date earned is toggled public but empty.')
+        if (flags.dateExpires && !(c.dateExpires ?? '').trim()) rowIssues.push('Date expires is toggled public but empty.')
+        if (rowIssues.length) nextValidation.credentials[idx] = rowIssues.join(' ')
+      })
+
+      experience.forEach((e, idx) => {
+        const flags = publicExperience[idx]
+        if (!hasAnyEnabledFlag(flags)) return
+        const company = (e.company ?? '').trim()
+        const role = (e.role ?? '').trim()
+        const start = (e.start ?? '').trim()
+        if (!flags?.company || !flags?.role || !flags?.start || !company || !role || !start) {
+          nextValidation.experience[idx] = 'Public experience requires company, role, and start, all toggled on and filled.'
+          return
+        }
+        const rowIssues: string[] = []
+        if (flags.companyUrl && !(e.companyUrl ?? '').trim()) rowIssues.push('Company URL is toggled public but empty.')
+        if (flags.companyLinkedInUrl && !(e.companyLinkedInUrl ?? '').trim()) rowIssues.push('Company LinkedIn URL is toggled public but empty.')
+        if (flags.end && !(e.end ?? '').trim()) rowIssues.push('End is toggled public but empty.')
+        if (flags.location && !(e.location ?? '').trim()) rowIssues.push('Location is toggled public but empty.')
+        if (flags.skills && !(e.skills ?? []).length) rowIssues.push('Skills are toggled public but empty.')
+        if (flags.highlights && !(e.highlights ?? []).length) rowIssues.push('Highlights are toggled public but empty.')
+        if (rowIssues.length) nextValidation.experience[idx] = rowIssues.join(' ')
+      })
+
+      education.forEach((e, idx) => {
+        const flags = publicEducation[idx]
+        if (!hasAnyEnabledFlag(flags)) return
+        const school = (e.school ?? '').trim()
+        if (!flags?.school || !school) {
+          nextValidation.education[idx] = 'Public education requires school toggled on and filled.'
+          return
+        }
+        const rowIssues: string[] = []
+        if (flags.schoolUrl && !(e.schoolUrl ?? '').trim()) rowIssues.push('School URL is toggled public but empty.')
+        if (flags.degree && !(e.degree ?? '').trim()) rowIssues.push('Degree is toggled public but empty.')
+        if (flags.field && !(e.field ?? '').trim()) rowIssues.push('Field is toggled public but empty.')
+        if (flags.program && !(e.program ?? '').trim()) rowIssues.push('Program is toggled public but empty.')
+        if (flags.start && !(e.start ?? '').trim()) rowIssues.push('Start is toggled public but empty.')
+        if (flags.end && !(e.end ?? '').trim()) rowIssues.push('End is toggled public but empty.')
+        if (flags.location && !(e.location ?? '').trim()) rowIssues.push('Location is toggled public but empty.')
+        if (flags.gpa && !(e.gpa ?? '').trim()) rowIssues.push('GPA is toggled public but empty.')
+        if (flags.highlights && !(e.highlights ?? []).length) rowIssues.push('Highlights are toggled public but empty.')
+        if (rowIssues.length) nextValidation.education[idx] = rowIssues.join(' ')
+      })
+
+      projects.forEach((p, idx) => {
+        const flags = publicProjects[idx]
+        if (!hasAnyEnabledFlag(flags)) return
+        const name = (p.name ?? '').trim()
+        if (!flags?.name || !name) {
+          nextValidation.projects[idx] = 'Public project requires name toggled on and filled.'
+          return
+        }
+        const rowIssues: string[] = []
+        if (flags.description && !(p.description ?? '').trim()) rowIssues.push('Description is toggled public but empty.')
+        if (flags.tags && !(p.tags ?? []).length) rowIssues.push('Tags are toggled public but empty.')
+        if (rowIssues.length) nextValidation.projects[idx] = rowIssues.join(' ')
+      })
+
+      if (hasPublicValidationErrors(nextValidation)) {
+        setPublicValidation(nextValidation)
+        setError('Fix the highlighted public visibility issues before saving.')
+        return
+      }
+
       const publicBasicsObj: Record<string, unknown> = {}
       if (publicBasics.name) publicBasicsObj.name = asString(nextBasics.name)
       if (publicBasics.headline) publicBasicsObj.headline = asString(nextBasics.headline)
@@ -621,6 +927,7 @@ export function AdminEditorRoute() {
       if (!publicPut.ok) return
 
       await load()
+      setPublicValidation(emptyPublicValidation())
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Failed saving profile.'))
     } finally {
@@ -714,6 +1021,7 @@ export function AdminEditorRoute() {
           setBasicsPhotoAlt={setBasicsPhotoAlt}
           publicBasics={publicBasics}
           setPublicBasics={setPublicBasics}
+          publicBasicsErrors={publicValidation.basics}
         />
 
         <SkillsLanguagesSection
@@ -726,7 +1034,14 @@ export function AdminEditorRoute() {
         />
       </div>
 
-      <LinksSection links={links} setLinks={setLinks} publicLinks={publicLinks} setPublicLinks={setPublicLinks} isMobile={isMobile} />
+      <LinksSection
+        links={links}
+        setLinks={setLinks}
+        publicLinks={publicLinks}
+        setPublicLinks={setPublicLinks}
+        isMobile={isMobile}
+        rowErrors={publicValidation.links}
+      />
 
       <CredentialsSection
         credentials={credentials}
@@ -734,6 +1049,7 @@ export function AdminEditorRoute() {
         publicCredentials={publicCredentials}
         setPublicCredentials={setPublicCredentials}
         isMobile={isMobile}
+        rowErrors={publicValidation.credentials}
       />
 
       <ExperienceSection
@@ -742,6 +1058,7 @@ export function AdminEditorRoute() {
         publicExperience={publicExperience}
         setPublicExperience={setPublicExperience}
         isMobile={isMobile}
+        rowErrors={publicValidation.experience}
       />
 
       <EducationSection
@@ -750,6 +1067,7 @@ export function AdminEditorRoute() {
         publicEducation={publicEducation}
         setPublicEducation={setPublicEducation}
         isMobile={isMobile}
+        rowErrors={publicValidation.education}
       />
 
       <ProjectsSection
@@ -758,6 +1076,7 @@ export function AdminEditorRoute() {
         publicProjects={publicProjects}
         setPublicProjects={setPublicProjects}
         isMobile={isMobile}
+        rowErrors={publicValidation.projects}
       />
     </div>
   )
