@@ -7,10 +7,6 @@
     {
       "route": "/admin/*",
       "allowedRoles": ["admin"]
-    },
-    {
-      "route": "/api/admin/*",
-      "allowedRoles": ["admin"]
     }
   ],
   "platform": {
