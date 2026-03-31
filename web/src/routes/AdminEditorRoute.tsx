@@ -490,10 +490,8 @@ export function AdminEditorRoute() {
           links: (p.links ?? []).filter((l) => l.label.trim() && l.url.trim()),
         }))
 
-      const slug = safeSlugFromName(basicsName)
       const qs = new URLSearchParams()
       if (locale) qs.set('locale', locale)
-      if (slug) qs.set('slug', slug)
 
       const privateJson = JSON.stringify(next, null, 2)
 

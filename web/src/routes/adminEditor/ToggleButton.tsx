@@ -1,7 +1,8 @@
 import { Eye, EyeOff } from 'lucide-react'
 
-export function ToggleButton(props: { pressed: boolean; onClick: () => void; title?: string }) {
+export function ToggleButton(props: { pressed: boolean; onClick: () => void; title?: string; label?: string }) {
   const { pressed, onClick } = props
+  const label = (props.label ?? '').trim()
   return (
     <button
       type="button"
@@ -13,7 +14,9 @@ export function ToggleButton(props: { pressed: boolean; onClick: () => void; tit
       }`}
       title={props.title ?? (pressed ? 'Public' : 'Private')}
     >
-      {pressed ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />} {pressed ? 'Public' : 'Private'}
+      {pressed ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+      {label ? <span className="text-slate-700/80 dark:text-slate-200/80">{label}</span> : null}
+      <span>{pressed ? 'Public' : 'Private'}</span>
     </button>
   )
 }

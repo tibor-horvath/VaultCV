@@ -15,8 +15,13 @@ export function SkillsLanguagesSection(props: {
       <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
         <div className="text-sm font-semibold text-slate-900 dark:text-white">Skills & languages</div>
         <div className="flex items-center gap-2">
-          <ToggleButton pressed={publicSections.skills} onClick={() => setPublicSections((cur) => ({ ...cur, skills: !cur.skills }))} />
           <ToggleButton
+            label="Skills"
+            pressed={publicSections.skills}
+            onClick={() => setPublicSections((cur) => ({ ...cur, skills: !cur.skills }))}
+          />
+          <ToggleButton
+            label="Languages"
             pressed={publicSections.languages}
             onClick={() => setPublicSections((cur) => ({ ...cur, languages: !cur.languages }))}
           />
