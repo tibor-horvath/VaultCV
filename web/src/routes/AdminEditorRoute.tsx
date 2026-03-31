@@ -732,8 +732,8 @@ export function AdminEditorRoute() {
         const issuer = (c.issuer ?? '').trim()
         const label = (c.label ?? '').trim()
         const url = (c.url ?? '').trim()
-        if (!flags?.issuer || !flags?.label || !flags?.url || !issuer || !label || !url) {
-          nextValidation.credentials[idx] = 'Public credential requires issuer, label, and URL, all toggled on and filled.'
+        if (!issuer || !label || !url) {
+          nextValidation.credentials[idx] = 'Public credential requires issuer, label, and URL values.'
           return
         }
         const rowIssues: string[] = []
@@ -831,7 +831,7 @@ export function AdminEditorRoute() {
       const publicCredOut = credentials
         .map((c, idx) => {
           const flags = publicCredentials[idx]
-          if (!flags?.issuer || !flags?.label || !flags?.url) return null
+          if (!hasAnyEnabledFlag(flags)) return null
           const issuer = (c.issuer ?? '').trim()
           const label = (c.label ?? '').trim()
           const url = (c.url ?? '').trim()
