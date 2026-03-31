@@ -1,7 +1,41 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ExternalLink, KeyRound, LoaderCircle, Save, Shield } from 'lucide-react'
+import { ExternalLink, KeyRound, LoaderCircle, Shield } from 'lucide-react'
 import { redirectToLogin } from '../lib/authRedirect'
+import { AdminEditorHeader } from './adminEditor/AdminEditorHeader'
+import { BasicsSection } from './adminEditor/BasicsSection'
+import { CredentialsSection } from './adminEditor/CredentialsSection'
+import { EducationSection } from './adminEditor/EducationSection'
+import { ExperienceSection } from './adminEditor/ExperienceSection'
+import { LinksSection } from './adminEditor/LinksSection'
+import { ProjectsSection } from './adminEditor/ProjectsSection'
+import { SkillsLanguagesSection } from './adminEditor/SkillsLanguagesSection'
+import type {
+  CredentialRow,
+  EducationRow,
+  ExperienceRow,
+  LinkRow,
+  LocaleItem,
+  ProjectRow,
+  PublicBasicsFlags,
+  PublicCredentialFlags,
+  PublicEducationFlags,
+  PublicExperienceFlags,
+  PublicLinkFlags,
+  PublicProjectFlags,
+  PublicSectionsFlags,
+} from './adminEditor/types'
+import {
+  asArray,
+  asObject,
+  asString,
+  asStringArray,
+  readJsonResponse,
+  safeJsonParse,
+  safeSlugFromName,
+  stringArrayToTextAreaLines,
+  textAreaLinesToStringArray,
+} from './adminEditor/utils'
 
 type ClientPrincipal = {
   userDetails?: string
@@ -23,49 +57,6 @@ async function fetchAuthMe(): Promise<ClientPrincipal | null> {
   }
 }
 
-function safeJsonParse<T>(text: string): { ok: true; value: T } | { ok: false; error: string } {
-  try {
-    return { ok: true, value: JSON.parse(text) as T }
-  } catch {
-    return { ok: false, error: 'Invalid JSON returned by server.' }
-  }
-}
-
-async function readJsonResponse<T>(res: Response): Promise<{ ok: true; value: T } | { ok: false; error: string; empty?: boolean }> {
-  const text = await res.text()
-  if (!text.trim()) return { ok: false, error: 'Empty response returned by server.', empty: true }
-  const parsed = safeJsonParse<T>(text)
-  if (!parsed.ok) return { ok: false, error: parsed.error }
-  return { ok: true, value: parsed.value }
-}
-
-function asString(value: unknown) {
-  return typeof value === 'string' ? value : ''
-}
-
-function asStringArray(value: unknown) {
-  return Array.isArray(value) ? value.filter((x) => typeof x === 'string') : []
-}
-
-function asObject(value: unknown) {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
-}
-
-function asArray(value: unknown) {
-  return Array.isArray(value) ? value : []
-}
-
-function textAreaLinesToStringArray(text: string) {
-  return text
-    .split('\n')
-    .map((x) => x.trim())
-    .filter(Boolean)
-}
-
-function stringArrayToTextAreaLines(arr: string[]) {
-  return arr.join('\n')
-}
-
 export function AdminEditorRoute() {
   const { kind } = useParams()
   const profileKind = (kind === 'public' || kind === 'private' ? kind : null) as ProfileKind | null
@@ -79,6 +70,9 @@ export function AdminEditorRoute() {
   const [raw, setRaw] = useState<Record<string, unknown> | null>(null)
   const [isMobile, setIsMobile] = useState(false)
 
+  const [locales, setLocales] = useState<LocaleItem[]>([{ locale: 'en', label: 'English' }])
+  const [locale, setLocale] = useState('en')
+
   // Hand-crafted form state (covers the full schema by section).
   const [basicsName, setBasicsName] = useState('')
   const [basicsHeadline, setBasicsHeadline] = useState('')
@@ -90,40 +84,31 @@ export function AdminEditorRoute() {
   const [skillsText, setSkillsText] = useState('')
   const [languagesText, setLanguagesText] = useState('')
 
-  const [links, setLinks] = useState<Array<{ label: string; url: string }>>([])
-  const [credentials, setCredentials] = useState<
-    Array<{ issuer: string; label: string; url: string; dateEarned?: string; dateExpires?: string }>
-  >([])
-  const [experience, setExperience] = useState<
-    Array<{
-      company: string
-      companyUrl?: string
-      companyLinkedInUrl?: string
-      role: string
-      start: string
-      end: string
-      location?: string
-      skills?: string[]
-      highlights?: string[]
-    }>
-  >([])
-  const [education, setEducation] = useState<
-    Array<{
-      school: string
-      schoolUrl?: string
-      degree?: string
-      field?: string
-      program?: string
-      start?: string
-      end?: string
-      location?: string
-      gpa?: string
-      highlights?: string[]
-    }>
-  >([])
-  const [projects, setProjects] = useState<Array<{ name: string; description: string; tags?: string[]; links?: Array<{ label: string; url: string }> }>>(
-    [],
-  )
+  const [links, setLinks] = useState<LinkRow[]>([])
+  const [credentials, setCredentials] = useState<CredentialRow[]>([])
+  const [experience, setExperience] = useState<ExperienceRow[]>([])
+  const [education, setEducation] = useState<EducationRow[]>([])
+  const [projects, setProjects] = useState<ProjectRow[]>([])
+
+  const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
+    name: true,
+    headline: true,
+    email: false,
+    mobile: false,
+    location: true,
+    summary: true,
+    photoAlt: true,
+  })
+  const [publicSections, setPublicSections] = useState<PublicSectionsFlags>({
+    skills: true,
+    languages: true,
+  })
+
+  const [publicLinks, setPublicLinks] = useState<PublicLinkFlags[]>([])
+  const [publicCredentials, setPublicCredentials] = useState<PublicCredentialFlags[]>([])
+  const [publicExperience, setPublicExperience] = useState<PublicExperienceFlags[]>([])
+  const [publicEducation, setPublicEducation] = useState<PublicEducationFlags[]>([])
+  const [publicProjects, setPublicProjects] = useState<PublicProjectFlags[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -132,6 +117,33 @@ export function AdminEditorRoute() {
       if (cancelled) return
       setMe(principal)
       setMeLoading(false)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/locales', { credentials: 'same-origin' })
+        if (!res.ok) return
+        const payload = (await res.json()) as unknown
+        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return
+        const obj = payload as Record<string, unknown>
+        const list = Array.isArray(obj.locales) ? obj.locales : []
+        const next = list
+          .filter((x): x is { locale: unknown; label?: unknown } => Boolean(x && typeof x === 'object' && !Array.isArray(x)))
+          .map((x) => ({
+            locale: typeof x.locale === 'string' ? x.locale.trim().toLowerCase() : '',
+            label: typeof x.label === 'string' ? x.label.trim() : undefined,
+          }))
+          .filter((x) => Boolean(x.locale))
+        if (!cancelled && next.length) setLocales(next)
+      } catch {
+        // Ignore; fallback to 'en'.
+      }
     })()
     return () => {
       cancelled = true
@@ -151,22 +163,198 @@ export function AdminEditorRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/manage/profile/${profileKind}`, { credentials: 'same-origin' })
-      if (res.status === 401) {
+      const slug = safeSlugFromName(basicsName)
+      const qs = new URLSearchParams()
+      if (locale) qs.set('locale', locale)
+      if (slug) qs.set('slug', slug)
+
+      const privateRes = await fetch(`/api/manage/profile/private?${qs.toString()}`, { credentials: 'same-origin' })
+      const publicRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, { credentials: 'same-origin' })
+
+      if (privateRes.status === 401 || publicRes.status === 401) {
         redirectToLogin(`/admin/editor/${profileKind}`)
         return
       }
-      const bodyResult = await readJsonResponse<{ json?: string; error?: string }>(res)
-      if (!bodyResult.ok) throw new Error(bodyResult.error)
-      const body = bodyResult.value
-      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
-      const jsonText = body.json
-      if (typeof jsonText !== 'string' || !jsonText.trim()) throw new Error('Profile JSON missing from server response.')
-      const parsed = safeJsonParse<Record<string, unknown>>(jsonText)
-      if (!parsed.ok) throw new Error(parsed.error)
-      setRaw(parsed.value)
 
-      const basics = asObject(parsed.value.basics)
+      const privateBodyResult = await readJsonResponse<{ json?: string; error?: string }>(privateRes)
+      if (!privateBodyResult.ok) throw new Error(privateBodyResult.error)
+      const privateBody = privateBodyResult.value
+      if (!privateRes.ok) throw new Error(privateBody.error || `Request failed (${privateRes.status})`)
+
+      const publicBodyResult = await readJsonResponse<{ json?: string; error?: string }>(publicRes)
+      if (!publicBodyResult.ok) throw new Error(publicBodyResult.error)
+      const publicBody = publicBodyResult.value
+      if (!publicRes.ok) throw new Error(publicBody.error || `Request failed (${publicRes.status})`)
+
+      const privateJsonText = typeof privateBody.json === 'string' ? privateBody.json : ''
+      const publicJsonText = typeof publicBody.json === 'string' ? publicBody.json : ''
+
+      const parsedPrivate = privateJsonText.trim() ? safeJsonParse<Record<string, unknown>>(privateJsonText) : { ok: true as const, value: {} }
+      if (!parsedPrivate.ok) throw new Error(parsedPrivate.error)
+      setRaw(parsedPrivate.value)
+
+      const parsedPublic = publicJsonText.trim() ? safeJsonParse<Record<string, unknown>>(publicJsonText) : { ok: true as const, value: {} }
+      if (!parsedPublic.ok) throw new Error(parsedPublic.error)
+
+      const pb = asObject(parsedPublic.value.basics)
+      setPublicBasics({
+        name: typeof pb.name === 'string' && pb.name.trim().length > 0,
+        headline: typeof pb.headline === 'string' && pb.headline.trim().length > 0,
+        email: typeof pb.email === 'string' && pb.email.trim().length > 0,
+        mobile: typeof pb.mobile === 'string' && pb.mobile.trim().length > 0,
+        location: typeof pb.location === 'string' && pb.location.trim().length > 0,
+        summary: typeof pb.summary === 'string' && pb.summary.trim().length > 0,
+        photoAlt: typeof pb.photoAlt === 'string' && pb.photoAlt.trim().length > 0,
+      })
+      setPublicSections({
+        skills: Array.isArray(parsedPublic.value.skills) && parsedPublic.value.skills.length > 0,
+        languages: Array.isArray(parsedPublic.value.languages) && parsedPublic.value.languages.length > 0,
+      })
+
+      const publicLinksArr = asArray(parsedPublic.value.links)
+      const publicLinksByKey = new Map<string, Record<string, unknown>>()
+      for (const x of publicLinksArr) {
+        const o = asObject(x)
+        const key = `${asString(o.label).trim()}|${asString(o.url).trim()}`
+        if (key !== '|') publicLinksByKey.set(key, o)
+      }
+
+      const privateLinksArr = asArray(parsedPrivate.value.links).map((x) => asObject(x))
+      setPublicLinks(
+        privateLinksArr.map((o) => {
+          const key = `${asString(o.label).trim()}|${asString(o.url).trim()}`
+          const pub = publicLinksByKey.get(key) ?? null
+          if (!pub) return { label: true, url: true }
+          return {
+            label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
+            url: typeof pub.url === 'string' && asString(pub.url).trim().length > 0,
+          }
+        }),
+      )
+
+      const publicCredArr = asArray(parsedPublic.value.credentials)
+      const publicCredByKey = new Map<string, Record<string, unknown>>()
+      for (const x of publicCredArr) {
+        const o = asObject(x)
+        const key = `${asString(o.issuer).trim()}|${asString(o.label).trim()}|${asString(o.url).trim()}`
+        if (key !== '||') publicCredByKey.set(key, o)
+      }
+      const privateCredArr = asArray(parsedPrivate.value.credentials).map((x) => asObject(x))
+      setPublicCredentials(
+        privateCredArr.map((o) => {
+          const key = `${asString(o.issuer).trim()}|${asString(o.label).trim()}|${asString(o.url).trim()}`
+          const pub = publicCredByKey.get(key) ?? null
+          if (!pub) return { issuer: true, label: true, url: true, dateEarned: true, dateExpires: true }
+          return {
+            issuer: typeof pub.issuer === 'string' && asString(pub.issuer).trim().length > 0,
+            label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
+            url: typeof pub.url === 'string' && asString(pub.url).trim().length > 0,
+            dateEarned: typeof pub.dateEarned === 'string' && asString(pub.dateEarned).trim().length > 0,
+            dateExpires: typeof pub.dateExpires === 'string' && asString(pub.dateExpires).trim().length > 0,
+          }
+        }),
+      )
+
+      const publicExpArr = asArray(parsedPublic.value.experience)
+      const publicExpByKey = new Map<string, Record<string, unknown>>()
+      for (const x of publicExpArr) {
+        const o = asObject(x)
+        const key = `${asString(o.company).trim()}|${asString(o.role).trim()}|${asString(o.start).trim()}|${asString(o.end).trim()}`
+        if (key !== '|||') publicExpByKey.set(key, o)
+      }
+      const privateExpArr = asArray(parsedPrivate.value.experience).map((x) => asObject(x))
+      setPublicExperience(
+        privateExpArr.map((o) => {
+          const key = `${asString(o.company).trim()}|${asString(o.role).trim()}|${asString(o.start).trim()}|${asString(o.end).trim()}`
+          const pub = publicExpByKey.get(key) ?? null
+          if (!pub)
+            return {
+              company: true,
+              companyUrl: true,
+              companyLinkedInUrl: true,
+              role: true,
+              start: true,
+              end: true,
+              location: true,
+              skills: true,
+              highlights: true,
+            }
+          return {
+            company: typeof pub.company === 'string' && asString(pub.company).trim().length > 0,
+            companyUrl: typeof pub.companyUrl === 'string' && asString(pub.companyUrl).trim().length > 0,
+            companyLinkedInUrl: typeof pub.companyLinkedInUrl === 'string' && asString(pub.companyLinkedInUrl).trim().length > 0,
+            role: typeof pub.role === 'string' && asString(pub.role).trim().length > 0,
+            start: typeof pub.start === 'string' && asString(pub.start).trim().length > 0,
+            end: typeof pub.end === 'string' && asString(pub.end).trim().length > 0,
+            location: typeof pub.location === 'string' && asString(pub.location).trim().length > 0,
+            skills: Array.isArray(pub.skills) && pub.skills.length > 0,
+            highlights: Array.isArray(pub.highlights) && pub.highlights.length > 0,
+          }
+        }),
+      )
+
+      const publicEduArr = asArray(parsedPublic.value.education)
+      const publicEduByKey = new Map<string, Record<string, unknown>>()
+      for (const x of publicEduArr) {
+        const o = asObject(x)
+        const key = `${asString(o.school).trim()}|${asString(o.program).trim()}|${asString(o.start).trim()}|${asString(o.end).trim()}`
+        if (key !== '|||') publicEduByKey.set(key, o)
+      }
+      const privateEduArr = asArray(parsedPrivate.value.education).map((x) => asObject(x))
+      setPublicEducation(
+        privateEduArr.map((o) => {
+          const key = `${asString(o.school).trim()}|${asString(o.program).trim()}|${asString(o.start).trim()}|${asString(o.end).trim()}`
+          const pub = publicEduByKey.get(key) ?? null
+          if (!pub)
+            return {
+              school: true,
+              schoolUrl: true,
+              degree: true,
+              field: true,
+              program: true,
+              start: true,
+              end: true,
+              location: true,
+              gpa: true,
+              highlights: true,
+            }
+          return {
+            school: typeof pub.school === 'string' && asString(pub.school).trim().length > 0,
+            schoolUrl: typeof pub.schoolUrl === 'string' && asString(pub.schoolUrl).trim().length > 0,
+            degree: typeof pub.degree === 'string' && asString(pub.degree).trim().length > 0,
+            field: typeof pub.field === 'string' && asString(pub.field).trim().length > 0,
+            program: typeof pub.program === 'string' && asString(pub.program).trim().length > 0,
+            start: typeof pub.start === 'string' && asString(pub.start).trim().length > 0,
+            end: typeof pub.end === 'string' && asString(pub.end).trim().length > 0,
+            location: typeof pub.location === 'string' && asString(pub.location).trim().length > 0,
+            gpa: typeof pub.gpa === 'string' && asString(pub.gpa).trim().length > 0,
+            highlights: Array.isArray(pub.highlights) && pub.highlights.length > 0,
+          }
+        }),
+      )
+
+      const publicProjArr = asArray(parsedPublic.value.projects)
+      const publicProjByKey = new Map<string, Record<string, unknown>>()
+      for (const x of publicProjArr) {
+        const o = asObject(x)
+        const key = asString(o.name).trim()
+        if (key) publicProjByKey.set(key, o)
+      }
+      const privateProjArr = asArray(parsedPrivate.value.projects).map((x) => asObject(x))
+      setPublicProjects(
+        privateProjArr.map((o) => {
+          const key = asString(o.name).trim()
+          const pub = (key ? publicProjByKey.get(key) : null) ?? null
+          if (!pub) return { name: true, tags: true, description: true }
+          return {
+            name: typeof pub.name === 'string' && asString(pub.name).trim().length > 0,
+            tags: Array.isArray(pub.tags) && pub.tags.length > 0,
+            description: typeof pub.description === 'string' && asString(pub.description).trim().length > 0,
+          }
+        }),
+      )
+
+      const basics = asObject(parsedPrivate.value.basics)
       setBasicsName(asString(basics.name))
       setBasicsHeadline(asString(basics.headline))
       setBasicsEmail(asString(basics.email))
@@ -175,18 +363,18 @@ export function AdminEditorRoute() {
       setBasicsSummary(asString(basics.summary))
       setBasicsPhotoAlt(asString(basics.photoAlt))
 
-      setSkillsText(stringArrayToTextAreaLines(asStringArray(parsed.value.skills)))
-      setLanguagesText(stringArrayToTextAreaLines(asStringArray(parsed.value.languages)))
+      setSkillsText(stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.skills)))
+      setLanguagesText(stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.languages)))
 
       setLinks(
-        asArray(parsed.value.links).map((x) => {
+        asArray(parsedPrivate.value.links).map((x) => {
           const o = asObject(x)
           return { label: asString(o.label), url: asString(o.url) }
         }),
       )
 
       setCredentials(
-        asArray(parsed.value.credentials).map((x) => {
+        asArray(parsedPrivate.value.credentials).map((x) => {
           const o = asObject(x)
           return {
             issuer: asString(o.issuer),
@@ -199,7 +387,7 @@ export function AdminEditorRoute() {
       )
 
       setExperience(
-        asArray(parsed.value.experience).map((x) => {
+        asArray(parsedPrivate.value.experience).map((x) => {
           const o = asObject(x)
           return {
             company: asString(o.company),
@@ -216,7 +404,7 @@ export function AdminEditorRoute() {
       )
 
       setEducation(
-        asArray(parsed.value.education).map((x) => {
+        asArray(parsedPrivate.value.education).map((x) => {
           const o = asObject(x)
           return {
             school: asString(o.school),
@@ -234,7 +422,7 @@ export function AdminEditorRoute() {
       )
 
       setProjects(
-        asArray(parsed.value.projects).map((x) => {
+        asArray(parsedPrivate.value.projects).map((x) => {
           const o = asObject(x)
           return {
             name: asString(o.name),
@@ -259,7 +447,7 @@ export function AdminEditorRoute() {
       void load()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meLoading, isAdmin, profileKind])
+  }, [meLoading, isAdmin, profileKind, locale])
 
   async function save() {
     if (!profileKind) return
@@ -302,21 +490,138 @@ export function AdminEditorRoute() {
           links: (p.links ?? []).filter((l) => l.label.trim() && l.url.trim()),
         }))
 
-      const json = JSON.stringify(next, null, 2)
-      const res = await fetch(`/api/manage/profile/${profileKind}`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json', accept: 'application/json', 'x-cv-admin': '1' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ json }),
-      })
-      if (res.status === 401) {
-        redirectToLogin(`/admin/editor/${profileKind}`)
-        return
+      const slug = safeSlugFromName(basicsName)
+      const qs = new URLSearchParams()
+      if (locale) qs.set('locale', locale)
+      if (slug) qs.set('slug', slug)
+
+      const privateJson = JSON.stringify(next, null, 2)
+
+      const publicNext: Record<string, unknown> = {}
+      const nextBasics = asObject(next.basics)
+      const publicBasicsObj: Record<string, unknown> = {}
+      if (publicBasics.name) publicBasicsObj.name = asString(nextBasics.name)
+      if (publicBasics.headline) publicBasicsObj.headline = asString(nextBasics.headline)
+      if (publicBasics.email && asString(nextBasics.email).trim()) publicBasicsObj.email = asString(nextBasics.email).trim()
+      if (publicBasics.mobile && asString(nextBasics.mobile).trim()) publicBasicsObj.mobile = asString(nextBasics.mobile).trim()
+      if (publicBasics.location && asString(nextBasics.location).trim()) publicBasicsObj.location = asString(nextBasics.location).trim()
+      if (publicBasics.summary && asString(nextBasics.summary).trim()) publicBasicsObj.summary = asString(nextBasics.summary).trim()
+      if (publicBasics.photoAlt && asString(nextBasics.photoAlt).trim()) publicBasicsObj.photoAlt = asString(nextBasics.photoAlt).trim()
+      if (Object.keys(publicBasicsObj).length) publicNext.basics = publicBasicsObj
+
+      if (publicSections.skills) publicNext.skills = next.skills
+      if (publicSections.languages) publicNext.languages = next.languages
+
+      const publicLinksOut = links
+        .map((l, idx) => {
+          const flags = publicLinks[idx]
+          if (!flags?.label || !flags?.url) return null
+          const label = (l.label ?? '').trim()
+          const url = (l.url ?? '').trim()
+          if (!label || !url) return null
+          return { label, url }
+        })
+        .filter(Boolean)
+      if (publicLinksOut.length) publicNext.links = publicLinksOut
+
+      const publicCredOut = credentials
+        .map((c, idx) => {
+          const flags = publicCredentials[idx]
+          if (!flags?.issuer || !flags?.label || !flags?.url) return null
+          const issuer = (c.issuer ?? '').trim()
+          const label = (c.label ?? '').trim()
+          const url = (c.url ?? '').trim()
+          if (!issuer || !label || !url) return null
+          const out: Record<string, unknown> = { issuer, label, url }
+          if (flags.dateEarned && (c.dateEarned ?? '').trim()) out.dateEarned = (c.dateEarned ?? '').trim()
+          if (flags.dateExpires && (c.dateExpires ?? '').trim()) out.dateExpires = (c.dateExpires ?? '').trim()
+          return out
+        })
+        .filter(Boolean)
+      if (publicCredOut.length) publicNext.credentials = publicCredOut
+
+      const publicExpOut = experience
+        .map((e, idx) => {
+          const flags = publicExperience[idx]
+          if (!flags) return null
+          if (!flags.company || !flags.role || !flags.start) return null
+          const company = (e.company ?? '').trim()
+          const role = (e.role ?? '').trim()
+          const start = (e.start ?? '').trim()
+          if (!company || !role || !start) return null
+          const out: Record<string, unknown> = { company, role, start }
+          if (flags.end && (e.end ?? '').trim()) out.end = (e.end ?? '').trim()
+          if (flags.location && (e.location ?? '').trim()) out.location = (e.location ?? '').trim()
+          if (flags.companyUrl && (e.companyUrl ?? '').trim()) out.companyUrl = (e.companyUrl ?? '').trim()
+          if (flags.companyLinkedInUrl && (e.companyLinkedInUrl ?? '').trim()) out.companyLinkedInUrl = (e.companyLinkedInUrl ?? '').trim()
+          if (flags.skills && (e.skills ?? []).length) out.skills = (e.skills ?? []).filter(Boolean)
+          if (flags.highlights && (e.highlights ?? []).length) out.highlights = (e.highlights ?? []).filter(Boolean)
+          return out
+        })
+        .filter(Boolean)
+      if (publicExpOut.length) publicNext.experience = publicExpOut
+
+      const publicEduOut = education
+        .map((e, idx) => {
+          const flags = publicEducation[idx]
+          if (!flags) return null
+          if (!flags.school) return null
+          const school = (e.school ?? '').trim()
+          if (!school) return null
+          const out: Record<string, unknown> = { school }
+          if (flags.program && (e.program ?? '').trim()) out.program = (e.program ?? '').trim()
+          if (flags.schoolUrl && (e.schoolUrl ?? '').trim()) out.schoolUrl = (e.schoolUrl ?? '').trim()
+          if (flags.degree && (e.degree ?? '').trim()) out.degree = (e.degree ?? '').trim()
+          if (flags.field && (e.field ?? '').trim()) out.field = (e.field ?? '').trim()
+          if (flags.start && (e.start ?? '').trim()) out.start = (e.start ?? '').trim()
+          if (flags.end && (e.end ?? '').trim()) out.end = (e.end ?? '').trim()
+          if (flags.location && (e.location ?? '').trim()) out.location = (e.location ?? '').trim()
+          if (flags.gpa && (e.gpa ?? '').trim()) out.gpa = (e.gpa ?? '').trim()
+          if (flags.highlights && (e.highlights ?? []).length) out.highlights = (e.highlights ?? []).filter(Boolean)
+          return out
+        })
+        .filter(Boolean)
+      if (publicEduOut.length) publicNext.education = publicEduOut
+
+      const publicProjOut = projects
+        .map((p, idx) => {
+          const flags = publicProjects[idx]
+          if (!flags?.name) return null
+          const name = (p.name ?? '').trim()
+          if (!name) return null
+          const out: Record<string, unknown> = { name }
+          if (flags.description && (p.description ?? '').trim()) out.description = (p.description ?? '').trim()
+          if (flags.tags && (p.tags ?? []).length) out.tags = (p.tags ?? []).filter(Boolean)
+          return out
+        })
+        .filter(Boolean)
+      if (publicProjOut.length) publicNext.projects = publicProjOut
+
+      const publicJson = JSON.stringify(publicNext, null, 2)
+
+      const put = async (which: 'private' | 'public', json: string) => {
+        const res = await fetch(`/api/manage/profile/${which}?${qs.toString()}`, {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json', accept: 'application/json', 'x-cv-admin': '1' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ json }),
+        })
+        if (res.status === 401) {
+          redirectToLogin(`/admin/editor/${profileKind}`)
+          return { ok: false as const }
+        }
+        const bodyResult = await readJsonResponse<{ ok?: boolean; error?: string }>(res)
+        if (!bodyResult.ok) throw new Error(bodyResult.error)
+        const body = bodyResult.value
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+        return { ok: true as const }
       }
-      const bodyResult = await readJsonResponse<{ ok?: boolean; error?: string }>(res)
-      if (!bodyResult.ok) throw new Error(bodyResult.error)
-      const body = bodyResult.value
-      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+
+      const privatePut = await put('private', privateJson)
+      if (!privatePut.ok) return
+      const publicPut = await put('public', publicJson)
+      if (!publicPut.ok) return
+
       await load()
     } catch (e: any) {
       setError(e?.message ?? 'Failed saving profile.')
@@ -387,44 +692,14 @@ export function AdminEditorRoute() {
 
   return (
     <div className="w-full space-y-6 py-10">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <div className="text-lg font-semibold text-slate-900 dark:text-white">
-            Editor: {profileKind === 'public' ? 'Public profile' : 'Private CV'}
-          </div>
-          <div className="text-xs text-slate-600 dark:text-slate-300">
-            This writes JSON to Blob Storage via <span className="font-mono">/api/manage/profile/{profileKind}</span>.
-          </div>
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
-          <Link className="text-xs font-medium text-slate-600 underline dark:text-slate-300" to="/admin">
-            Back to admin
-          </Link>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => void save()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 sm:w-auto dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-          >
-            <Save className="h-4 w-4" /> Save
-          </button>
-        </div>
-      </div>
-
-      <div className="flex gap-3 text-xs">
-        <Link
-          to="/admin/editor/public"
-          className={`rounded-lg border px-3 py-1.5 ${profileKind === 'public' ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white' : 'border-slate-300/70 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'}`}
-        >
-          Public
-        </Link>
-        <Link
-          to="/admin/editor/private"
-          className={`rounded-lg border px-3 py-1.5 ${profileKind === 'private' ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white' : 'border-slate-300/70 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60'}`}
-        >
-          Private
-        </Link>
-      </div>
+      <AdminEditorHeader
+        profileKind={profileKind}
+        locale={locale}
+        locales={locales}
+        setLocale={setLocale}
+        loading={loading}
+        onSave={() => void save()}
+      />
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
@@ -433,365 +708,68 @@ export function AdminEditorRoute() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="sticky top-0 z-10 -mx-5 border-b border-slate-200/70 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-white md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-            Basics
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-              Name
-              <input
-                value={basicsName}
-                onChange={(e) => setBasicsName(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-              Headline
-              <input
-                value={basicsHeadline}
-                onChange={(e) => setBasicsHeadline(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-              Email
-              <input
-                value={basicsEmail}
-                onChange={(e) => setBasicsEmail(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-              Mobile
-              <input
-                value={basicsMobile}
-                onChange={(e) => setBasicsMobile(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
-              Location
-              <input
-                value={basicsLocation}
-                onChange={(e) => setBasicsLocation(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
-              Summary
-              <textarea
-                rows={5}
-                value={basicsSummary}
-                onChange={(e) => setBasicsSummary(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
-              Photo alt
-              <input
-                value={basicsPhotoAlt}
-                onChange={(e) => setBasicsPhotoAlt(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              />
-            </label>
-          </div>
-        </section>
+        <BasicsSection
+          basicsName={basicsName}
+          setBasicsName={setBasicsName}
+          basicsHeadline={basicsHeadline}
+          setBasicsHeadline={setBasicsHeadline}
+          basicsEmail={basicsEmail}
+          setBasicsEmail={setBasicsEmail}
+          basicsMobile={basicsMobile}
+          setBasicsMobile={setBasicsMobile}
+          basicsLocation={basicsLocation}
+          setBasicsLocation={setBasicsLocation}
+          basicsSummary={basicsSummary}
+          setBasicsSummary={setBasicsSummary}
+          basicsPhotoAlt={basicsPhotoAlt}
+          setBasicsPhotoAlt={setBasicsPhotoAlt}
+          publicBasics={publicBasics}
+          setPublicBasics={setPublicBasics}
+        />
 
-        <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="sticky top-0 z-10 -mx-5 border-b border-slate-200/70 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-white md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-            Skills & languages
-          </div>
-          <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Skills (one per line)
-            <textarea
-              rows={6}
-              value={skillsText}
-              onChange={(e) => setSkillsText(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Languages (one per line)
-            <textarea
-              rows={6}
-              value={languagesText}
-              onChange={(e) => setLanguagesText(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-          </label>
-        </section>
+        <SkillsLanguagesSection
+          skillsText={skillsText}
+          setSkillsText={setSkillsText}
+          languagesText={languagesText}
+          setLanguagesText={setLanguagesText}
+          publicSections={publicSections}
+          setPublicSections={setPublicSections}
+        />
       </div>
 
-      <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Links</div>
-          <button
-            type="button"
-            onClick={() => setLinks((cur) => [...cur, { label: '', url: '' }])}
-            className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
-          >
-            Add
-          </button>
-        </div>
-        <div className="space-y-2">
-          {links.map((l, idx) => (
-            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
-              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
-                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
-                Link {idx + 1}: {(l.label || l.url || 'Untitled').slice(0, 60)}
-              </summary>
-              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-3">
-                <input
-                  value={l.label}
-                  onChange={(e) =>
-                    setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))
-                  }
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Label"
-                />
-                <input
-                  value={l.url}
-                  onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                  placeholder="https://..."
-                />
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
+      <LinksSection links={links} setLinks={setLinks} publicLinks={publicLinks} setPublicLinks={setPublicLinks} isMobile={isMobile} />
 
-      <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Credentials</div>
-          <button
-            type="button"
-            onClick={() => setCredentials((cur) => [...cur, { issuer: '', label: '', url: '' }])}
-            className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
-          >
-            Add
-          </button>
-        </div>
-        <div className="space-y-2">
-          {credentials.map((c, idx) => (
-            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
-              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
-                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
-                Credential {idx + 1}: {(c.label || c.issuer || 'Untitled').slice(0, 60)}
-              </summary>
-              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-6">
-                <input
-                  value={c.issuer}
-                  onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: e.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="issuer"
-                />
-                <input
-                  value={c.label}
-                  onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                  placeholder="label"
-                />
-                <input
-                  value={c.url}
-                  onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                  placeholder="https://..."
-                />
-                <input
-                  value={c.dateEarned ?? ''}
-                  onChange={(e) =>
-                    setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, dateEarned: e.target.value || undefined } : x)))
-                  }
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="earned (YYYY-MM)"
-                />
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
+      <CredentialsSection
+        credentials={credentials}
+        setCredentials={setCredentials}
+        publicCredentials={publicCredentials}
+        setPublicCredentials={setPublicCredentials}
+        isMobile={isMobile}
+      />
 
-      <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Experience</div>
-          <button
-            type="button"
-            onClick={() =>
-              setExperience((cur) => [
-                ...cur,
-                { company: '', role: '', start: '', end: '', skills: [], highlights: [] },
-              ])
-            }
-            className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
-          >
-            Add
-          </button>
-        </div>
-        <div className="space-y-4">
-          {experience.map((e, idx) => (
-            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
-              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
-                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
-                Experience {idx + 1}: {(e.company || e.role || 'Untitled').slice(0, 60)}
-              </summary>
-              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-2">
-                <input
-                  value={e.company}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, company: ev.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Company"
-                />
-                <input
-                  value={e.role}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: ev.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Role"
-                />
-                <input
-                  value={e.start}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: ev.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Start"
-                />
-                <input
-                  value={e.end}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: ev.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="End"
-                />
-                <input
-                  value={e.location ?? ''}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: ev.target.value || undefined } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                  placeholder="Location (optional)"
-                />
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
-                  Skills (one per line)
-                  <textarea
-                    rows={3}
-                    value={stringArrayToTextAreaLines(e.skills ?? [])}
-                    onChange={(ev) =>
-                      setExperience((cur) =>
-                        cur.map((x, i) => (i === idx ? { ...x, skills: textAreaLinesToStringArray(ev.target.value) } : x)),
-                      )
-                    }
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
-                  Highlights (one per line)
-                  <textarea
-                    rows={4}
-                    value={stringArrayToTextAreaLines(e.highlights ?? [])}
-                    onChange={(ev) =>
-                      setExperience((cur) =>
-                        cur.map((x, i) => (i === idx ? { ...x, highlights: textAreaLinesToStringArray(ev.target.value) } : x)),
-                      )
-                    }
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  />
-                </label>
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
+      <ExperienceSection
+        experience={experience}
+        setExperience={setExperience}
+        publicExperience={publicExperience}
+        setPublicExperience={setPublicExperience}
+        isMobile={isMobile}
+      />
 
-      <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Education</div>
-          <button
-            type="button"
-            onClick={() => setEducation((cur) => [...cur, { school: '', program: '' }])}
-            className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
-          >
-            Add
-          </button>
-        </div>
-        <div className="space-y-2">
-          {education.map((e, idx) => (
-            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
-              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
-                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
-                Education {idx + 1}: {(e.school || e.program || 'Untitled').slice(0, 60)}
-              </summary>
-              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-3">
-                <input
-                  value={e.school}
-                  onChange={(ev) => setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: ev.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="School"
-                />
-                <input
-                  value={e.program ?? ''}
-                  onChange={(ev) =>
-                    setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, program: ev.target.value || undefined } : x)))
-                  }
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white md:col-span-2"
-                  placeholder="Program"
-                />
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
+      <EducationSection
+        education={education}
+        setEducation={setEducation}
+        publicEducation={publicEducation}
+        setPublicEducation={setPublicEducation}
+        isMobile={isMobile}
+      />
 
-      <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">Projects</div>
-          <button
-            type="button"
-            onClick={() => setProjects((cur) => [...cur, { name: '', description: '', tags: [], links: [] }])}
-            className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
-          >
-            Add
-          </button>
-        </div>
-        <div className="space-y-4">
-          {projects.map((p, idx) => (
-            <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
-              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
-                <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
-                Project {idx + 1}: {(p.name || 'Untitled').slice(0, 60)}
-              </summary>
-              <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-2">
-                <input
-                  value={p.name}
-                  onChange={(ev) => setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, name: ev.target.value } : x)))}
-                  className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Name"
-                />
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Tags (one per line)
-                  <textarea
-                    rows={3}
-                    value={stringArrayToTextAreaLines(p.tags ?? [])}
-                    onChange={(ev) =>
-                      setProjects((cur) =>
-                        cur.map((x, i) => (i === idx ? { ...x, tags: textAreaLinesToStringArray(ev.target.value) } : x)),
-                      )
-                    }
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
-                  Description
-                  <textarea
-                    rows={4}
-                    value={p.description}
-                    onChange={(ev) =>
-                      setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, description: ev.target.value } : x)))
-                    }
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  />
-                </label>
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
+      <ProjectsSection
+        projects={projects}
+        setProjects={setProjects}
+        publicProjects={publicProjects}
+        setPublicProjects={setPublicProjects}
+        isMobile={isMobile}
+      />
     </div>
   )
 }

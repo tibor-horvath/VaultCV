@@ -6,6 +6,20 @@ function requiredEnv(name: string, value: string | undefined) {
   return trimmed
 }
 
+function safeSlugFromName(name: string) {
+  const normalized = name
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+  const slug = normalized
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '')
+    .replace(/-+/g, '-')
+  return slug
+}
+
 async function streamToText(stream: NodeJS.ReadableStream) {
   const chunks: Buffer[] = []
   for await (const chunk of stream) {
@@ -28,14 +42,28 @@ function blobName(kind: 'public' | 'private') {
   return requiredEnv('CV_PRIVATE_PROFILE_BLOB', process.env.CV_PRIVATE_PROFILE_BLOB)
 }
 
-function getBlobClient(kind: 'public' | 'private') {
+function getContainerClient() {
   const service = BlobServiceClient.fromConnectionString(storageConnectionString())
-  const container = service.getContainerClient(containerName())
-  return container.getBlockBlobClient(blobName(kind))
+  return service.getContainerClient(containerName())
 }
 
-export async function readProfileJson(kind: 'public' | 'private') {
-  const client = getBlobClient(kind)
+function getBlobClientByName(name: string) {
+  return getContainerClient().getBlockBlobClient(name)
+}
+
+function getLegacyBlobClient(kind: 'public' | 'private') {
+  return getBlobClientByName(blobName(kind))
+}
+
+function blobNameV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string }) {
+  const slug = safeSlugFromName(args.slugFromName)
+  if (!slug) throw new Error('Profile slug is empty (basics.name is required).')
+  const locale = args.locale.trim().toLowerCase()
+  if (!locale) throw new Error('Locale is required.')
+  return `${slug}-${args.kind}-profile-${locale}.json`
+}
+
+async function readBlobText(client: ReturnType<typeof getBlobClientByName>) {
   try {
     const download = await client.download()
     // In Node (Azure Functions), `readableStreamBody` is available.
@@ -55,13 +83,39 @@ export async function readProfileJson(kind: 'public' | 'private') {
   }
 }
 
-export async function writeProfileJson(kind: 'public' | 'private', jsonText: string) {
-  const client = getBlobClient(kind)
+async function writeBlobText(client: ReturnType<typeof getBlobClientByName>, jsonText: string) {
   await client.upload(jsonText, Buffer.byteLength(jsonText), {
     blobHTTPHeaders: {
       blobContentType: 'application/json; charset=utf-8',
       blobCacheControl: 'no-store',
     },
   })
+}
+
+export async function readProfileJson(kind: 'public' | 'private') {
+  return readBlobText(getLegacyBlobClient(kind))
+}
+
+export async function writeProfileJson(kind: 'public' | 'private', jsonText: string) {
+  return writeBlobText(getLegacyBlobClient(kind), jsonText)
+}
+
+export async function readProfileJsonV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string; legacyFallback?: boolean }) {
+  const slug = safeSlugFromName(args.slugFromName)
+  if (!slug) return readProfileJson(args.kind)
+
+  const name = blobNameV2(args)
+  const primary = await readBlobText(getBlobClientByName(name))
+  if (primary.trim()) return primary
+  if (!args.legacyFallback) return primary
+  return readProfileJson(args.kind)
+}
+
+export async function writeProfileJsonV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string; jsonText: string }) {
+  const slug = safeSlugFromName(args.slugFromName)
+  if (!slug) return writeProfileJson(args.kind, args.jsonText)
+
+  const name = blobNameV2(args)
+  return writeBlobText(getBlobClientByName(name), args.jsonText)
 }
 

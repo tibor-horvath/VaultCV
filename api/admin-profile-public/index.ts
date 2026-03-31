@@ -1,5 +1,7 @@
-import { readProfileJson, writeProfileJson } from '../lib/profileBlobStore'
+import { readProfileJsonV2, writeProfileJsonV2 } from '../lib/profileBlobStore'
 import { requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
+import { getHeaderInsensitive, firstLanguageTagFromAcceptLanguage } from '../lib/httpHeaders'
+import { normalizeLocale, readSupportedLocales } from '../lib/localeRegistry'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -13,6 +15,7 @@ type Context = {
 type HttpRequest = {
   method?: string
   headers?: Record<string, string | undefined>
+  query?: Record<string, string | undefined>
   body?: unknown
 }
 
@@ -39,9 +42,17 @@ export default async function (context: Context, req: HttpRequest) {
       return
     }
 
+    const supported = readSupportedLocales()
+    const requestedLocale = normalizeLocale(req.query?.locale ?? firstLanguageTagFromAcceptLanguage(getHeaderInsensitive(req.headers, 'accept-language')))
+    if (!supported.includes(requestedLocale)) {
+      context.res = jsonResponse(400, { error: 'Unsupported locale.' })
+      return
+    }
+    const slugFromName = (req.query?.slug ?? '').trim()
+
     const method = (req.method ?? '').toUpperCase()
     if (method === 'GET') {
-      const jsonText = await readProfileJson('public')
+      const jsonText = await readProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName, legacyFallback: true })
       context.res = jsonResponse(200, { json: jsonText })
       return
     }
@@ -76,7 +87,7 @@ export default async function (context: Context, req: HttpRequest) {
         context.res = jsonResponse(400, { error: 'Invalid JSON.' })
         return
       }
-      await writeProfileJson('public', json)
+      await writeProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName, jsonText: json })
       context.res = jsonResponse(200, { ok: true })
       return
     }
