@@ -50,8 +50,6 @@ export default async function (context: Context, req: HttpRequest) {
 
   if (method === 'POST') {
     const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
-    const label = typeof payload?.label === 'string' ? payload.label : ''
-    const sharedWith = typeof payload?.sharedWith === 'string' ? payload.sharedWith : undefined
     const notes = typeof payload?.notes === 'string' ? payload.notes : undefined
 
     const expiresAtEpoch =
@@ -66,7 +64,7 @@ export default async function (context: Context, req: HttpRequest) {
       return
     }
 
-    const created = await createShareLink({ label, sharedWith, notes, expiresAtEpoch })
+    const created = await createShareLink({ notes, expiresAtEpoch })
     context.res = jsonResponse(201, { id: created.id })
     return
   }

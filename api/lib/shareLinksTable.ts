@@ -4,8 +4,6 @@ import { TableClient, type TableEntityResult } from '@azure/data-tables'
 export type ShareLinkEntity = {
   partitionKey: string
   rowKey: string
-  label: string
-  sharedWith?: string
   notes?: string
   createdAtEpoch: number
   expiresAtEpoch: number
@@ -57,8 +55,6 @@ function clampText(input: string | undefined, maxLen: number) {
 }
 
 export type CreateShareLinkInput = {
-  label: string
-  sharedWith?: string
   notes?: string
   expiresAtEpoch: number
 }
@@ -78,8 +74,6 @@ export async function createShareLink(input: CreateShareLinkInput): Promise<Crea
   const entity: ShareLinkEntity = {
     partitionKey: PARTITION_KEY,
     rowKey: id,
-    label: clampText(input.label, 120) ?? 'Share link',
-    sharedWith: clampText(input.sharedWith, 120),
     notes: clampText(input.notes, 1000),
     createdAtEpoch,
     expiresAtEpoch,
@@ -97,8 +91,6 @@ export async function getShareLink(id: string): Promise<ShareLinkEntity | null> 
     return {
       partitionKey: PARTITION_KEY,
       rowKey: trimmed,
-      label: String(result.label ?? ''),
-      sharedWith: result.sharedWith ? String(result.sharedWith) : undefined,
       notes: result.notes ? String(result.notes) : undefined,
       createdAtEpoch: Number(result.createdAtEpoch ?? 0),
       expiresAtEpoch: Number(result.expiresAtEpoch ?? 0),
@@ -158,8 +150,6 @@ export async function listShareLinks(limit: number = 200): Promise<ShareLinkEnti
     out.push({
       partitionKey: PARTITION_KEY,
       rowKey: String(e.rowKey),
-      label: String(e.label ?? ''),
-      sharedWith: e.sharedWith ? String(e.sharedWith) : undefined,
       notes: e.notes ? String(e.notes) : undefined,
       createdAtEpoch: Number(e.createdAtEpoch ?? 0),
       expiresAtEpoch: Number(e.expiresAtEpoch ?? 0),

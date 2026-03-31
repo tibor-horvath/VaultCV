@@ -11,8 +11,6 @@ type ClientPrincipal = {
 
 type ShareLink = {
   rowKey: string
-  label: string
-  sharedWith?: string
   notes?: string
   createdAtEpoch: number
   expiresAtEpoch: number
@@ -57,8 +55,13 @@ export function AdminRoute() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [shareLang, setShareLang] = useState<string>('')
+  const [showRevoked, setShowRevoked] = useState(false)
 
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
+  const visibleLinks = useMemo(() => {
+    if (showRevoked) return links
+    return links.filter((l) => !l.revokedAtEpoch)
+  }, [links, showRevoked])
 
   useEffect(() => {
     let cancelled = false
@@ -103,8 +106,6 @@ export function AdminRoute() {
 
   async function createLink(form: HTMLFormElement) {
     const fd = new FormData(form)
-    const label = String(fd.get('label') ?? '')
-    const sharedWith = String(fd.get('sharedWith') ?? '')
     const notes = String(fd.get('notes') ?? '')
     const expiresInDays = Number.parseInt(String(fd.get('expiresInDays') ?? '30'), 10)
     setLoading(true)
@@ -115,8 +116,6 @@ export function AdminRoute() {
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({
-          label,
-          sharedWith: sharedWith.trim() ? sharedWith : undefined,
           notes: notes.trim() ? notes : undefined,
           expiresInDays: Number.isFinite(expiresInDays) ? expiresInDays : 30,
         }),
@@ -310,23 +309,6 @@ export function AdminRoute() {
           }}
         >
           <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Label
-            <input
-              name="label"
-              required
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              placeholder="Recruiter link"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Shared with (admin-only)
-            <input
-              name="sharedWith"
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-              placeholder="ACME Recruiting"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Expires in (days)
             <input
               name="expiresInDays"
@@ -361,15 +343,26 @@ export function AdminRoute() {
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
         <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between gap-3 border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white">Share links</div>
-          {loading ? (
-            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-              <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> Working…
-            </div>
-          ) : null}
+          <div className="flex items-center gap-3">
+            <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+              <input
+                type="checkbox"
+                checked={showRevoked}
+                onChange={(e) => setShowRevoked(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border border-slate-300/70 text-slate-900 dark:border-slate-700"
+              />
+              Show revoked
+            </label>
+            {loading ? (
+              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> Working…
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-4 space-y-3 md:hidden">
-          {links.map((l) => {
+          {visibleLinks.map((l) => {
             const isRevoked = Boolean(l.revokedAtEpoch)
             const shareUrlBase = `${window.location.origin}/?s=${encodeURIComponent(l.rowKey)}`
             const shareUrl = shareLang ? `${shareUrlBase}&lang=${encodeURIComponent(shareLang)}` : shareUrlBase
@@ -377,12 +370,11 @@ export function AdminRoute() {
               <div key={l.rowKey} className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/20">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-sm font-semibold">{l.label}</div>
+                    <div className="text-sm font-semibold">Link</div>
                     {isRevoked ? <div className="text-[11px] text-red-700 dark:text-red-300">Revoked</div> : null}
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">Expires: {epochToIso(l.expiresAtEpoch)}</div>
                 </div>
-                <div className="mt-2 text-[11px] text-slate-600 dark:text-slate-300">Shared with: {l.sharedWith ?? '-'}</div>
                 <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">
                   Views: {l.viewCount ?? 0} ({epochToIso(l.lastViewedAtEpoch) || 'never'})
                 </div>
@@ -418,15 +410,17 @@ export function AdminRoute() {
               </div>
             )
           })}
-          {links.length === 0 ? <div className="py-2 text-sm text-slate-500 dark:text-slate-400">No links yet.</div> : null}
+          {visibleLinks.length === 0 ? (
+            <div className="py-2 text-sm text-slate-500 dark:text-slate-400">
+              {showRevoked ? 'No links yet.' : 'No active links.'}
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-4 hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[44rem] text-left text-xs">
+          <table className="w-full min-w-[36rem] text-left text-xs">
             <thead className="text-slate-500 dark:text-slate-400">
               <tr className="border-b border-slate-200/70 dark:border-slate-800">
-                <th className="py-2 pr-3">Label</th>
-                <th className="py-2 pr-3">Shared with</th>
                 <th className="py-2 pr-3">Expires</th>
                 <th className="py-2 pr-3">Views</th>
                 <th className="py-2 pr-3">Link</th>
@@ -434,19 +428,12 @@ export function AdminRoute() {
               </tr>
             </thead>
             <tbody className="text-slate-800 dark:text-slate-200">
-              {links.map((l) => {
+              {visibleLinks.map((l) => {
                 const isRevoked = Boolean(l.revokedAtEpoch)
                 const shareUrlBase = `${window.location.origin}/?s=${encodeURIComponent(l.rowKey)}`
                 const shareUrl = shareLang ? `${shareUrlBase}&lang=${encodeURIComponent(shareLang)}` : shareUrlBase
                 return (
                   <tr key={l.rowKey} className="border-b border-slate-200/40 dark:border-slate-800/60">
-                    <td className="py-2 pr-3">
-                      <div className="font-medium">{l.label}</div>
-                      {isRevoked ? (
-                        <div className="mt-0.5 text-[11px] text-red-700 dark:text-red-300">Revoked</div>
-                      ) : null}
-                    </td>
-                    <td className="py-2 pr-3">{l.sharedWith ?? ''}</td>
                     <td className="py-2 pr-3">{epochToIso(l.expiresAtEpoch)}</td>
                     <td className="py-2 pr-3">
                       <div>{l.viewCount ?? 0}</div>
@@ -456,6 +443,7 @@ export function AdminRoute() {
                       <a className="font-mono text-[11px] underline" href={shareUrl} target="_blank" rel="noreferrer">
                         /?s={l.rowKey}
                       </a>
+                      {isRevoked ? <div className="mt-0.5 text-[11px] text-red-700 dark:text-red-300">Revoked</div> : null}
                     </td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
@@ -488,10 +476,10 @@ export function AdminRoute() {
                   </tr>
                 )
               })}
-              {links.length === 0 ? (
+              {visibleLinks.length === 0 ? (
                 <tr>
-                  <td className="py-4 text-slate-500 dark:text-slate-400" colSpan={6}>
-                    No links yet.
+                  <td className="py-4 text-slate-500 dark:text-slate-400" colSpan={4}>
+                    {showRevoked ? 'No links yet.' : 'No active links.'}
                   </td>
                 </tr>
               ) : null}
