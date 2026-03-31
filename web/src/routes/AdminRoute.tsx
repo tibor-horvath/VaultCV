@@ -56,6 +56,14 @@ async function fetchShareLinksWithFallback(init?: RequestInit) {
   return lastResponse
 }
 
+async function revokeShareLinkWithFallback(id: string, init?: RequestInit) {
+  const primary = `/api/admin/share-links/${encodeURIComponent(id)}/revoke`
+  const fallback = `/api/admin-share-links-revoke/${encodeURIComponent(id)}`
+  const first = await fetch(primary, init)
+  if (first.status !== 404) return first
+  return fetch(fallback, init)
+}
+
 function epochToIso(epoch: number | undefined) {
   if (!epoch || !Number.isFinite(epoch) || epoch <= 0) return ''
   return new Date(epoch * 1000).toISOString().slice(0, 10)
@@ -158,7 +166,7 @@ export function AdminRoute() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/share-links/${encodeURIComponent(id)}/revoke`, {
+      const res = await revokeShareLinkWithFallback(id, {
         method: 'POST',
         headers: { accept: 'application/json' },
         credentials: 'same-origin',
