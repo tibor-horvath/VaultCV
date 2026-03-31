@@ -1,4 +1,3 @@
-import { createShareLink, listShareLinks } from '../lib/shareLinksTable'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -42,35 +41,44 @@ export default async function (context: Context, req: HttpRequest) {
   }
 
   const method = (req.method ?? '').toUpperCase()
-  if (method === 'GET') {
-    const links = await listShareLinks(200)
-    context.res = jsonResponse(200, { links })
-    return
-  }
+  try {
+    const { createShareLink, listShareLinks } = await import('../lib/shareLinksTable')
 
-  if (method === 'POST') {
-    const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
-    const label = typeof payload?.label === 'string' ? payload.label : ''
-    const sharedWith = typeof payload?.sharedWith === 'string' ? payload.sharedWith : undefined
-    const notes = typeof payload?.notes === 'string' ? payload.notes : undefined
-
-    const expiresAtEpoch =
-      typeof payload?.expiresAtEpoch === 'number'
-        ? payload.expiresAtEpoch
-        : typeof payload?.expiresInDays === 'number'
-          ? nowEpochSeconds() + Math.floor(payload.expiresInDays * 24 * 60 * 60)
-          : 0
-
-    if (!expiresAtEpoch) {
-      context.res = jsonResponse(400, { error: 'Missing expiresAtEpoch (or expiresInDays).' })
+    if (method === 'GET') {
+      const links = await listShareLinks(200)
+      context.res = jsonResponse(200, { links })
       return
     }
 
-    const created = await createShareLink({ label, sharedWith, notes, expiresAtEpoch })
-    context.res = jsonResponse(201, { id: created.id })
-    return
-  }
+    if (method === 'POST') {
+      const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
+      const label = typeof payload?.label === 'string' ? payload.label : ''
+      const sharedWith = typeof payload?.sharedWith === 'string' ? payload.sharedWith : undefined
+      const notes = typeof payload?.notes === 'string' ? payload.notes : undefined
 
-  context.res = jsonResponse(405, { error: 'Method not allowed' })
+      const expiresAtEpoch =
+        typeof payload?.expiresAtEpoch === 'number'
+          ? payload.expiresAtEpoch
+          : typeof payload?.expiresInDays === 'number'
+            ? nowEpochSeconds() + Math.floor(payload.expiresInDays * 24 * 60 * 60)
+            : 0
+
+      if (!expiresAtEpoch) {
+        context.res = jsonResponse(400, { error: 'Missing expiresAtEpoch (or expiresInDays).' })
+        return
+      }
+
+      const created = await createShareLink({ label, sharedWith, notes, expiresAtEpoch })
+      context.res = jsonResponse(201, { id: created.id })
+      return
+    }
+
+    context.res = jsonResponse(405, { error: 'Method not allowed' })
+  } catch (e: any) {
+    context.res = jsonResponse(500, {
+      error: 'Share links backend failed to initialize.',
+      detail: e?.message ?? 'Unknown error',
+    })
+  }
 }
 

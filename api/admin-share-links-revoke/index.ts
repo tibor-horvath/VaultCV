@@ -1,4 +1,3 @@
-import { revokeShareLink } from '../lib/shareLinksTable'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -42,12 +41,19 @@ export default async function (context: Context, req: HttpRequest) {
     return
   }
 
-  const ok = await revokeShareLink(id)
-  if (!ok) {
-    context.res = jsonResponse(404, { error: 'Not found.' })
-    return
+  try {
+    const { revokeShareLink } = await import('../lib/shareLinksTable')
+    const ok = await revokeShareLink(id)
+    if (!ok) {
+      context.res = jsonResponse(404, { error: 'Not found.' })
+      return
+    }
+    context.res = jsonResponse(200, { ok: true })
+  } catch (e: any) {
+    context.res = jsonResponse(500, {
+      error: 'Share links backend failed to initialize.',
+      detail: e?.message ?? 'Unknown error',
+    })
   }
-
-  context.res = jsonResponse(200, { ok: true })
 }
 
