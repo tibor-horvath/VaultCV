@@ -44,7 +44,7 @@ export function BasicsSection(props: {
         <div className="text-sm font-semibold text-slate-900 dark:text-white">Basics</div>
         <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-300">Per-field public toggle</div>
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3">
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Name
@@ -107,7 +107,7 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Location
             <input
@@ -124,7 +124,7 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Summary
             <textarea
@@ -142,7 +142,7 @@ export function BasicsSection(props: {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
             Photo alt
             <input

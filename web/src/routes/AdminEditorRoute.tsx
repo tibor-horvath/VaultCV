@@ -91,17 +91,17 @@ export function AdminEditorRoute() {
   const [projects, setProjects] = useState<ProjectRow[]>([])
 
   const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
-    name: true,
-    headline: true,
+    name: false,
+    headline: false,
     email: false,
     mobile: false,
-    location: true,
-    summary: true,
-    photoAlt: true,
+    location: false,
+    summary: false,
+    photoAlt: false,
   })
   const [publicSections, setPublicSections] = useState<PublicSectionsFlags>({
-    skills: true,
-    languages: true,
+    skills: false,
+    languages: false,
   })
 
   const [publicLinks, setPublicLinks] = useState<PublicLinkFlags[]>([])
@@ -223,7 +223,7 @@ export function AdminEditorRoute() {
         privateLinksArr.map((o) => {
           const key = `${asString(o.label).trim()}|${asString(o.url).trim()}`
           const pub = publicLinksByKey.get(key) ?? null
-          if (!pub) return { label: true, url: true }
+          if (!pub) return { label: false, url: false }
           return {
             label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
             url: typeof pub.url === 'string' && asString(pub.url).trim().length > 0,
@@ -243,7 +243,7 @@ export function AdminEditorRoute() {
         privateCredArr.map((o) => {
           const key = `${asString(o.issuer).trim()}|${asString(o.label).trim()}|${asString(o.url).trim()}`
           const pub = publicCredByKey.get(key) ?? null
-          if (!pub) return { issuer: true, label: true, url: true, dateEarned: true, dateExpires: true }
+          if (!pub) return { issuer: false, label: false, url: false, dateEarned: false, dateExpires: false }
           return {
             issuer: typeof pub.issuer === 'string' && asString(pub.issuer).trim().length > 0,
             label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
@@ -268,15 +268,15 @@ export function AdminEditorRoute() {
           const pub = publicExpByKey.get(key) ?? null
           if (!pub)
             return {
-              company: true,
-              companyUrl: true,
-              companyLinkedInUrl: true,
-              role: true,
-              start: true,
-              end: true,
-              location: true,
-              skills: true,
-              highlights: true,
+              company: false,
+              companyUrl: false,
+              companyLinkedInUrl: false,
+              role: false,
+              start: false,
+              end: false,
+              location: false,
+              skills: false,
+              highlights: false,
             }
           return {
             company: typeof pub.company === 'string' && asString(pub.company).trim().length > 0,
@@ -306,16 +306,16 @@ export function AdminEditorRoute() {
           const pub = publicEduByKey.get(key) ?? null
           if (!pub)
             return {
-              school: true,
-              schoolUrl: true,
-              degree: true,
-              field: true,
-              program: true,
-              start: true,
-              end: true,
-              location: true,
-              gpa: true,
-              highlights: true,
+              school: false,
+              schoolUrl: false,
+              degree: false,
+              field: false,
+              program: false,
+              start: false,
+              end: false,
+              location: false,
+              gpa: false,
+              highlights: false,
             }
           return {
             school: typeof pub.school === 'string' && asString(pub.school).trim().length > 0,
@@ -344,7 +344,7 @@ export function AdminEditorRoute() {
         privateProjArr.map((o) => {
           const key = asString(o.name).trim()
           const pub = (key ? publicProjByKey.get(key) : null) ?? null
-          if (!pub) return { name: true, tags: true, description: true }
+          if (!pub) return { name: false, tags: false, description: false }
           return {
             name: typeof pub.name === 'string' && asString(pub.name).trim().length > 0,
             tags: Array.isArray(pub.tags) && pub.tags.length > 0,

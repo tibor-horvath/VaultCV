@@ -19,7 +19,7 @@ export function ProjectsSection(props: {
             type="button"
             onClick={() => {
               setProjects((cur) => [...cur, { name: '', description: '', tags: [], links: [] }])
-              setPublicProjects((cur) => [...cur, { name: true, tags: true, description: true }])
+              setPublicProjects((cur) => [...cur, { name: false, tags: false, description: false }])
             }}
             className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
@@ -35,21 +35,26 @@ export function ProjectsSection(props: {
               <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
               Project {idx + 1}: {(p.name || 'Untitled').slice(0, 60)}
             </summary>
-            <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-2">
-              <div className="flex items-start gap-2">
-                <input
-                  value={p.name}
-                  onChange={(ev) => setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, name: ev.target.value } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Name"
-                />
-                <ToggleButton
-                  pressed={Boolean(publicProjects[idx]?.name)}
-                  onClick={() => setPublicProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, name: !x.name } : x)))}
-                />
+            <div className="mt-2 space-y-2 md:mt-0">
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Name
+                  <input
+                    value={p.name}
+                    onChange={(ev) => setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, name: ev.target.value } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Name"
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicProjects[idx]?.name)}
+                    onClick={() => setPublicProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, name: !x.name } : x)))}
+                  />
+                </div>
               </div>
 
-              <div className="flex items-start gap-2">
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   Tags (one per line)
                   <textarea
@@ -58,7 +63,7 @@ export function ProjectsSection(props: {
                     onChange={(ev) =>
                       setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, tags: textAreaLinesToStringArray(ev.target.value) } : x)))
                     }
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   />
                 </label>
                 <div className="pt-5">
@@ -69,14 +74,14 @@ export function ProjectsSection(props: {
                 </div>
               </div>
 
-              <div className="flex items-start gap-2 md:col-span-2">
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   Description
                   <textarea
                     rows={4}
                     value={p.description}
                     onChange={(ev) => setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, description: ev.target.value } : x)))}
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   />
                 </label>
                 <div className="pt-5">

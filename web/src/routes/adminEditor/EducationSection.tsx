@@ -21,16 +21,16 @@ export function EducationSection(props: {
               setPublicEducation((cur) => [
                 ...cur,
                 {
-                  school: true,
-                  schoolUrl: true,
-                  degree: true,
-                  field: true,
-                  program: true,
-                  start: true,
-                  end: true,
-                  location: true,
-                  gpa: true,
-                  highlights: true,
+                  school: false,
+                  schoolUrl: false,
+                  degree: false,
+                  field: false,
+                  program: false,
+                  start: false,
+                  end: false,
+                  location: false,
+                  gpa: false,
+                  highlights: false,
                 },
               ])
             }}

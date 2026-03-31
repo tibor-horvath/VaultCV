@@ -18,7 +18,7 @@ export function LinksSection(props: {
             type="button"
             onClick={() => {
               setLinks((cur) => [...cur, { label: '', url: '' }])
-              setPublicLinks((cur) => [...cur, { label: true, url: true }])
+              setPublicLinks((cur) => [...cur, { label: false, url: false }])
             }}
             className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
@@ -33,30 +33,41 @@ export function LinksSection(props: {
               <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
               Link {idx + 1}: {(l.label || l.url || 'Untitled').slice(0, 60)}
             </summary>
-            <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-3">
-              <div className="flex items-start gap-2">
-                <input
-                  value={l.label}
-                  onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Label"
-                />
-                <ToggleButton
-                  pressed={Boolean(publicLinks[idx]?.label)}
-                  onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: !x.label } : x)))}
-                />
+            <div className="mt-2 space-y-2 md:mt-0">
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Label
+                  <input
+                    value={l.label}
+                    onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="GitHub"
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicLinks[idx]?.label)}
+                    onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, label: !x.label } : x)))}
+                  />
+                </div>
               </div>
-              <div className="flex items-start gap-2 md:col-span-2">
-                <input
-                  value={l.url}
-                  onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="https://..."
-                />
-                <ToggleButton
-                  pressed={Boolean(publicLinks[idx]?.url)}
-                  onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
-                />
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  URL
+                  <input
+                    value={l.url}
+                    onChange={(e) => setLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: e.target.value } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="https://..."
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicLinks[idx]?.url)}
+                    onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
+                  />
+                </div>
               </div>
             </div>
           </details>

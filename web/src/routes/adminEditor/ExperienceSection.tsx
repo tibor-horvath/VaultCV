@@ -22,15 +22,15 @@ export function ExperienceSection(props: {
               setPublicExperience((cur) => [
                 ...cur,
                 {
-                  company: true,
-                  companyUrl: true,
-                  companyLinkedInUrl: true,
-                  role: true,
-                  start: true,
-                  end: true,
-                  location: true,
-                  skills: true,
-                  highlights: true,
+                  company: false,
+                  companyUrl: false,
+                  companyLinkedInUrl: false,
+                  role: false,
+                  start: false,
+                  end: false,
+                  location: false,
+                  skills: false,
+                  highlights: false,
                 },
               ])
             }}
@@ -48,68 +48,98 @@ export function ExperienceSection(props: {
               <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
               Experience {idx + 1}: {(e.company || e.role || 'Untitled').slice(0, 60)}
             </summary>
-            <div className="mt-2 grid grid-cols-1 gap-2 md:mt-0 md:grid-cols-2">
-              <div className="flex items-start gap-2">
-                <input
-                  value={e.company}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, company: ev.target.value } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Company"
-                />
-                <ToggleButton
-                  pressed={Boolean(publicExperience[idx]?.company)}
-                  onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, company: !x.company } : x)))}
-                />
+            <div className="mt-2 space-y-2 md:mt-0">
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Company
+                  <input
+                    value={e.company}
+                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, company: ev.target.value } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Company"
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicExperience[idx]?.company)}
+                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, company: !x.company } : x)))}
+                  />
+                </div>
               </div>
-              <div className="flex items-start gap-2">
-                <input
-                  value={e.role}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: ev.target.value } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Role"
-                />
-                <ToggleButton
-                  pressed={Boolean(publicExperience[idx]?.role)}
-                  onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: !x.role } : x)))}
-                />
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Role
+                  <input
+                    value={e.role}
+                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: ev.target.value } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Role"
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicExperience[idx]?.role)}
+                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: !x.role } : x)))}
+                  />
+                </div>
               </div>
-              <div className="flex items-start gap-2">
-                <input
-                  value={e.start}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: ev.target.value } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Start"
-                />
-                <ToggleButton
-                  pressed={Boolean(publicExperience[idx]?.start)}
-                  onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: !x.start } : x)))}
-                />
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Start
+                  <input
+                    value={e.start}
+                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: ev.target.value } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Start"
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicExperience[idx]?.start)}
+                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: !x.start } : x)))}
+                  />
+                </div>
               </div>
-              <div className="flex items-start gap-2">
-                <input
-                  value={e.end}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: ev.target.value } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="End"
-                />
-                <ToggleButton
-                  pressed={Boolean(publicExperience[idx]?.end)}
-                  onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: !x.end } : x)))}
-                />
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  End
+                  <input
+                    value={e.end}
+                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: ev.target.value } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="End"
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicExperience[idx]?.end)}
+                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: !x.end } : x)))}
+                  />
+                </div>
               </div>
-              <div className="flex items-start gap-2 md:col-span-2">
-                <input
-                  value={e.location ?? ''}
-                  onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: ev.target.value || undefined } : x)))}
-                  className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Location (optional)"
-                />
-                <ToggleButton
-                  pressed={Boolean(publicExperience[idx]?.location)}
-                  onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: !x.location } : x)))}
-                />
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Location (optional)
+                  <input
+                    value={e.location ?? ''}
+                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: ev.target.value || undefined } : x)))}
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Location"
+                  />
+                </label>
+                <div className="pt-5">
+                  <ToggleButton
+                    pressed={Boolean(publicExperience[idx]?.location)}
+                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: !x.location } : x)))}
+                  />
+                </div>
               </div>
-              <div className="flex items-start gap-2 md:col-span-2">
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   Skills (one per line)
                   <textarea
@@ -118,7 +148,7 @@ export function ExperienceSection(props: {
                     onChange={(ev) =>
                       setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, skills: textAreaLinesToStringArray(ev.target.value) } : x)))
                     }
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   />
                 </label>
                 <div className="pt-5">
@@ -128,7 +158,8 @@ export function ExperienceSection(props: {
                   />
                 </div>
               </div>
-              <div className="flex items-start gap-2 md:col-span-2">
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   Highlights (one per line)
                   <textarea
@@ -139,7 +170,7 @@ export function ExperienceSection(props: {
                         cur.map((x, i) => (i === idx ? { ...x, highlights: textAreaLinesToStringArray(ev.target.value) } : x)),
                       )
                     }
-                    className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 font-mono text-[12px] dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   />
                 </label>
                 <div className="pt-5">
