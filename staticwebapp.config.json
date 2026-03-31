@@ -23,6 +23,16 @@
       ]
     }
   ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    },
+    "403": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    }
+  },
   "platform": {
     "apiRuntime": "node:22"
   },

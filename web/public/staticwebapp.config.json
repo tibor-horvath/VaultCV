@@ -1,14 +1,38 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/api/*", "/assets/*", "/*.css", "/*.js", "/*.ico", "/*.png", "/*.svg"]
+    "exclude": [
+      "/api/*",
+      "/assets/*",
+      "/*.css",
+      "/*.js",
+      "/*.ico",
+      "/*.png",
+      "/*.svg"
+    ]
   },
   "routes": [
     {
       "route": "/admin/*",
-      "allowedRoles": ["admin"]
+      "methods": [
+        "post",
+        "get"
+      ],
+      "allowedRoles": [
+        "admin"
+      ]
     }
   ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    },
+    "403": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    }
+  },
   "platform": {
     "apiRuntime": "node:22"
   },
@@ -20,4 +44,3 @@
     "Content-Security-Policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https://*.blob.core.windows.net; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://*.blob.core.windows.net"
   }
 }
-
