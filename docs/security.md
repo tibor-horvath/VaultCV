@@ -12,7 +12,7 @@ Session details:
 ## Public vs private configuration
 
 - **Public (`VITE_*`)**: embedded into the built web bundle. Only use for non-sensitive values like display name, title, and branding links.
-- **Private (server-side app settings)**: never commit. This includes `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, SAS tokens / blob URLs with SAS, and any deployment tokens.
+- **Private (server-side app settings)**: never commit. This includes `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, and any deployment tokens.
 
 Local-only files that should remain uncommitted:
 

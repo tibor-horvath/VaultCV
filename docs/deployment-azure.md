@@ -63,21 +63,18 @@ az staticwebapp create \
 
 ## Step 3 — Upload a profile photo (optional)
 
-The API can serve your photo from Azure Blob Storage without embedding image data in your profile JSON payloads. Skip this step if you don't want a profile photo.
+Profile photos are uploaded and managed directly through the **admin editor** — no manual blob or SAS configuration is required. Skip this step if you don't want a profile photo.
 
-> **What is Azure Blob Storage?** It's a file hosting service — like a private folder in the cloud. A **SAS token** (Shared Access Signature) is a special string you attach to a file URL that proves you have permission to access it, without needing a password.
+Once your site is deployed and you have admin access (see Step 5 and the [admin guide](admin.md)):
 
-1. In the [Azure Portal](https://portal.azure.com), search for **Storage accounts** and click **+ Create**.
-2. Choose the same Resource Group you created earlier, give the account a name, and click **Review + create**.
-3. Once created, go to the storage account → **Containers** → **+ Container**. Give it a name (e.g. `photos`) and set access to **Private**.
-4. Open the container and click **Upload** to upload your photo.
-5. Click on the uploaded file, then click **Generate SAS**. Set:
-   - **Permissions**: Read
-   - **Expiry**: set a date a year or more away (you can regenerate it later)
-   - Click **Generate SAS token and URL**
-6. Copy the **Blob SAS URL** — split it at the `?`: the part before is `PROFILE_PHOTO_URL`, the part from `?` onward (including the `?`) is `PROFILE_PHOTO_SAS_TOKEN`.
+1. Open your site and sign in as an admin.
+2. Go to `/admin/editor`.
+3. In the **Basics** section, click **Upload photo** and select a JPEG or PNG image.
+4. Use the crop tool to position and zoom the image, then click **Confirm**.
+5. Toggle **Profile photo** to control whether the photo appears on the public landing page.
+6. Click **Save** to persist the changes.
 
-7. **CORS (required for PDF export):** In the storage account, open **Settings** → **Resource sharing (CORS)** → **Blob service**. Add a rule that allows **GET** from your Static Web App origin (for example `https://your-app.azurestaticapps.net`). Allowed headers can be `*`; exposed headers can be empty. Without this, the photo may show in the browser but appear **missing in the generated PDF** (client-side canvas capture).
+The photo is stored in the same Azure Blob Storage container as your profile JSON (configured in Step 4 via `CV_PROFILE_CONTAINER`). No separate storage account or SAS token setup is needed.
 
 ## Step 4 — Configure Application settings
 
@@ -95,8 +92,6 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | `CV_PROFILE_STORAGE_CONNECTION_STRING` | Required Azure Storage connection string (or use `AZURE_STORAGE_CONNECTION_STRING`). |
 | `CV_PROFILE_CONTAINER` | Required container name that holds your profile JSON blobs. |
 | `CV_ALLOWED_ORIGINS` | Optional comma-separated origin allowlist for admin mutations (used by CSRF guard). Recommended when you have multiple domains (e.g. apex + `www`). |
-| `PROFILE_PHOTO_URL` | Azure Blob URL of your profile photo (the part before `?` from Step 3). |
-| `PROFILE_PHOTO_SAS_TOKEN` | SAS token string from Step 3 (starting with `?` or without — both work). |
 | `AZURE_STORAGE_CONNECTION_STRING` | Required for share links (Table Storage). Connection string to the storage account where the `sharelinks` table lives. |
 | `CV_SHARELINKS_TABLE` | Optional Table Storage table name for share links. Default: `sharelinks`. |
 
@@ -137,6 +132,5 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 | API returns 401 and debug shows `signature_mismatch` while headers are present | Wrong token source selected (often a platform-injected `Authorization` bearer token) | Prefer the `cv_session` cookie over `Authorization` in API token resolution. |
 | API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
 | Landing page shows no profile details | Missing public profile blob | Ensure `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING` (or `AZURE_STORAGE_CONNECTION_STRING`), and `CV_PROFILE_CONTAINER` are set, and the `{slug}-public-profile-{locale}.json` blob exists. |
-| Profile photo not loading | Invalid URL or expired SAS token | Regenerate a SAS token in Azure Storage and update `PROFILE_PHOTO_SAS_TOKEN`. |
-| Profile photo missing in **PDF** only | Blob CORS not allowing your site origin | In the storage account → **CORS** for Blob service, allow **GET** from your SWA URL. See [pdf-export.md](pdf-export.md). |
+| Profile photo not loading | No image uploaded yet | Upload a photo via the admin editor: `/admin/editor` → Basics → **Upload photo**. |
 | Site shows "page not found" for routes | Routing config missing | Ensure `staticwebapp.config.json` was deployed — it should be in the `web/public/` folder. |

@@ -10,7 +10,7 @@ Key fields:
   - `mobile` is optional; prefer international format (for example `+36...`).
   - In the web CV view, `mobile` is hidden by default and shown only after the visitor clicks **Reveal phone**.
   - `photoAlt` is optional and used as the `alt` attribute for the profile image (defaults to `{name} profile photo`).
-  - Keep photo bytes out of profile JSON files. Configure `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`) so the API injects `basics.photoUrl` at request time.
+  - The profile photo itself is uploaded and managed via the admin editor (`/admin/editor` → Basics → **Upload photo**). `basics.photoUrl` is set automatically based on whether an image has been uploaded and the public visibility toggle is on.
 - `links`: only **GitHub** and **LinkedIn** are rendered in the header right now
 - `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | school | language | other`
 - `languages`: string array, shown as chips
@@ -23,7 +23,7 @@ Key fields:
 
 ## Example
 
-Below is a single JSON object (the file content you upload to Blob as `{slug}-private-profile-{locale}.json`). Omit sections you do not need. Do not put `basics.photoUrl` here unless you inject it yourself; the API normally adds it from blob settings.
+Below is a single JSON object (the file content you upload to Blob as `{slug}-private-profile-{locale}.json`). Omit sections you do not need. `basics.photoUrl` is managed automatically by the API based on whether a profile image has been uploaded.
 
 ```json
 {

@@ -1,6 +1,7 @@
 import { ToggleButton } from './ToggleButton'
 import { IdCard } from 'lucide-react'
 import type { PublicBasicsFlags } from './types'
+import { ProfileImageUpload } from './ProfileImageUpload'
 
 export function BasicsSection(props: {
   basicsName: string
@@ -17,6 +18,8 @@ export function BasicsSection(props: {
   setBasicsSummary: (v: string) => void
   basicsPhotoAlt: string
   setBasicsPhotoAlt: (v: string) => void
+  hasProfileImage: boolean
+  onProfileImageChange: (hasImage: boolean) => void
   publicBasics: PublicBasicsFlags
   setPublicBasics: (updater: (cur: PublicBasicsFlags) => PublicBasicsFlags) => void
   publicBasicsErrors?: Partial<Record<keyof PublicBasicsFlags, string>>
@@ -36,6 +39,8 @@ export function BasicsSection(props: {
     setBasicsSummary,
     basicsPhotoAlt,
     setBasicsPhotoAlt,
+    hasProfileImage,
+    onProfileImageChange,
     publicBasics,
     setPublicBasics,
     publicBasicsErrors,
@@ -161,23 +166,29 @@ export function BasicsSection(props: {
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-          <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Photo alt
-            <input
-              id="basics-photo-alt"
-              value={basicsPhotoAlt}
-              onChange={(e) => setBasicsPhotoAlt(e.target.value)}
-              aria-invalid={Boolean(publicBasicsErrors?.photoAlt)}
-              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-            {publicBasicsErrors?.photoAlt ? (
-              <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.photoAlt}</div>
-            ) : null}
-          </label>
+          <div className="flex flex-col gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+            Profile photo
+            <ProfileImageUpload hasProfileImage={hasProfileImage} onChange={onProfileImageChange} />
+            <label className="flex flex-col gap-1">
+              Photo alt text
+              <input
+                id="basics-photo-alt"
+                value={basicsPhotoAlt}
+                onChange={(e) => setBasicsPhotoAlt(e.target.value)}
+                aria-invalid={Boolean(publicBasicsErrors?.photo)}
+                placeholder="e.g. John Doe headshot"
+                className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              />
+              {publicBasicsErrors?.photo ? (
+                <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.photo}</div>
+              ) : null}
+            </label>
+          </div>
           <div className="pt-5">
             <ToggleButton
-              pressed={publicBasics.photoAlt}
-              onClick={() => setPublicBasics((cur) => ({ ...cur, photoAlt: !cur.photoAlt }))}
+              pressed={publicBasics.photo}
+              onClick={() => setPublicBasics((cur) => ({ ...cur, photo: !cur.photo }))}
+              title="Show photo on public profile"
             />
           </div>
         </div>

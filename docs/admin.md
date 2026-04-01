@@ -27,6 +27,13 @@ Primary admin API endpoints:
 - `PUT /api/manage/profile/private`
 - `GET /api/manage/profile/public`
 - `PUT /api/manage/profile/public`
+- `GET /api/manage/profile/image`
+- `PUT /api/manage/profile/image`
+- `DELETE /api/manage/profile/image`
+
+Public (unauthenticated) image endpoint:
+
+- `GET /api/public-profile/image`
 
 In the Azure Portal, open your Static Web App resource → **Role assignments** and assign yourself the `admin` role.
 
@@ -67,6 +74,12 @@ Always-private fields are never exposed publicly:
 - credential dates: `dateEarned`, `dateExpires`
 - education-sensitive metadata (for example GPA/honors/thesis/advisor)
 - share-link notes and metadata
+
+The **Profile photo** section lets you:
+
+- Upload and crop a JPEG or PNG image (stored in Blob Storage as `{slug}-profile-image`).
+- Toggle whether the photo appears on the public landing page. When the toggle is off the photo is still stored and visible in the editor, but `basics.photoUrl` is omitted from the public profile payload.
+- Delete the photo entirely.
 
 ## Security notes (important)
 

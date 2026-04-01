@@ -43,7 +43,7 @@ To run the API locally with secrets, create `api/local.settings.json` (gitignore
 You can copy the committed template and edit values:
 
 - Copy `api/local.settings.example.json` to `api/local.settings.json`
-- Set `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING`, `CV_PROFILE_CONTAINER` (plus optional photo settings).
+- Set `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING`, `CV_PROFILE_CONTAINER`.
 
 Minimal `Values` shape:
 
@@ -57,9 +57,7 @@ Minimal `Values` shape:
     "CV_SESSION_SIGNING_KEY": "<random-secret-at-least-32-chars>",
     "CV_PROFILE_SLUG": "john-doe",
     "CV_PROFILE_STORAGE_CONNECTION_STRING": "<azure-storage-connection-string>",
-    "CV_PROFILE_CONTAINER": "profiles",
-    "PROFILE_PHOTO_URL": "https://<account>.blob.core.windows.net/<container>/<blob>",
-    "PROFILE_PHOTO_SAS_TOKEN": "sp=...&st=...&se=...&spr=https&sv=...&sr=b&sig=..."
+    "CV_PROFILE_CONTAINER": "profiles"
   }
 }
 ```

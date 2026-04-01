@@ -162,16 +162,6 @@ function jsonResponse(status: number, body: unknown) {
   }
 }
 
-function normalizeSasToken(token: string) {
-  return token.trim().replace(/^\?+/, '')
-}
-
-function appendSasToken(url: string, sasToken: string) {
-  if (!sasToken) return url
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}${sasToken}`
-}
-
 function isDebugAuthEnabled() {
   if ((process.env.NODE_ENV ?? '').trim().toLowerCase() === 'production') return false
   return (process.env.CV_DEBUG_AUTH ?? '').trim() === '1'
@@ -273,19 +263,9 @@ export default async function (context: Context, req: HttpRequest) {
     }
     const data = JSON.parse(raw) as Record<string, unknown>
 
-    // Allow moving photo URL out of `PRIVATE_PROFILE_JSON`.
-    // Inject a direct URL from `PROFILE_PHOTO_URL` (+ optional `PROFILE_PHOTO_SAS_TOKEN`).
     if (data && typeof data === 'object') {
       const dataObj = data as Record<string, unknown>
       if (!dataObj.locale) dataObj.locale = resolvedLocale
-      const basics =
-        dataObj.basics && typeof dataObj.basics === 'object' ? (dataObj.basics as Record<string, unknown>) : (dataObj.basics = {})
-
-      const photoUrl = process.env.PROFILE_PHOTO_URL?.trim() ?? ''
-      const photoSasToken = normalizeSasToken(process.env.PROFILE_PHOTO_SAS_TOKEN ?? '')
-      if (photoUrl) {
-        basics.photoUrl = appendSasToken(photoUrl, photoSasToken)
-      }
     }
 
     const response = jsonResponse(200, data)

@@ -121,6 +121,7 @@ function buildDraftSignature(input: {
   basicsLocation: string
   basicsSummary: string
   basicsPhotoAlt: string
+  hasProfileImage: boolean
   skillsText: string
   languagesText: string
   links: LinkRow[]
@@ -146,7 +147,7 @@ function focusFirstValidationIssue(validation: PublicValidation) {
     headline: 'basics-headline',
     location: 'basics-location',
     summary: 'basics-summary',
-    photoAlt: 'basics-photo-alt',
+    photo: 'basics-photo-alt',
   }
   if (firstBasicsKey) {
     document.getElementById(basicsByKey[firstBasicsKey])?.focus()
@@ -222,12 +223,13 @@ export function AdminEditorRoute() {
   const [projects, setProjects] = useState<ProjectRow[]>([])
   const [publicValidation, setPublicValidation] = useState<PublicValidation>(emptyPublicValidation())
 
+  const [hasProfileImage, setHasProfileImage] = useState(false)
   const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
     name: false,
     headline: false,
     location: false,
     summary: false,
-    photoAlt: false,
+    photo: false,
   })
   const [publicSections, setPublicSections] = useState<PublicSectionsFlags>({
     skills: false,
@@ -248,6 +250,7 @@ export function AdminEditorRoute() {
     basicsLocation,
     basicsSummary,
     basicsPhotoAlt,
+    hasProfileImage,
     publicBasics,
   })
   const previousLinksRef = useRef(links)
@@ -273,6 +276,7 @@ export function AdminEditorRoute() {
         basicsLocation,
         basicsSummary,
         basicsPhotoAlt,
+        hasProfileImage,
         skillsText,
         languagesText,
         links,
@@ -296,6 +300,7 @@ export function AdminEditorRoute() {
       basicsLocation,
       basicsSummary,
       basicsPhotoAlt,
+      hasProfileImage,
       skillsText,
       languagesText,
       links,
@@ -458,7 +463,7 @@ export function AdminEditorRoute() {
         headline: typeof pb.headline === 'string' && pb.headline.trim().length > 0,
         location: typeof pb.location === 'string' && pb.location.trim().length > 0,
         summary: typeof pb.summary === 'string' && pb.summary.trim().length > 0,
-        photoAlt:
+        photo:
           (typeof pb.photoAlt === 'string' && pb.photoAlt.trim().length > 0) ||
           (typeof pb.photoUrl === 'string' && pb.photoUrl.trim().length > 0),
       }
@@ -612,6 +617,7 @@ export function AdminEditorRoute() {
       const nextBasicsLocation = asString(basics.location)
       const nextBasicsSummary = asString(basics.summary)
       const nextBasicsPhotoAlt = asString(basics.photoAlt)
+      const nextHasProfileImage = asString(basics.photoUrl).trim().length > 0
       const nextSkillsText = stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.skills))
       const nextLanguagesText = stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.languages))
       const nextLinks = asArray(parsedPrivate.value.links).map((x) => {
@@ -677,6 +683,7 @@ export function AdminEditorRoute() {
         basicsLocation: nextBasicsLocation,
         basicsSummary: nextBasicsSummary,
         basicsPhotoAlt: nextBasicsPhotoAlt,
+        hasProfileImage: nextHasProfileImage,
         skillsText: nextSkillsText,
         languagesText: nextLanguagesText,
         links: nextLinks,
@@ -707,6 +714,7 @@ export function AdminEditorRoute() {
       setBasicsLocation(nextBasicsLocation)
       setBasicsSummary(nextBasicsSummary)
       setBasicsPhotoAlt(nextBasicsPhotoAlt)
+      setHasProfileImage(nextHasProfileImage)
       setSkillsText(nextSkillsText)
       setLanguagesText(nextLanguagesText)
       setLinks(nextLinks)
@@ -777,8 +785,8 @@ export function AdminEditorRoute() {
         delete nextBasics.summary
         changed = true
       }
-      if ((prev.basicsPhotoAlt !== basicsPhotoAlt || prev.publicBasics.photoAlt !== publicBasics.photoAlt) && nextBasics.photoAlt) {
-        delete nextBasics.photoAlt
+      if ((prev.basicsPhotoAlt !== basicsPhotoAlt || prev.hasProfileImage !== hasProfileImage || prev.publicBasics.photo !== publicBasics.photo) && nextBasics.photo) {
+        delete nextBasics.photo
         changed = true
       }
 
@@ -793,9 +801,10 @@ export function AdminEditorRoute() {
       basicsLocation,
       basicsSummary,
       basicsPhotoAlt,
+      hasProfileImage,
       publicBasics,
     }
-  }, [basicsName, basicsHeadline, basicsEmail, basicsMobile, basicsLocation, basicsSummary, basicsPhotoAlt, publicBasics])
+  }, [basicsName, basicsHeadline, basicsEmail, basicsMobile, basicsLocation, basicsSummary, basicsPhotoAlt, hasProfileImage, publicBasics])
 
   useEffect(() => {
     setPublicValidation((cur) => {
@@ -889,6 +898,7 @@ export function AdminEditorRoute() {
         location: basicsLocation.trim() || undefined,
         summary: basicsSummary.trim() || undefined,
         photoAlt: basicsPhotoAlt.trim() || undefined,
+        photoUrl: hasProfileImage ? '/api/manage/profile/image' : undefined,
       }
       next.skills = textAreaLinesToStringArray(skillsText)
       next.languages = textAreaLinesToStringArray(languagesText)
@@ -930,7 +940,7 @@ export function AdminEditorRoute() {
       if (publicBasics.headline && !asString(nextBasics.headline).trim()) nextValidation.basics.headline = 'Headline is toggled public but empty.'
       if (publicBasics.location && !asString(nextBasics.location).trim()) nextValidation.basics.location = 'Location is toggled public but empty.'
       if (publicBasics.summary && !asString(nextBasics.summary).trim()) nextValidation.basics.summary = 'Summary is toggled public but empty.'
-      if (publicBasics.photoAlt && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photoAlt = 'Photo alt is toggled public but empty.'
+      if (publicBasics.photo && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photo = 'Photo alt is required when photo is toggled public.'
       if (publicSections.skills && nextSkills.length === 0) nextValidation.sections.skills = 'Skills are toggled public but empty.'
       if (publicSections.languages && nextLanguages.length === 0) nextValidation.sections.languages = 'Languages are toggled public but empty.'
 
@@ -1023,8 +1033,8 @@ export function AdminEditorRoute() {
       if (publicBasics.headline) publicBasicsObj.headline = asString(nextBasics.headline)
       if (publicBasics.location && asString(nextBasics.location).trim()) publicBasicsObj.location = asString(nextBasics.location).trim()
       if (publicBasics.summary && asString(nextBasics.summary).trim()) publicBasicsObj.summary = asString(nextBasics.summary).trim()
-      if (publicBasics.photoAlt && asString(nextBasics.photoAlt).trim()) publicBasicsObj.photoAlt = asString(nextBasics.photoAlt).trim()
-      if (publicBasics.photoAlt && asString(nextBasics.photoUrl).trim()) publicBasicsObj.photoUrl = asString(nextBasics.photoUrl).trim()
+      if (publicBasics.photo && asString(nextBasics.photoAlt).trim()) publicBasicsObj.photoAlt = asString(nextBasics.photoAlt).trim()
+      if (publicBasics.photo && hasProfileImage) publicBasicsObj.photoUrl = '/api/public-profile/image'
       if (Object.keys(publicBasicsObj).length) publicNext.basics = publicBasicsObj
 
       if (publicSections.skills) publicNext.skills = nextSkills
@@ -1298,6 +1308,8 @@ export function AdminEditorRoute() {
               setBasicsSummary={setBasicsSummary}
               basicsPhotoAlt={basicsPhotoAlt}
               setBasicsPhotoAlt={setBasicsPhotoAlt}
+              hasProfileImage={hasProfileImage}
+              onProfileImageChange={setHasProfileImage}
               publicBasics={publicBasics}
               setPublicBasics={setPublicBasics}
               publicBasicsErrors={publicValidation.basics}

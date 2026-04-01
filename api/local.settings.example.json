@@ -8,8 +8,7 @@
     "CV_PROFILE_SLUG": "john-doe",
     "CV_PROFILE_STORAGE_CONNECTION_STRING": "<azure-storage-connection-string>",
     "CV_PROFILE_CONTAINER": "profiles",
-    "PROFILE_PHOTO_URL": "https://<account>.blob.core.windows.net/<container>/<blob>",
-    "PROFILE_PHOTO_SAS_TOKEN": "sp=...&st=...&se=...&spr=https&sv=...&sr=b&sig=...",
+
     "CV_ALLOWED_ORIGINS": "http://localhost:4280"
   }
 }

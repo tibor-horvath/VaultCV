@@ -5,7 +5,7 @@ export type PublicBasicsFlags = {
   headline: boolean
   location: boolean
   summary: boolean
-  photoAlt: boolean
+  photo: boolean
 }
 
 export type PublicSectionsFlags = {
