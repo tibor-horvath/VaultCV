@@ -1,7 +1,7 @@
 import { ToggleButton } from './ToggleButton'
 import { ConfirmButton } from './ConfirmButton'
 import { BadgeCheck, Plus, Trash2 } from 'lucide-react'
-import type { CredentialRow, PublicCredentialFlags } from './types'
+import type { CredentialRow } from './types'
 import { IconSelect } from './IconSelect'
 import { CredentialIssuerIcon } from '../../components/cv/CredentialIssuerIcon'
 
@@ -11,12 +11,10 @@ const CUSTOM_OPTION = '__custom__'
 export function CredentialsSection(props: {
   credentials: CredentialRow[]
   setCredentials: (updater: (cur: CredentialRow[]) => CredentialRow[]) => void
-  publicCredentials: PublicCredentialFlags[]
-  setPublicCredentials: (updater: (cur: PublicCredentialFlags[]) => PublicCredentialFlags[]) => void
   isMobile: boolean
   rowErrors?: string[]
 }) {
-  const { credentials, setCredentials, publicCredentials, setPublicCredentials, isMobile, rowErrors } = props
+  const { credentials, setCredentials, isMobile, rowErrors } = props
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
       <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
@@ -27,8 +25,7 @@ export function CredentialsSection(props: {
           <button
             type="button"
             onClick={() => {
-              setCredentials((cur) => [...cur, { issuer: '', label: '', url: '' }])
-              setPublicCredentials((cur) => [...cur, { issuer: false, label: false, url: false }])
+              setCredentials((cur) => [...cur, { issuer: '', label: '', url: '', isPublic: false }])
             }}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
@@ -54,13 +51,12 @@ export function CredentialsSection(props: {
                   confirmLabel="Remove"
                   onConfirm={() => {
                     setCredentials((cur) => cur.filter((_, i) => i !== idx))
-                    setPublicCredentials((cur) => cur.filter((_, i) => i !== idx))
                   }}
                 />
               </div>
               {rowErrors?.[idx] ? <div className="text-[11px] text-red-700 dark:text-red-300">{rowErrors[idx]}</div> : null}
-              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
-                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+              <div className="space-y-2 md:grid md:grid-cols-[1fr_1fr_auto] md:gap-3 md:space-y-0">
+                <div className="grid items-start gap-2">
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     Issuer
                     {(() => {
@@ -108,15 +104,9 @@ export function CredentialsSection(props: {
                       )
                     })()}
                   </label>
-                  <div className="pt-5">
-                    <ToggleButton
-                      pressed={Boolean(publicCredentials[idx]?.issuer)}
-                      onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: !x.issuer } : x)))}
-                    />
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <div className="grid items-start gap-2">
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     Label
                     <input
@@ -126,15 +116,16 @@ export function CredentialsSection(props: {
                       placeholder="Microsoft Certified: ..."
                     />
                   </label>
-                  <div className="pt-5">
-                    <ToggleButton
-                      pressed={Boolean(publicCredentials[idx]?.label)}
-                      onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, label: !x.label } : x)))}
-                    />
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
+                <div className="flex items-start justify-end md:pt-5">
+                  <ToggleButton
+                    pressed={Boolean(c.isPublic)}
+                    onClick={() => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, isPublic: !x.isPublic } : x)))}
+                  />
+                </div>
+
+                <div className="grid items-start gap-2 md:col-span-3">
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     URL
                     <input
@@ -144,12 +135,6 @@ export function CredentialsSection(props: {
                       placeholder="https://..."
                     />
                   </label>
-                  <div className="pt-5">
-                    <ToggleButton
-                      pressed={Boolean(publicCredentials[idx]?.url)}
-                      onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
-                    />
-                  </div>
                 </div>
               </div>
 

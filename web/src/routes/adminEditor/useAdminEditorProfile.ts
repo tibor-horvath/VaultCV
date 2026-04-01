@@ -9,10 +9,8 @@ import type {
   LocaleItem,
   ProjectRow,
   PublicBasicsFlags,
-  PublicCredentialFlags,
   PublicEducationFlags,
   PublicExperienceFlags,
-  PublicLinkFlags,
   PublicProjectFlags,
   PublicSectionsFlags,
 } from './types'
@@ -93,8 +91,6 @@ export function useAdminEditorProfile(params: {
     languages: false,
   })
 
-  const [publicLinks, setPublicLinks] = useState<PublicLinkFlags[]>([])
-  const [publicCredentials, setPublicCredentials] = useState<PublicCredentialFlags[]>([])
   const [publicExperience, setPublicExperience] = useState<PublicExperienceFlags[]>([])
   const [publicEducation, setPublicEducation] = useState<PublicEducationFlags[]>([])
   const [publicProjects, setPublicProjects] = useState<PublicProjectFlags[]>([])
@@ -111,9 +107,7 @@ export function useAdminEditorProfile(params: {
     publicBasics,
   })
   const previousLinksRef = useRef(links)
-  const previousPublicLinksRef = useRef(publicLinks)
   const previousCredentialsRef = useRef(credentials)
-  const previousPublicCredentialsRef = useRef(publicCredentials)
   const previousExperienceRef = useRef(experience)
   const previousPublicExperienceRef = useRef(publicExperience)
   const previousEducationRef = useRef(education)
@@ -144,8 +138,6 @@ export function useAdminEditorProfile(params: {
         projects,
         publicBasics,
         publicSections,
-        publicLinks,
-        publicCredentials,
         publicExperience,
         publicEducation,
         publicProjects,
@@ -168,8 +160,6 @@ export function useAdminEditorProfile(params: {
       projects,
       publicBasics,
       publicSections,
-      publicLinks,
-      publicCredentials,
       publicExperience,
       publicEducation,
       publicProjects,
@@ -325,17 +315,6 @@ export function useAdminEditorProfile(params: {
         if (key !== '|') publicLinksByKey.set(key, o)
       }
 
-      const privateLinksArr = asArray(parsedPrivate.value.links).map((x) => asObject(x))
-      const nextPublicLinks = privateLinksArr.map((o) => {
-        const key = `${asString(o.label).trim()}|${asString(o.url).trim()}`
-        const pub = publicLinksByKey.get(key) ?? null
-        if (!pub) return { label: false, url: false }
-        return {
-          label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
-          url: typeof pub.url === 'string' && asString(pub.url).trim().length > 0,
-        }
-      })
-
       const publicCredArr = asArray(parsedPublic.value.credentials)
       const publicCredByExactKey = new Map<string, Record<string, unknown>>()
       const publicCredByIssuerLabelKey = new Map<string, Record<string, unknown>>()
@@ -349,22 +328,6 @@ export function useAdminEditorProfile(params: {
         const issuerLabelKey = `${issuer}|${label}`
         if (issuerLabelKey !== '|') publicCredByIssuerLabelKey.set(issuerLabelKey, o)
       }
-      const privateCredArr = asArray(parsedPrivate.value.credentials).map((x) => asObject(x))
-      const nextPublicCredentials = privateCredArr.map((o) => {
-        const issuer = asString(o.issuer).trim()
-        const label = asString(o.label).trim()
-        const url = asString(o.url).trim()
-        const exactKey = `${issuer}|${label}|${url}`
-        const issuerLabelKey = `${issuer}|${label}`
-        const pub = publicCredByExactKey.get(exactKey) ?? publicCredByIssuerLabelKey.get(issuerLabelKey) ?? null
-        if (!pub) return { issuer: false, label: false, url: false }
-        return {
-          issuer: typeof pub.issuer === 'string' && asString(pub.issuer).trim().length > 0,
-          label: typeof pub.label === 'string' && asString(pub.label).trim().length > 0,
-          url: typeof pub.url === 'string' && asString(pub.url).trim().length > 0,
-        }
-      })
-
       const publicExpArr = asArray(parsedPublic.value.experience)
       const publicExpByKey = new Map<string, Record<string, unknown>>()
       for (const x of publicExpArr) {
@@ -467,14 +430,23 @@ export function useAdminEditorProfile(params: {
       const nextLanguagesText = stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.languages))
       const nextLinks = asArray(parsedPrivate.value.links).map((x) => {
         const o = asObject(x)
-        return { label: asString(o.label), url: asString(o.url) }
+        const label = asString(o.label)
+        const url = asString(o.url)
+        const key = `${label.trim()}|${url.trim()}`
+        return { label, url, isPublic: key !== '|' && publicLinksByKey.has(key) }
       })
       const nextCredentials = asArray(parsedPrivate.value.credentials).map((x) => {
         const o = asObject(x)
+        const issuer = asString(o.issuer)
+        const label = asString(o.label)
+        const url = asString(o.url)
+        const exactKey = `${issuer.trim()}|${label.trim()}|${url.trim()}`
+        const issuerLabelKey = `${issuer.trim()}|${label.trim()}`
         return {
-          issuer: asString(o.issuer),
-          label: asString(o.label),
-          url: asString(o.url),
+          issuer,
+          label,
+          url,
+          isPublic: (exactKey !== '||' && publicCredByExactKey.has(exactKey)) || (issuerLabelKey !== '|' && publicCredByIssuerLabelKey.has(issuerLabelKey)),
           dateEarned: asString(o.dateEarned) || undefined,
           dateExpires: asString(o.dateExpires) || undefined,
         }
@@ -538,8 +510,6 @@ export function useAdminEditorProfile(params: {
         projects: nextProjects,
         publicBasics: nextPublicBasics,
         publicSections: nextPublicSections,
-        publicLinks: nextPublicLinks,
-        publicCredentials: nextPublicCredentials,
         publicExperience: nextPublicExperience,
         publicEducation: nextPublicEducation,
         publicProjects: nextPublicProjects,
@@ -547,8 +517,6 @@ export function useAdminEditorProfile(params: {
 
       setPublicBasics(nextPublicBasics)
       setPublicSections(nextPublicSections)
-      setPublicLinks(nextPublicLinks)
-      setPublicCredentials(nextPublicCredentials)
       setPublicExperience(nextPublicExperience)
       setPublicEducation(nextPublicEducation)
       setPublicProjects(nextPublicProjects)
@@ -654,18 +622,15 @@ export function useAdminEditorProfile(params: {
 
   useEffect(() => {
     setPublicValidation((cur) => {
-      const nextErrors = clearChangedRowErrors({
+      const nextErrors = clearChangedRowErrorsWithoutFlags({
         previousRows: previousLinksRef.current,
         nextRows: links,
-        previousFlags: previousPublicLinksRef.current,
-        nextFlags: publicLinks,
         currentErrors: cur.links,
       })
       return nextErrors ? { ...cur, links: nextErrors } : cur
     })
     previousLinksRef.current = links
-    previousPublicLinksRef.current = publicLinks
-  }, [links, publicLinks])
+  }, [links])
 
   useEffect(() => {
     setPrivateValidation((cur) => {
@@ -680,18 +645,15 @@ export function useAdminEditorProfile(params: {
 
   useEffect(() => {
     setPublicValidation((cur) => {
-      const nextErrors = clearChangedRowErrors({
+      const nextErrors = clearChangedRowErrorsWithoutFlags({
         previousRows: previousCredentialsRef.current,
         nextRows: credentials,
-        previousFlags: previousPublicCredentialsRef.current,
-        nextFlags: publicCredentials,
         currentErrors: cur.credentials,
       })
       return nextErrors ? { ...cur, credentials: nextErrors } : cur
     })
     previousCredentialsRef.current = credentials
-    previousPublicCredentialsRef.current = publicCredentials
-  }, [credentials, publicCredentials])
+  }, [credentials])
 
   useEffect(() => {
     setPrivateValidation((cur) => {
@@ -879,7 +841,9 @@ export function useAdminEditorProfile(params: {
       }
       next.skills = textAreaLinesToStringArray(skillsText)
       next.languages = textAreaLinesToStringArray(languagesText)
-      next.links = links.filter((l) => l.label.trim() && l.url.trim())
+      next.links = links
+        .filter((l) => l.label.trim() && l.url.trim())
+        .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
       next.credentials = credentials
         .filter((c) => c.issuer.trim() && c.label.trim())
         .map((c) => ({
@@ -930,26 +894,17 @@ export function useAdminEditorProfile(params: {
       if (publicSections.languages && nextLanguages.length === 0) nextValidation.sections.languages = 'Languages are toggled public but empty.'
 
       links.forEach((l, idx) => {
-        const flags = publicLinks[idx]
-        if (!hasAnyEnabledFlag(flags)) return
+        if (!l.isPublic) return
         const label = (l.label ?? '').trim()
         const url = (l.url ?? '').trim()
-        if (!flags?.label || !flags?.url || !label || !url) {
-          nextValidation.links[idx] = 'Public link requires label and URL, both toggled on and filled.'
-        }
+        if (!label || !url) nextValidation.links[idx] = 'Public link requires both label and URL.'
       })
 
       credentials.forEach((c, idx) => {
-        const flags = publicCredentials[idx]
-        if (!hasAnyEnabledFlag(flags)) return
+        if (!c.isPublic) return
         const issuer = (c.issuer ?? '').trim()
         const label = (c.label ?? '').trim()
-        const url = (c.url ?? '').trim()
-        if (!flags?.issuer || !flags?.label || !issuer || !label) {
-          nextValidation.credentials[idx] = 'Public credential requires issuer and label, both toggled on and filled.'
-          return
-        }
-        if (flags.url && !url) nextValidation.credentials[idx] = 'Credential URL is toggled public but empty.'
+        if (!issuer || !label) nextValidation.credentials[idx] = 'Public credential requires both issuer and label.'
       })
 
       experience.forEach((e, idx) => {
@@ -1026,9 +981,8 @@ export function useAdminEditorProfile(params: {
       if (publicSections.languages) publicNext.languages = nextLanguages
 
       const publicLinksOut = links
-        .map((l, idx) => {
-          const flags = publicLinks[idx]
-          if (!flags?.label || !flags?.url) return null
+        .map((l) => {
+          if (!l.isPublic) return null
           const label = (l.label ?? '').trim()
           const url = (l.url ?? '').trim()
           if (!label || !url) return null
@@ -1038,15 +992,13 @@ export function useAdminEditorProfile(params: {
       if (publicLinksOut.length) publicNext.links = publicLinksOut
 
       const publicCredOut = credentials
-        .map((c, idx) => {
-          const flags = publicCredentials[idx]
-          if (!hasAnyEnabledFlag(flags)) return null
+        .map((c) => {
+          if (!c.isPublic) return null
           const issuer = (c.issuer ?? '').trim()
           const label = (c.label ?? '').trim()
           const url = (c.url ?? '').trim()
-          if (!flags?.issuer || !flags?.label || !issuer || !label) return null
-          if (flags.url && !url) return null
-          return flags.url && url ? { issuer, label, url } : { issuer, label }
+          if (!issuer || !label) return null
+          return url ? { issuer, label, url } : { issuer, label }
         })
         .filter(Boolean)
       if (publicCredOut.length) publicNext.credentials = publicCredOut
@@ -1202,10 +1154,6 @@ export function useAdminEditorProfile(params: {
     setPublicBasics,
     publicSections,
     setPublicSections,
-    publicLinks,
-    setPublicLinks,
-    publicCredentials,
-    setPublicCredentials,
     publicExperience,
     setPublicExperience,
     publicEducation,
