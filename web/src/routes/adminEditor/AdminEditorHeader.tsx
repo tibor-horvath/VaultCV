@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react'
 import { Languages, Link2, LoaderCircle, LogOut, Save, Shield, SquarePen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { LocaleItem } from './types'
+import { AdminPageHeader } from '../AdminPageHeader'
 
 export function AdminEditorHeader(props: {
   locale: string
@@ -21,20 +22,12 @@ export function AdminEditorHeader(props: {
     if (!confirmed) event.preventDefault()
   }
   return (
-    <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-slate-900 dark:text-white">
-            <SquarePen className="h-5 w-5" />
-            <div className="text-lg font-semibold">Edit CV</div>
-          </div>
-          {signedInEmail ? (
-            <div className="text-xs text-slate-600 dark:text-slate-300">
-              Signed in as <span className="font-mono">{signedInEmail}</span>
-            </div>
-          ) : null}
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
+    <AdminPageHeader
+      title="Edit CV"
+      icon={<SquarePen className="h-5 w-5" />}
+      signedInEmail={signedInEmail}
+      actions={
+        <>
           <Link
             to="/admin"
             onClick={(event) => confirmIfDirty(event)}
@@ -85,9 +78,9 @@ export function AdminEditorHeader(props: {
           >
             <LogOut className="h-3.5 w-3.5 shrink-0" /> Sign out
           </a>
-        </div>
-      </div>
-    </>
+        </>
+      }
+    />
   )
 }
 
