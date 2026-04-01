@@ -102,7 +102,7 @@ export function StringListEditor(props: {
             Tip: you can paste multiple values separated by new lines, commas, or semicolons.
           </div>
 
-          <div className="space-y-2">
+          <div className={multilineItems ? 'space-y-2' : 'grid grid-cols-1 gap-2 md:grid-cols-2'}>
             {normalizedItems.map((item, idx) => (
               <div key={`${item}:${idx}`} className="grid grid-cols-[1fr_auto] items-start gap-2 rounded-lg border border-slate-200/60 p-2 dark:border-slate-800">
                 {multilineItems ? (
