@@ -16,7 +16,7 @@ export const enMessages = {
   themeLight: 'Light',
   themeDark: 'Dark',
   locked: 'Locked',
-  lockedHintPrefix: 'Scan your QR code to open this page with a token parameter:',
+  lockedHintPrefix: 'Use your share link or QR code to unlock:',
   lockedHintLangOptional: 'optional: add &lang=<locale> (e.g. de, hu) to open in that language',
   loadingCv: 'Verifying token and loading CV...',
   unlockedUntil: 'Unlocked until',
@@ -58,7 +58,7 @@ export const enMessages = {
   backToCv: 'Back to CV',
   pdfLayoutTitle: 'Print layout',
   pdfSessionExpiredHint:
-    'Your session is not active. Open the CV from the home page with your access link (or add ?t=TOKEN to the URL), then open Print / PDF again.',
+    'Your session is not active. Open the CV from the home page with your access link, then open Print / PDF again.',
   pdfDevPreviewBanner:
     'Local preview: mock CV data (?preview=1). Remove the query to load the real CV when unlocked.',
   pdfProfilePhotoContext: 'Profile photo',

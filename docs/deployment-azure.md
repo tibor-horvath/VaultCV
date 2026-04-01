@@ -92,8 +92,7 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 
 | Setting | Value |
 |---|---|
-| `CV_ACCESS_TOKEN` | Must be **exactly 32 hexadecimal characters** (GUID without hyphens). Generate: `[guid]::NewGuid().ToString("N")` (PowerShell) or `openssl rand -hex 16` (bash — 16 bytes → 32 hex chars). Do **not** use `openssl rand -hex 32` (that yields 64 hex characters and will be rejected). See [security.md](security.md#access-token-format). |
-| `CV_SESSION_SIGNING_KEY` | Required signing secret for short-lived session tokens. Use a different random value than `CV_ACCESS_TOKEN` (do not reuse). |
+| `CV_SESSION_SIGNING_KEY` | Required signing secret for short-lived session tokens. Use a strong random value.
 | `CV_SESSION_TTL_SECONDS` | Optional session token lifetime in seconds. Default: `3600` (1 hour). Allowed range: `60` to `86400`. |
 | `SUPPORTED_LOCALES` | Optional comma-separated locale list exposed by `/api/locales` and used by the frontend selector (example: `en` or `en,hu,de`). Fallback: `en`. |
 | `CV_PROFILE_SLUG` | Required slug used in blob filenames (for example `john-doe`). This is the **primary** identifier for your profile across the public site and the admin editor. |
@@ -115,20 +114,20 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 > az staticwebapp appsettings set \
 >   --name <your-app-name> \
 >   --resource-group <your-rg> \
->   --setting-names CV_ACCESS_TOKEN="<token>" CV_PROFILE_SLUG="john-doe" CV_PROFILE_CONTAINER="profiles"
+>   --setting-names CV_SESSION_SIGNING_KEY="<secret>" CV_PROFILE_SLUG="john-doe" CV_PROFILE_CONTAINER="profiles"
 > ```
 
 ### Blob security and operations guidance
 
 - Minimum: private container + read-only SAS (`sp=r`) with explicit expiry and a rotation schedule.
 - Preferred where supported: managed identity-based blob read access, so long-lived SAS secrets are avoided.
-- Keep real secrets (`CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`) in app settings/Key Vault, not in blob JSON.
+- Keep real secrets (`CV_SESSION_SIGNING_KEY`) in app settings/Key Vault, not in blob JSON.
 
 ## Step 5 — Verify the deployment
 
 1. In the Azure Portal, open your Static Web App and copy the **URL** from the overview page (e.g. `https://nice-river-abc123.azurestaticapps.net`).
 2. Open the URL in your browser — you should see the landing page with your name and title.
-3. Open `https://<your-site>/?t=<CV_ACCESS_TOKEN>` to confirm the full CV unlocks correctly (paste the token or use the link; then open the CV from the landing page). Optionally try `?t=<CV_ACCESS_TOKEN>&lang=<locale>` to confirm the forced language.
+3. Create a share link from the admin page (`/admin/share`) and open it to confirm the full CV unlocks correctly. Optionally append `&lang=<locale>` to the share link to confirm the forced language.
 
 ## Troubleshooting
 
@@ -136,10 +135,9 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 |---|---|---|
 | GitHub Actions workflow fails on first deploy after SWA creation | `api_location` or `output_location` wrong in the auto-generated workflow file | Open `.github/workflows/azure-static-web-apps-<name>.yml` and set `api_location: "api"` and `output_location: "dist"` (Azure often defaults `api_location` to `""` and `output_location` to `"build"`). |
 | GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
-| API returns 400 / auth says **Invalid token format** | `CV_ACCESS_TOKEN` or pasted code is not 32 hex chars | Regenerate the token (PowerShell GUID **N**, or `openssl rand -hex 16`). See [security.md](security.md#access-token-format). |
-| API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your shareable link (`/?t=...`) exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
+| API returns 401 for every request | Expired or revoked share link | Create a fresh share link from the admin page. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
 | API returns 401 and debug shows `signature_mismatch` while headers are present | Wrong token source selected (often a platform-injected `Authorization` bearer token) | Prefer the `cv_session` cookie over `Authorization` in API token resolution. |
-| API returns "Server is not configured." | Missing required auth config | Ensure both `CV_ACCESS_TOKEN` and `CV_SESSION_SIGNING_KEY` are set in Azure app settings. |
+| API returns "Server is not configured." | Missing required auth config | Ensure `CV_SESSION_SIGNING_KEY` is set in Azure app settings. |
 | Landing page shows no profile details | Missing public profile blob | Ensure `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING` (or `AZURE_STORAGE_CONNECTION_STRING`), and `CV_PROFILE_CONTAINER` are set, and the `{slug}-public-profile-{locale}.json` blob exists. |
 | Profile photo not loading | No image uploaded yet | Upload a photo via the admin editor: `/admin/editor` → Basics → **Upload photo**. |
 | Site shows "page not found" for routes | Routing config missing | Ensure `staticwebapp.config.json` was deployed — it should be in the `web/public/` folder. |

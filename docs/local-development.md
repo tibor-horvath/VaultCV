@@ -38,12 +38,12 @@ func start
 
 The API listens at `http://localhost:7071` by default (for example `POST http://localhost:7071/api/auth`).
 
-To run the API locally with secrets, create `api/local.settings.json` (gitignored — it will not be committed). **`CV_ACCESS_TOKEN` must be exactly 32 hexadecimal characters** (see [security.md](security.md#access-token-format)); **`CV_SESSION_SIGNING_KEY`** is required and should be a long random secret (at least 32 characters).
+To run the API locally with secrets, create `api/local.settings.json` (gitignored — it will not be committed). **`CV_SESSION_SIGNING_KEY`** is required and should be a long random secret (at least 32 characters).
 
 You can copy the committed template and edit values:
 
 - Copy `api/local.settings.example.json` to `api/local.settings.json`
-- Set `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING`, `CV_PROFILE_CONTAINER`.
+- Set `CV_SESSION_SIGNING_KEY`, `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING`, `CV_PROFILE_CONTAINER`.
 
 Minimal `Values` shape:
 
@@ -53,7 +53,6 @@ Minimal `Values` shape:
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "CV_ACCESS_TOKEN": "0123456789abcdef0123456789abcdef",
     "CV_SESSION_SIGNING_KEY": "<random-secret-at-least-32-chars>",
     "CV_PROFILE_SLUG": "john-doe",
     "CV_PROFILE_STORAGE_CONNECTION_STRING": "<azure-storage-connection-string>",

@@ -36,16 +36,6 @@ function jsonResponse(status: number, body: unknown) {
   }
 }
 
-function isGuidN(token: string) {
-  return /^[0-9a-f]{32}$/i.test(token)
-}
-
-function constantTimeEqual(a: string, b: string) {
-  const aBuf = Buffer.from(a)
-  const bBuf = Buffer.from(b)
-  if (aBuf.length !== bBuf.length) return false
-  return crypto.timingSafeEqual(aBuf, bBuf)
-}
 
 function toBase64Url(input: string | Buffer) {
   return Buffer.from(input).toString('base64url')
@@ -97,55 +87,38 @@ function buildSessionCookie(token: string, maxAgeSeconds: number) {
 
 export default async function (context: Context, req: HttpRequest) {
   const payload = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : null
-  const code = (typeof payload?.code === 'string' ? payload.code : '').trim()
   const shareId = (typeof payload?.shareId === 'string' ? payload.shareId : typeof payload?.share === 'string' ? payload.share : '').trim()
-  const expected = (process.env.CV_ACCESS_TOKEN ?? '').trim()
   const signingSecret = getSigningSecret()
 
-  if (!expected || !signingSecret) {
+  if (!signingSecret) {
     const response = jsonResponse(500, { error: 'Server is not configured.' })
     attachDebugHeaders(response, signingSecret)
     context.res = response
     return
   }
 
-  if (shareId) {
-    if (!isShareId(shareId)) {
-      const response = jsonResponse(400, { error: 'Invalid share id format.' })
-      attachDebugHeaders(response, signingSecret)
-      context.res = response
-      return
-    }
-    const validation = await validateShareLink(shareId)
-    if (!validation.ok) {
-      const response = jsonResponse(401, { error: 'Unauthorized' })
-      attachDebugHeaders(response, signingSecret)
-      context.res = response
-      return
-    }
-    await markShareLinkViewed(shareId)
-  } else {
-    if (!isGuidN(code)) {
-      const response = jsonResponse(400, { error: 'Invalid token format.' })
-      attachDebugHeaders(response, signingSecret)
-      context.res = response
-      return
-    }
-
-    if (!isGuidN(expected)) {
-      const response = jsonResponse(500, { error: 'Server token is invalid.' })
-      attachDebugHeaders(response, signingSecret)
-      context.res = response
-      return
-    }
-
-    if (!constantTimeEqual(code, expected)) {
-      const response = jsonResponse(401, { error: 'Unauthorized' })
-      attachDebugHeaders(response, signingSecret)
-      context.res = response
-      return
-    }
+  if (!shareId) {
+    const response = jsonResponse(400, { error: 'Missing share id.' })
+    attachDebugHeaders(response, signingSecret)
+    context.res = response
+    return
   }
+
+  if (!isShareId(shareId)) {
+    const response = jsonResponse(400, { error: 'Invalid share id format.' })
+    attachDebugHeaders(response, signingSecret)
+    context.res = response
+    return
+  }
+
+  const validation = await validateShareLink(shareId)
+  if (!validation.ok) {
+    const response = jsonResponse(401, { error: 'Unauthorized' })
+    attachDebugHeaders(response, signingSecret)
+    context.res = response
+    return
+  }
+  await markShareLinkViewed(shareId)
 
   const ttlSeconds = getSessionTtlSeconds()
   const sessionToken = issueSessionToken(ttlSeconds)

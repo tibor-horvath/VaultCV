@@ -19,7 +19,7 @@ export const deMessages: Partial<MessageCatalog> = {
   themeLight: 'Hell',
   themeDark: 'Dunkel',
   locked: 'Gesperrt',
-  lockedHintPrefix: 'Scanne deinen QR-Code, um diese Seite mit einem Token-Parameter zu öffnen:',
+  lockedHintPrefix: 'Verwende deinen Freigabelink oder QR-Code zum Entsperren:',
   lockedHintLangOptional: 'optional: &lang=<locale> anhängen (z. B. de, hu) für diese Sprache',
   loadingCv: 'Token wird geprüft und Lebenslauf wird geladen...',
   unlockedUntil: 'Freigeschaltet bis',
@@ -61,7 +61,7 @@ export const deMessages: Partial<MessageCatalog> = {
   backToCv: 'Zurück zum CV',
   pdfLayoutTitle: 'Drucklayout',
   pdfSessionExpiredHint:
-    'Deine Sitzung ist nicht aktiv. Öffne den Lebenslauf von der Startseite mit deinem Zugangslink (oder füge ?t=TOKEN zur URL hinzu), dann öffne Druck/PDF erneut.',
+    'Deine Sitzung ist nicht aktiv. Öffne den Lebenslauf von der Startseite mit deinem Zugangslink, dann öffne Druck/PDF erneut.',
   pdfDevPreviewBanner:
     'Lokale Vorschau: Mock-CV (?preview=1). Parameter entfernen, um den echten CV nach Entsperren zu laden.',
   pdfProfilePhotoContext: 'Profilfoto',

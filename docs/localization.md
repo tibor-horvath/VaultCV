@@ -7,7 +7,7 @@ VaultCV supports two localization layers:
 
 ## Locale selection and fallback
 
-- Active locale comes from this order: **share link** `?t=...&lang=...` (both query params together — forces that locale for the visit) → `localStorage` (remembered choice) → browser language. A standalone `?lang=` without `t` is ignored so ad‑hoc links cannot override locale. The chosen locale is sent to APIs via the HTTP `Accept-Language` header. After the access token is consumed on the CV screen, `t` and `lang` are removed from the address bar; the locale remains stored for the session.
+- Active locale comes from this order: **share link** `?s=...&lang=...` (both query params together — forces that locale for the visit) → `localStorage` (remembered choice) → browser language. A standalone `?lang=` without `s` is ignored so ad‑hoc links cannot override locale. The chosen locale is sent to APIs via the HTTP `Accept-Language` header.
 - Supported locales are configured by API runtime env var `SUPPORTED_LOCALES` (comma-separated, e.g. `en,hu,de`) and served by `GET /api/locales`.
 - Locale fallback follows `exact -> base -> en` (example: `de-AT -> de -> en`).
 

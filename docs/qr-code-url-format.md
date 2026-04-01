@@ -1,21 +1,15 @@
 # Share link / QR code URL format
 
-VaultCV supports two URL-based unlock methods:
+VaultCV supports URL-based unlock via share links:
 
-- **Share links (recommended):** `s=<SHARE_ID>` (revocable + expiring, created from the admin page)
-- **Access token:** `t=<TOKEN>` which must match `CV_ACCESS_TOKEN` — **32 hexadecimal characters**, no hyphens ([details](security.md#access-token-format)).
+- **Share links:** `s=<SHARE_ID>` (revocable + expiring, created from the admin page)
 
-## Share links (recommended)
+## Share links
 
 - `https://<your-site>/?s=<SHARE_ID>`
 - Optional — fixed language for the recipient: `https://<your-site>/?s=<SHARE_ID>&lang=<locale>` (example: `lang=de`)
 
 You can turn the URL into a QR code using any free QR generator (search "free QR code generator"). Print it on a business card or add it to your paper CV.
-
-## Access token (optional)
-
-- `https://<your-site>/?t=<TOKEN>`
-- Optional — fixed language: `https://<your-site>/?t=<TOKEN>&lang=<locale>`
 
 The SPA/API auth flow uses the code like this:
 

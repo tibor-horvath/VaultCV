@@ -18,7 +18,7 @@ export const huMessages: Partial<MessageCatalog> = {
   themeLight: 'Világos',
   themeDark: 'Sötét',
   locked: 'Zárolva',
-  lockedHintPrefix: 'Olvassa be a QR-kódot az oldal megnyitásához token paraméterrel:',
+  lockedHintPrefix: 'Használja a megosztó linket vagy QR-kódot a feloldáshoz:',
   lockedHintLangOptional: 'opcionális: adjon hozzá &lang=<locale> (pl. de, hu) paramétert az adott nyelven való megnyitáshoz',
   loadingCv: 'Token ellenőrzése és önéletrajz betöltése...',
   unlockedUntil: 'Feloldva eddig:',
@@ -60,7 +60,7 @@ export const huMessages: Partial<MessageCatalog> = {
   backToCv: 'Vissza az önéletrajzhoz',
   pdfLayoutTitle: 'Nyomtatási elrendezés',
   pdfSessionExpiredHint:
-    'A munkamenet nem aktív. Nyissa meg az önéletrajzot a kezdőlapról a hozzáférési linkkel (vagy adja a ?t=TOKEN paramétert az URL-hez), majd próbálja újra a PDF megnyitását.',
+    'A munkamenet nem aktív. Nyissa meg az önéletrajzot a kezdőlapról a hozzáférési linkkel, majd próbálja újra a PDF megnyitását.',
   pdfDevPreviewBanner:
     'Helyi előnézet: minta adatok (?preview=1). Távolítsa el a paramétert a valódi adatok betöltéséhez feloldás után.',
   pdfProfilePhotoContext: 'Profilkép',

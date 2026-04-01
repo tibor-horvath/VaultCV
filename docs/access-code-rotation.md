@@ -1,21 +1,25 @@
-# 6‑month access code rotation (manual)
+# Share link management
 
-This repo uses a single server-side token (`CV_ACCESS_TOKEN`). To make the access code expire every ~6 months, rotate it twice a year. This is optional but recommended if you want to limit how long a shared link stays valid.
+Access to the CV is granted exclusively through **share links** created from the admin page (`/admin/share`). Each share link has its own expiry date and can be revoked individually.
 
-- **1) Generate a new token** — it must be **exactly 32 hexadecimal characters** (same rules as [security.md](security.md#access-token-format)).
-  - PowerShell:
+## Creating a new share link
 
-```powershell
-[guid]::NewGuid().ToString("N")
-```
+1. Go to `/admin/share` and sign in as an admin.
+2. Click **New share link** and set an expiry date.
+3. Copy the generated `?s=<SHARE_ID>` URL and share it (email, QR code, printed CV, etc.).
 
-  - Bash / macOS Terminal (16 random bytes → 32 hex digits):
+## Revoking a share link
 
-```bash
-openssl rand -hex 16
-```
+Open `/admin/share`, find the link, and click **Revoke**. The share ID is immediately invalidated — anyone using an old link or QR code will get a 401.
 
-- **2) Update `CV_ACCESS_TOKEN`** in your Azure Static Web App's **Settings → Environment variables**.
-- **3) Update your shareable link** — your old `/?t=<OLD_TOKEN>` links will stop working. Update any printed CVs, emails, or QR codes with the new `/?t=<NEW_TOKEN>` value.
-- **4) Keep `CV_SESSION_SIGNING_KEY` separate** from `CV_ACCESS_TOKEN`; rotate it independently if needed.
-- **5) Optional:** set `CV_SESSION_TTL_SECONDS` (default `3600`) to tune session duration.
+## Rotating access
+
+When you want to cycle access (for example every 6 months):
+
+1. Create a new share link with a fresh expiry.
+2. Revoke the old share link(s) from `/admin/share`.
+3. Update any printed CVs, emails, or QR codes with the new `?s=<NEW_SHARE_ID>` URL.
+
+## Signing key rotation
+
+`CV_SESSION_SIGNING_KEY` controls session token integrity and is independent of share links. Rotate it in **Settings → Environment variables** when needed. Rotating it immediately invalidates all active sessions (users will need to re-open their share link).

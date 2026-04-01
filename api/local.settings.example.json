@@ -3,7 +3,6 @@
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "CV_ACCESS_TOKEN": "0123456789abcdef0123456789abcdef",
     "CV_SESSION_SIGNING_KEY": "<random-secret-at-least-32-chars>",
     "CV_PROFILE_SLUG": "john-doe",
     "CV_PROFILE_STORAGE_CONNECTION_STRING": "<azure-storage-connection-string>",
