@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ExternalLink, KeyRound, LoaderCircle, Shield } from 'lucide-react'
+import { ExternalLink, KeyRound, LoaderCircle, Save, Shield } from 'lucide-react'
 import { redirectToLogin } from '../lib/authRedirect'
 import { AdminEditorHeader } from './adminEditor/AdminEditorHeader'
 import { BasicsSection } from './adminEditor/BasicsSection'
@@ -1189,7 +1189,7 @@ export function AdminEditorRoute() {
   }
 
   return (
-    <div className="w-full space-y-6 py-10">
+    <div className="w-full space-y-6 pb-28 pt-10 md:pb-10">
       <AdminEditorHeader
         locale={locale}
         locales={locales}
@@ -1324,6 +1324,34 @@ export function AdminEditorRoute() {
           />
         </>
       )}
+
+      {hasLoadedOnce ? (
+        <>
+          <div className="fixed bottom-6 right-6 z-40 hidden md:block">
+            <button
+              type="button"
+              disabled={loading || isSaving}
+              onClick={() => void save()}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+            >
+              {isSaving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 md:hidden">
+            <button
+              type="button"
+              disabled={loading || isSaving}
+              onClick={() => void save()}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+            >
+              {isSaving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }
