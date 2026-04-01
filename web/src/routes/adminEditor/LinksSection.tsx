@@ -44,22 +44,8 @@ export function LinksSection(props: {
               Link {idx + 1}: {(l.label || l.url || 'Untitled').slice(0, 60)}
             </summary>
             <div className="mt-2 space-y-2 md:mt-0">
-              <div className="flex justify-end">
-                <ConfirmButton
-                  label="Remove link"
-                  icon={<Trash2 className="h-3.5 w-3.5" />}
-                  className="inline-flex items-center gap-1 rounded-lg border border-red-300/70 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-200 dark:hover:bg-red-950/40"
-                  confirmTitle="Remove this link?"
-                  confirmDescription="This removes the link and its public visibility settings."
-                  confirmLabel="Remove"
-                  onConfirm={() => {
-                    setLinks((cur) => cur.filter((_, i) => i !== idx))
-                    setPublicLinks((cur) => cur.filter((_, i) => i !== idx))
-                  }}
-                />
-              </div>
               {rowErrors?.[idx] ? <div className="text-[11px] text-red-700 dark:text-red-300">{rowErrors[idx]}</div> : null}
-              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+              <div className="space-y-2 md:grid md:grid-cols-[1fr_1fr_auto] md:gap-3 md:space-y-0">
                 <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     Label
@@ -135,6 +121,21 @@ export function LinksSection(props: {
                       onClick={() => setPublicLinks((cur) => cur.map((x, i) => (i === idx ? { ...x, url: !x.url } : x)))}
                     />
                   </div>
+                </div>
+
+                <div className="flex items-start justify-end md:pt-5">
+                  <ConfirmButton
+                    label="Remove link"
+                    icon={<Trash2 className="h-3.5 w-3.5" />}
+                    className="inline-flex items-center gap-1 rounded-lg border border-red-300/70 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-200 dark:hover:bg-red-950/40"
+                    confirmTitle="Remove this link?"
+                    confirmDescription="This removes the link and its public visibility settings."
+                    confirmLabel="Remove"
+                    onConfirm={() => {
+                      setLinks((cur) => cur.filter((_, i) => i !== idx))
+                      setPublicLinks((cur) => cur.filter((_, i) => i !== idx))
+                    }}
+                  />
                 </div>
               </div>
             </div>
