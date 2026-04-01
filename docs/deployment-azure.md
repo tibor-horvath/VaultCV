@@ -42,7 +42,7 @@ An **Azure Static Web App** is the cloud resource that hosts your website and AP
    - **Output location**: `dist`
 8. Click **Review + create**, then **Create**.
 
-Azure will open a pull request against your GitHub repo adding a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml`. **Before merging**, open that file and verify the three build settings are correct — Azure sometimes auto-fills wrong defaults:
+Azure will add a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` to your repo. Depending on your repo's branch-protection settings, Azure may either open a pull request or commit the file directly to `main`. Either way, **check the file immediately** and verify the three build settings are correct — Azure often auto-fills wrong defaults:
 
 | Setting | Required value | Why |
 |---|---|---|
@@ -50,9 +50,9 @@ Azure will open a pull request against your GitHub repo adding a workflow file a
 | `api_location` | `"api"` | Azure Functions source lives in `api/` |
 | `output_location` | `"dist"` | Vite outputs to `dist/`, not `build/` |
 
-If any of these are wrong, edit the file in the pull request before merging. Merging with incorrect values causes the GitHub Actions deployment to fail immediately. You can watch the progress under the **Actions** tab in your GitHub repo.
+If any of these are wrong, edit the file (directly or via a follow-up commit/PR) before the next deployment runs. Wrong values cause the GitHub Actions deployment to fail immediately. You can watch the progress under the **Actions** tab in your GitHub repo.
 
-> **Using this template?** This repository does not include a pre-configured deployment workflow. When you link your new repository to an Azure SWA resource, Azure opens a pull request that adds a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` containing your app-specific secret name and resource identifier. Check and correct the build settings in that file (see table above) before merging to activate deployments.
+> **Using this template?** This repository does not include a pre-configured deployment workflow. When you link your new repository to an Azure SWA resource, Azure adds a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` containing your app-specific secret name and resource identifier. Check and correct the build settings in that file (see table above) before or immediately after the first deployment runs.
 
 ### Option B — Azure CLI
 
