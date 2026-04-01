@@ -538,6 +538,11 @@ export function AdminShareRoute() {
                 <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">
                   {t('adminViews').replace('{count}', String(l.viewCount ?? 0)).replace('{date}', epochToIso(l.lastViewedAtEpoch) || t('adminNever'))}
                 </div>
+                {l.notes?.trim() ? (
+                  <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">
+                    <span className="font-semibold">{t('adminNotes')}:</span> {l.notes.trim()}
+                  </div>
+                ) : null}
                 <a className="mt-2 inline-block break-all font-mono text-[11px] underline" href={shareUrl} target="_blank" rel="noreferrer">
                   /?s={l.rowKey}
                 </a>
@@ -608,6 +613,11 @@ export function AdminShareRoute() {
                       <a className="font-mono text-[11px] underline" href={shareUrl} target="_blank" rel="noreferrer">
                         /?s={l.rowKey}
                       </a>
+                      {l.notes?.trim() ? (
+                        <div className="mt-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                          <span className="font-semibold">{t('adminNotes')}:</span> {l.notes.trim()}
+                        </div>
+                      ) : null}
                       {isRevoked ? <div className="mt-0.5 text-[11px] text-red-700 dark:text-red-300">{t('adminStatusRevoked')}</div> : null}
                       {isExpired ? <div className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">{t('adminStatusExpired')}</div> : null}
                     </td>

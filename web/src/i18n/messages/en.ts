@@ -89,6 +89,7 @@ export const enMessages = {
   adminCreateShareLink: 'Create share link',
   adminExpiresInDays: 'Expires in (days)',
   adminNotesAdminOnly: 'Notes (admin-only)',
+  adminNotes: 'Notes',
   adminNotesPlaceholder: 'Role / date / context...',
   adminCreate: 'Create',
   adminShareLinks: 'Share links',

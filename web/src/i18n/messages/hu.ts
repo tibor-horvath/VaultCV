@@ -91,6 +91,7 @@ export const huMessages: Partial<MessageCatalog> = {
   adminCreateShareLink: 'Megosztási link létrehozása',
   adminExpiresInDays: 'Lejárat (nap)',
   adminNotesAdminOnly: 'Megjegyzés (csak adminoknak)',
+  adminNotes: 'Megjegyzés',
   adminNotesPlaceholder: 'Pozíció / dátum / kontextus...',
   adminCreate: 'Létrehozás',
   adminShareLinks: 'Megosztási linkek',

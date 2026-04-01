@@ -93,6 +93,7 @@ export const deMessages: Partial<MessageCatalog> = {
   adminCreateShareLink: 'Freigabelink erstellen',
   adminExpiresInDays: 'Läuft ab in (Tagen)',
   adminNotesAdminOnly: 'Notizen (nur Admin)',
+  adminNotes: 'Notizen',
   adminNotesPlaceholder: 'Rolle / Datum / Kontext...',
   adminCreate: 'Erstellen',
   adminShareLinks: 'Freigabelinks',
