@@ -20,15 +20,28 @@ If there are no new upstream commits the workflow exits early without creating a
 
 ## First-time setup
 
-The workflow requires the following GitHub Actions **permissions** on your repository:
+### 1. Create a fine-grained PAT
 
-| Permission | Required for |
-|---|---|
-| `contents: write` | Pushing the sync branch |
-| `pull-requests: write` | Opening the PR |
-| `actions: write` | Creating/updating the `LAST_TEMPLATE_SYNC` variable |
+The workflow needs to read and write a repository variable (`LAST_TEMPLATE_SYNC`) and open pull requests using a single token. The built-in `GITHUB_TOKEN` does not have the required `variables` scope, so you must create a **fine-grained personal access token** once:
 
-These are declared in the workflow file itself. For public repositories they are granted automatically. For private repositories you may need to confirm that Actions have write access in your repo settings (**Settings → Actions → General → Workflow permissions**).
+1. Go to [github.com → Settings → Developer settings → Fine-grained tokens](https://github.com/settings/personal-access-tokens).
+2. Click **Generate new token**.
+3. Under **Repository access**, select **Only select repositories** and choose your CV repo.
+4. Under **Repository permissions**, set:
+   - **Variables** → **Read and write**
+   - **Pull requests** → **Read and write**
+5. Generate and copy the token.
+
+### 2. Add the PAT as a repository secret
+
+In your repository go to **Settings → Secrets and variables → Actions → New repository secret** and add:
+
+- **Name**: `SYNC_PAT`
+- **Value**: the token you just created
+
+### 3. Workflow permissions
+
+`contents: write` and `pull-requests: write` are declared in the workflow file itself and are granted automatically. The `SYNC_PAT` handles both variable management and PR creation — no additional configuration is needed.
 
 ## Conflict resolution strategy
 
@@ -49,3 +62,117 @@ The scheduled run always uses the default (`tibor-horvath/VaultCV`).
 ## Disabling the workflow
 
 To stop receiving scheduled syncs, delete or disable the workflow in **Settings → Actions → Workflows**, or remove the `schedule` trigger from `.github/workflows/sync-template.yml`.
+
+## Full workflow file
+
+`.github/workflows/sync-template.yml`:
+
+```yaml
+name: Sync with template
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_repo:
+        description: 'Upstream template repository (owner/repo) — defaults to tibor-horvath/VaultCV'
+        required: false
+        default: 'tibor-horvath/VaultCV'
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve upstream repo
+        id: upstream
+        run: |
+          REPO="${{ inputs.upstream_repo }}"
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          BRANCH="sync/template-$(date -u +'%Y%m%d-%H%M%S')"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "https://github.com/${{ steps.upstream.outputs.repo }}.git"
+          git fetch upstream main --no-tags
+
+      - name: Check for new upstream commits
+        id: diff
+        run: |
+          UPSTREAM_HEAD=$(git rev-parse upstream/main)
+          echo "upstream_head=$UPSTREAM_HEAD" >> "$GITHUB_OUTPUT"
+
+          LAST_SHA="${{ vars.LAST_TEMPLATE_SYNC }}"
+          if [ -n "$LAST_SHA" ]; then
+            echo "Last synced upstream commit: $LAST_SHA"
+            COUNT=$(git rev-list ${LAST_SHA}..upstream/main --count 2>/dev/null || echo "unknown")
+          else
+            echo "No sync record found — first run."
+            COUNT=$(git rev-list HEAD..upstream/main --count)
+          fi
+
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$COUNT" = "0" ]; then
+            echo "Already up to date with ${{ steps.upstream.outputs.repo }}."
+          else
+            echo "$COUNT new commit(s) found upstream."
+          fi
+
+      - name: Create sync branch and merge
+        if: steps.diff.outputs.count != '0'
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="${{ steps.upstream.outputs.branch }}"
+          git checkout -b "$BRANCH"
+          git merge upstream/main \
+            --no-edit \
+            --allow-unrelated-histories \
+            -X theirs \
+            -m "chore: sync with template (${{ steps.upstream.outputs.repo }})"
+          git push origin "$BRANCH"
+
+      - name: Record last synced upstream commit
+        if: steps.diff.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+          NEW_SHA: ${{ steps.diff.outputs.upstream_head }}
+        run: |
+          # Requires a fine-grained PAT stored as SYNC_PAT with:
+          #   Repository permissions → Variables → Read and write
+          #   Repository permissions → Pull requests → Read and write
+          if gh api /repos/${{ github.repository }}/actions/variables/LAST_TEMPLATE_SYNC &>/dev/null; then
+            gh api --method PATCH /repos/${{ github.repository }}/actions/variables/LAST_TEMPLATE_SYNC \
+              -f value="$NEW_SHA"
+          else
+            gh api --method POST /repos/${{ github.repository }}/actions/variables \
+              -f name=LAST_TEMPLATE_SYNC -f value="$NEW_SHA"
+          fi
+          echo "LAST_TEMPLATE_SYNC set to $NEW_SHA"
+
+      - name: Open or update pull request
+        if: steps.diff.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+          UPSTREAM: ${{ steps.upstream.outputs.repo }}
+          BRANCH: ${{ steps.upstream.outputs.branch }}
+        run: |
+          BODY_FILE=$(mktemp)
+          printf 'Automated sync of upstream changes from [%s](https://github.com/%s).\n\nReview the changes and merge when ready.' \
+            "$UPSTREAM" "$UPSTREAM" > "$BODY_FILE"
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: sync with template ($UPSTREAM)" \
+            --body-file "$BODY_FILE"
+```
