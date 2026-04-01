@@ -227,75 +227,77 @@ export function ExperienceSection(props: {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Role
-                  <input
-                    value={e.role}
-                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: ev.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="Role"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicExperience[idx]?.role)}
-                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: !x.role } : x)))}
-                  />
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Role
+                    <input
+                      value={e.role}
+                      onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: ev.target.value } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="Role"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicExperience[idx]?.role)}
+                      onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, role: !x.role } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Start
-                  <input
-                    value={e.start}
-                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: ev.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="Start"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicExperience[idx]?.start)}
-                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: !x.start } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Start
+                    <input
+                      value={e.start}
+                      onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: ev.target.value } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="Start"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicExperience[idx]?.start)}
+                      onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, start: !x.start } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  End
-                  <input
-                    value={e.end}
-                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: ev.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="End"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicExperience[idx]?.end)}
-                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: !x.end } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    End
+                    <input
+                      value={e.end}
+                      onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: ev.target.value } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="End"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicExperience[idx]?.end)}
+                      onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, end: !x.end } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Location (optional)
-                  <input
-                    value={e.location ?? ''}
-                    onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: ev.target.value || undefined } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="Location"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicExperience[idx]?.location)}
-                    onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: !x.location } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Location (optional)
+                    <input
+                      value={e.location ?? ''}
+                      onChange={(ev) => setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: ev.target.value || undefined } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="Location"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicExperience[idx]?.location)}
+                      onClick={() => setPublicExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, location: !x.location } : x)))}
+                    />
+                  </div>
                 </div>
               </div>
 
