@@ -266,6 +266,12 @@ export default async function (context: Context, req: HttpRequest) {
     if (data && typeof data === 'object') {
       const dataObj = data as Record<string, unknown>
       if (!dataObj.locale) dataObj.locale = resolvedLocale
+      // Rewrite legacy admin-only photo URL to the public endpoint so token
+      // holders (who are not Azure AD admins) can load the profile image.
+      const basics = dataObj.basics as Record<string, unknown> | undefined
+      if (basics && basics.photoUrl === '/api/manage/profile/image') {
+        basics.photoUrl = '/api/public-profile/image'
+      }
     }
 
     const response = jsonResponse(200, data)
