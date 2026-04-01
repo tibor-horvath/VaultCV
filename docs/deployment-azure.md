@@ -42,9 +42,17 @@ An **Azure Static Web App** is the cloud resource that hosts your website and AP
    - **Output location**: `dist`
 8. Click **Review + create**, then **Create**.
 
-Azure will open a pull request against your GitHub repo adding a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml`. **Merge that pull request** to trigger your first deployment. You can watch the progress under the **Actions** tab in your GitHub repo.
+Azure will add a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` to your repo. Depending on your repo's branch-protection settings, Azure may either open a pull request or commit the file directly to `main`. Either way, **check the file immediately** and verify the three build settings are correct — Azure often auto-fills wrong defaults:
 
-> **Using this template?** This repository does not include a pre-configured deployment workflow. When you link your new repository to an Azure SWA resource, Azure opens a pull request that adds a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` containing your app-specific secret name and resource identifier. Merge that pull request to activate deployments.
+| Setting | Required value | Why |
+|---|---|---|
+| `app_location` | `"web"` | React source lives in `web/` |
+| `api_location` | `"api"` | Azure Functions source lives in `api/` |
+| `output_location` | `"dist"` | Vite outputs to `dist/`, not `build/` |
+
+If any of these are wrong, edit the file (directly or via a follow-up commit/PR) before the next deployment runs. Wrong values cause the GitHub Actions deployment to fail immediately. You can watch the progress under the **Actions** tab in your GitHub repo.
+
+> **Using this template?** This repository does not include a pre-configured deployment workflow. When you link your new repository to an Azure SWA resource, Azure adds a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` containing your app-specific secret name and resource identifier. Check and correct the build settings in that file (see table above) before or immediately after the first deployment runs.
 
 ### Option B — Azure CLI
 
@@ -126,6 +134,7 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
+| GitHub Actions workflow fails on first deploy after SWA creation | `api_location` or `output_location` wrong in the auto-generated workflow file | Open `.github/workflows/azure-static-web-apps-<name>.yml` and set `api_location: "api"` and `output_location: "dist"` (Azure often defaults `api_location` to `""` and `output_location` to `"build"`). |
 | GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
 | API returns 400 / auth says **Invalid token format** | `CV_ACCESS_TOKEN` or pasted code is not 32 hex chars | Regenerate the token (PowerShell GUID **N**, or `openssl rand -hex 16`). See [security.md](security.md#access-token-format). |
 | API returns 401 for every request | Token mismatch or expired session | Double-check `CV_ACCESS_TOKEN` in Azure settings matches the `?t=` value in your shareable link (`/?t=...`) exactly, then retry to get a fresh session token. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
