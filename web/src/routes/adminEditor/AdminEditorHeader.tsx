@@ -1,4 +1,4 @@
-import { ArrowLeft, Languages, Save, SquarePen } from 'lucide-react'
+import { ArrowLeft, Languages, LoaderCircle, Save, SquarePen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { LocaleItem } from './types'
 
@@ -8,9 +8,10 @@ export function AdminEditorHeader(props: {
   setLocale: (locale: string) => void
   hasUnsavedChanges: boolean
   loading: boolean
+  saving: boolean
   onSave: () => void
 }) {
-  const { locale, locales, setLocale, hasUnsavedChanges, loading, onSave } = props
+  const { locale, locales, setLocale, hasUnsavedChanges, loading, saving, onSave } = props
   const localeSelectId = 'admin-editor-locale-select'
   return (
     <>
@@ -57,11 +58,12 @@ export function AdminEditorHeader(props: {
           </Link>
           <button
             type="button"
-            disabled={loading}
+            disabled={loading || saving}
             onClick={onSave}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 sm:w-auto dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            <Save className="h-4 w-4 shrink-0" /> Save
+            {saving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}{' '}
+            {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

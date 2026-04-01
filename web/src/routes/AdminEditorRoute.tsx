@@ -189,6 +189,7 @@ export function AdminEditorRoute() {
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
 
   const [loading, setLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
@@ -836,6 +837,7 @@ export function AdminEditorRoute() {
   }, [projects, publicProjects])
 
   async function save() {
+    setIsSaving(true)
     setLoading(true)
     setError(null)
     setStatus(null)
@@ -1104,11 +1106,13 @@ export function AdminEditorRoute() {
       if (!publicPut.ok) return
 
       await load()
+      setIsDirty(false)
       setPublicValidation(emptyPublicValidation())
       setStatus('Profile saved.')
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Failed saving profile.'))
     } finally {
+      setIsSaving(false)
       setLoading(false)
     }
   }
@@ -1192,6 +1196,7 @@ export function AdminEditorRoute() {
         setLocale={handleLocaleChange}
         hasUnsavedChanges={isDirty}
         loading={loading}
+        saving={isSaving}
         onSave={() => void save()}
       />
 
@@ -1213,6 +1218,17 @@ export function AdminEditorRoute() {
           className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
         >
           {status}
+        </div>
+      ) : null}
+      {isSaving ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+        >
+          <span className="inline-flex items-center gap-2">
+            <LoaderCircle className="h-4 w-4 animate-spin" /> Saving profile...
+          </span>
         </div>
       ) : null}
       {loading && !hasLoadedOnce ? (
