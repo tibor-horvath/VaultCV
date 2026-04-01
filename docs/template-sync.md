@@ -11,25 +11,22 @@ The workflow runs on two triggers:
 
 When new commits are found on the upstream `main` branch, the workflow:
 
-1. Creates a timestamped branch (`sync/template-YYYYMMDD-HHMMSS`).
-2. Merges upstream changes into it using `-X theirs` (upstream wins on conflicts).
+1. Checks out the long-lived `sync/template` branch (creating it if it doesn't exist yet).
+2. Merges upstream changes into it using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
 3. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new commits.
-4. Opens a pull request against your `main` branch for you to review and merge.
 
-If there are no new upstream commits the workflow exits early without creating a branch or PR.
+The `sync/template` branch is refreshed in place on every run. You can open a pull request from it manually whenever you are ready to review and merge the upstream changes. If there are no new upstream commits the workflow exits early without touching anything.
 
 ## First-time setup
 
 ### 1. Create a fine-grained PAT
 
-The workflow needs to read and write a repository variable (`LAST_TEMPLATE_SYNC`) and open pull requests using a single token. The built-in `GITHUB_TOKEN` does not have the required `variables` scope, so you must create a **fine-grained personal access token** once:
+The workflow needs to read and write a repository variable (`LAST_TEMPLATE_SYNC`). The built-in `GITHUB_TOKEN` does not have the required `variables` scope, so you must create a **fine-grained personal access token** once:
 
 1. Go to [github.com → Settings → Developer settings → Fine-grained tokens](https://github.com/settings/personal-access-tokens).
 2. Click **Generate new token**.
 3. Under **Repository access**, select **Only select repositories** and choose your CV repo.
-4. Under **Repository permissions**, set:
-   - **Variables** → **Read and write**
-   - **Pull requests** → **Read and write**
+4. Under **Repository permissions**, set **Variables** → **Read and write**.
 5. Generate and copy the token.
 
 ### 2. Add the PAT as a repository secret
@@ -41,13 +38,13 @@ In your repository go to **Settings → Secrets and variables → Actions → Ne
 
 ### 3. Workflow permissions
 
-`contents: write` and `pull-requests: write` are declared in the workflow file itself and are granted automatically. The `SYNC_PAT` handles both variable management and PR creation — no additional configuration is needed.
+`contents: write` is declared in the workflow file itself and is granted automatically. The `SYNC_PAT` is only used for updating the `LAST_TEMPLATE_SYNC` variable — no additional configuration is needed.
 
 ## Conflict resolution strategy
 
 The merge uses `-X theirs`, meaning **upstream changes win on conflicts**. This keeps the sync simple but means any local edits that touch the same lines as an upstream change will be overwritten in the sync branch.
 
-Review the opened PR carefully before merging. If you need to keep a local customization, resolve the conflict in the PR before merging — or simply close the PR and apply the upstream changes manually.
+Review the `sync/template` branch carefully before opening a PR or merging. If you need to keep a local customization, resolve the conflict manually before merging.
 
 ## Changing the upstream source
 
@@ -85,7 +82,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -96,7 +92,7 @@ jobs:
         run: |
           REPO="${{ inputs.upstream_repo }}"
           echo "repo=$REPO" >> "$GITHUB_OUTPUT"
-          BRANCH="sync/template-$(date -u +'%Y%m%d-%H%M%S')"
+          BRANCH="sync/template"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Fetch upstream
@@ -133,13 +129,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           BRANCH="${{ steps.upstream.outputs.branch }}"
-          git checkout -b "$BRANCH"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+          fi
           git merge upstream/main \
             --no-edit \
             --allow-unrelated-histories \
             -X theirs \
             -m "chore: sync with template (${{ steps.upstream.outputs.repo }})"
-          git push origin "$BRANCH"
+          git push --force-with-lease origin "$BRANCH"
 
       - name: Record last synced upstream commit
         if: steps.diff.outputs.count != '0'
@@ -149,7 +149,6 @@ jobs:
         run: |
           # Requires a fine-grained PAT stored as SYNC_PAT with:
           #   Repository permissions → Variables → Read and write
-          #   Repository permissions → Pull requests → Read and write
           if gh api /repos/${{ github.repository }}/actions/variables/LAST_TEMPLATE_SYNC &>/dev/null; then
             gh api --method PATCH /repos/${{ github.repository }}/actions/variables/LAST_TEMPLATE_SYNC \
               -f value="$NEW_SHA"
@@ -158,21 +157,4 @@ jobs:
               -f name=LAST_TEMPLATE_SYNC -f value="$NEW_SHA"
           fi
           echo "LAST_TEMPLATE_SYNC set to $NEW_SHA"
-
-      - name: Open or update pull request
-        if: steps.diff.outputs.count != '0'
-        env:
-          GH_TOKEN: ${{ secrets.SYNC_PAT }}
-          UPSTREAM: ${{ steps.upstream.outputs.repo }}
-          BRANCH: ${{ steps.upstream.outputs.branch }}
-        run: |
-          BODY_FILE=$(mktemp)
-          printf 'Automated sync of upstream changes from [%s](https://github.com/%s).\n\nReview the changes and merge when ready.' \
-            "$UPSTREAM" "$UPSTREAM" > "$BODY_FILE"
-
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "chore: sync with template ($UPSTREAM)" \
-            --body-file "$BODY_FILE"
 ```
