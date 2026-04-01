@@ -68,165 +68,165 @@ export function EducationSection(props: {
                 />
               </div>
               {rowErrors?.[idx] ? <div className="text-[11px] text-red-700 dark:text-red-300">{rowErrors[idx]}</div> : null}
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  School
-                  <input
-                    value={e.school}
-                    onChange={(ev) => setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: ev.target.value } : x)))}
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="School"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.school)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: !x.school } : x)))}
-                  />
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    School
+                    <input
+                      value={e.school}
+                      onChange={(ev) => setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: ev.target.value } : x)))}
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="School"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.school)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: !x.school } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  School URL (optional)
-                  <input
-                    value={e.schoolUrl ?? ''}
-                    onChange={(ev) =>
-                      setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, schoolUrl: ev.target.value || undefined } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="https://school.example"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.schoolUrl)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, schoolUrl: !x.schoolUrl } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    School URL (optional)
+                    <input
+                      value={e.schoolUrl ?? ''}
+                      onChange={(ev) =>
+                        setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, schoolUrl: ev.target.value || undefined } : x)))
+                      }
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="https://school.example"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.schoolUrl)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, schoolUrl: !x.schoolUrl } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Degree (optional)
-                  <input
-                    value={e.degree ?? ''}
-                    onChange={(ev) =>
-                      setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, degree: ev.target.value || undefined } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="Bachelor of Science"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.degree)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, degree: !x.degree } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Degree (optional)
+                    <input
+                      value={e.degree ?? ''}
+                      onChange={(ev) =>
+                        setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, degree: ev.target.value || undefined } : x)))
+                      }
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="Bachelor of Science"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.degree)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, degree: !x.degree } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Field (optional)
-                  <input
-                    value={e.field ?? ''}
-                    onChange={(ev) =>
-                      setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, field: ev.target.value || undefined } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="Computer Science"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.field)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, field: !x.field } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Field (optional)
+                    <input
+                      value={e.field ?? ''}
+                      onChange={(ev) =>
+                        setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, field: ev.target.value || undefined } : x)))
+                      }
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="Computer Science"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.field)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, field: !x.field } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Program (optional)
-                  <input
-                    value={e.program ?? ''}
-                    onChange={(ev) =>
-                      setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, program: ev.target.value || undefined } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="Program"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.program)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, program: !x.program } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Program (optional)
+                    <input
+                      value={e.program ?? ''}
+                      onChange={(ev) =>
+                        setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, program: ev.target.value || undefined } : x)))
+                      }
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="Program"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.program)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, program: !x.program } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Start (optional)
-                  <input
-                    value={e.start ?? ''}
-                    onChange={(ev) =>
-                      setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, start: ev.target.value || undefined } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="2020-09"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.start)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, start: !x.start } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Location (optional)
+                    <input
+                      value={e.location ?? ''}
+                      onChange={(ev) =>
+                        setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, location: ev.target.value || undefined } : x)))
+                      }
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="City, Country"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.location)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, location: !x.location } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  End (optional)
-                  <input
-                    value={e.end ?? ''}
-                    onChange={(ev) =>
-                      setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, end: ev.target.value || undefined } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="2024-06"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.end)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, end: !x.end } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Start (optional)
+                    <input
+                      value={e.start ?? ''}
+                      onChange={(ev) =>
+                        setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, start: ev.target.value || undefined } : x)))
+                      }
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="2020-09"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.start)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, start: !x.start } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Location (optional)
-                  <input
-                    value={e.location ?? ''}
-                    onChange={(ev) =>
-                      setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, location: ev.target.value || undefined } : x)))
-                    }
-                    className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    placeholder="City, Country"
-                  />
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicEducation[idx]?.location)}
-                    onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, location: !x.location } : x)))}
-                  />
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    End (optional)
+                    <input
+                      value={e.end ?? ''}
+                      onChange={(ev) =>
+                        setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, end: ev.target.value || undefined } : x)))
+                      }
+                      className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      placeholder="2024-06"
+                    />
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicEducation[idx]?.end)}
+                      onClick={() => setPublicEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, end: !x.end } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   GPA (optional)
                   <input

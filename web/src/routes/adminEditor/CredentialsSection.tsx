@@ -59,7 +59,7 @@ export function CredentialsSection(props: {
                 />
               </div>
               {rowErrors?.[idx] ? <div className="text-[11px] text-red-700 dark:text-red-300">{rowErrors[idx]}</div> : null}
-              <div className="space-y-2 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
                 <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     Issuer
@@ -134,7 +134,7 @@ export function CredentialsSection(props: {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2 md:col-span-2">
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     URL
                     <input

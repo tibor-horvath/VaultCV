@@ -53,6 +53,7 @@ export function SkillsLanguagesSection(props: {
           items={textAreaLinesToStringArray(languagesText)}
           setItems={(items) => setLanguagesText(stringArrayToTextAreaLines(items))}
           placeholder="Add a language"
+          desktopColumns={3}
           error={sectionErrors?.languages}
           errorId="languages-error"
         />

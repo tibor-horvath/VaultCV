@@ -308,6 +308,7 @@ export function ExperienceSection(props: {
                       setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, skills: items } : x)))
                     }
                     placeholder="Add a skill"
+                    desktopColumns={3}
                   />
                 </div>
                 <div className="pt-5">
