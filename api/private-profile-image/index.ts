@@ -1,6 +1,5 @@
-import { readProfileImage, readProfileJsonV2 } from '../lib/profileBlobStore'
-import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
-import { normalizeLocale } from '../lib/localeRegistry'
+import { readProfileImage } from '../lib/profileBlobStore'
+import { getSigningSecret, readAccessToken, verifySessionToken } from '../lib/sessionAuth'
 
 type Context = {
   res?: {
@@ -34,27 +33,24 @@ function readServerConfiguredProfileSlug() {
   return (process.env.CV_PROFILE_SLUG ?? '').trim()
 }
 
-async function isPhotoPublic(slug: string, locale: string): Promise<boolean> {
-  const raw = await readProfileJsonV2({ kind: 'public', locale, slugFromName: slug })
-  if (!raw.trim()) return false
-  const data = JSON.parse(raw) as Record<string, unknown>
-  const basics = data?.basics as Record<string, unknown> | undefined
-  return Boolean(basics?.photoUrl)
-}
-
 export default async function (context: Context, req: HttpRequest) {
   try {
-    const slug = readServerConfiguredProfileSlug()
-    if (!slug) {
-      context.res = jsonResponse(500, { error: 'Server not configured.' })
+    const signingSecret = getSigningSecret()
+    if (!signingSecret) {
+      context.res = jsonResponse(500, { error: 'Server is not configured.' })
       return
     }
 
-    const acceptLanguage = getHeaderInsensitive(req.headers, 'accept-language')
-    const locale = normalizeLocale(firstLanguageTagFromAcceptLanguage(acceptLanguage))
+    const tokenRead = readAccessToken(req.headers)
+    const tokenVerification = verifySessionToken(tokenRead.token)
+    if (!tokenVerification.ok) {
+      context.res = jsonResponse(401, { error: 'Unauthorized' })
+      return
+    }
 
-    if (!(await isPhotoPublic(slug, locale))) {
-      context.res = jsonResponse(404, { error: 'No profile image found.' })
+    const slug = readServerConfiguredProfileSlug()
+    if (!slug) {
+      context.res = jsonResponse(500, { error: 'Server not configured.' })
       return
     }
 

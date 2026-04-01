@@ -59,7 +59,7 @@ describe('/api/cv', () => {
     )
   })
 
-  it('rewrites legacy admin photo URL to public endpoint', async () => {
+  it('rewrites legacy admin photo URL to private endpoint', async () => {
     const signingSecret = 'test-signing-secret'
     process.env.CV_SESSION_SIGNING_KEY = signingSecret
     process.env.CV_PROFILE_SLUG = 'john-doe'
@@ -73,11 +73,11 @@ describe('/api/cv', () => {
 
     expect(context.res).toMatchObject({
       status: 200,
-      body: { basics: { name: 'Jane', photoUrl: '/api/public-profile/image' }, locale: 'en' },
+      body: { basics: { name: 'Jane', photoUrl: '/api/private-profile/image' }, locale: 'en' },
     })
   })
 
-  it('leaves non-admin photo URLs unchanged', async () => {
+  it('rewrites public photo URL to private endpoint', async () => {
     const signingSecret = 'test-signing-secret'
     process.env.CV_SESSION_SIGNING_KEY = signingSecret
     process.env.CV_PROFILE_SLUG = 'john-doe'
@@ -91,7 +91,25 @@ describe('/api/cv', () => {
 
     expect(context.res).toMatchObject({
       status: 200,
-      body: { basics: { name: 'Jane', photoUrl: '/api/public-profile/image' }, locale: 'en' },
+      body: { basics: { name: 'Jane', photoUrl: '/api/private-profile/image' }, locale: 'en' },
+    })
+  })
+
+  it('leaves private-profile photo URLs unchanged', async () => {
+    const signingSecret = 'test-signing-secret'
+    process.env.CV_SESSION_SIGNING_KEY = signingSecret
+    process.env.CV_PROFILE_SLUG = 'john-doe'
+    ;(readProfileJsonV2 as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      '{"basics":{"name":"Jane","photoUrl":"/api/private-profile/image"}}',
+    )
+    const token = signToken(Math.floor(Date.now() / 1000) + 3600, signingSecret)
+    const context: { log: ReturnType<typeof vi.fn>; res?: unknown } = { log: vi.fn() }
+
+    await handler(context, { headers: { authorization: `Bearer ${token}`, 'accept-language': 'en' } })
+
+    expect(context.res).toMatchObject({
+      status: 200,
+      body: { basics: { name: 'Jane', photoUrl: '/api/private-profile/image' }, locale: 'en' },
     })
   })
 

@@ -875,7 +875,7 @@ export function useAdminEditorProfile(params: {
         location: basicsLocation.trim() || undefined,
         summary: basicsSummary.trim() || undefined,
         photoAlt: basicsPhotoAlt.trim() || undefined,
-        photoUrl: hasProfileImage ? '/api/public-profile/image' : undefined,
+        photoUrl: hasProfileImage ? '/api/private-profile/image' : undefined,
       }
       next.skills = textAreaLinesToStringArray(skillsText)
       next.languages = textAreaLinesToStringArray(languagesText)
