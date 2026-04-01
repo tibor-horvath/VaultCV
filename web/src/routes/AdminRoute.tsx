@@ -575,7 +575,8 @@ export function AdminShareRoute() {
                           .share({ url: shareUrl })
                           .catch((e: unknown) => {
                             if (e instanceof Error && e.name === 'AbortError') return
-                            throw e
+                            // Log non-abort share errors instead of re-throwing to avoid unhandled promise rejections.
+                            console.error('navigator.share failed', e)
                           })
                       }
                     >
