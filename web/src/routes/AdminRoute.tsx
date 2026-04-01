@@ -587,13 +587,14 @@ export function AdminShareRoute() {
         </div>
 
         <div className="mt-4 hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[36rem] text-left text-xs">
+          <table className="w-full min-w-[44rem] text-left text-xs">
             <thead className="text-slate-500 dark:text-slate-400">
               <tr className="border-b border-slate-200/70 dark:border-slate-800">
-                <th className="py-2 pr-3">Expires</th>
-                <th className="py-2 pr-3">Views</th>
-                <th className="py-2 pr-3">Link</th>
-                <th className="py-2 pr-3">Actions</th>
+                <th className="py-2 pr-3">{t('adminColumnExpires')}</th>
+                <th className="py-2 pr-3">{t('adminColumnViews')}</th>
+                <th className="py-2 pr-3">{t('adminLink')}</th>
+                <th className="py-2 pr-3">{t('adminNotes')}</th>
+                <th className="py-2 pr-3">{t('adminColumnActions')}</th>
               </tr>
             </thead>
             <tbody className="text-slate-800 dark:text-slate-200">
@@ -609,17 +610,15 @@ export function AdminShareRoute() {
                       <div>{l.viewCount ?? 0}</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">{epochToIso(l.lastViewedAtEpoch)}</div>
                     </td>
-                    <td className="py-2 pr-3">
+                    <td className="py-2 pr-3 align-top">
                       <a className="font-mono text-[11px] underline" href={shareUrl} target="_blank" rel="noreferrer">
                         /?s={l.rowKey}
                       </a>
-                      {l.notes?.trim() ? (
-                        <div className="mt-0.5 text-[11px] text-slate-600 dark:text-slate-300">
-                          <span className="font-semibold">{t('adminNotes')}:</span> {l.notes.trim()}
-                        </div>
-                      ) : null}
                       {isRevoked ? <div className="mt-0.5 text-[11px] text-red-700 dark:text-red-300">{t('adminStatusRevoked')}</div> : null}
                       {isExpired ? <div className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">{t('adminStatusExpired')}</div> : null}
+                    </td>
+                    <td className="max-w-[14rem] py-2 pr-3 align-top text-[11px] text-slate-600 dark:text-slate-300">
+                      {l.notes?.trim() ? <span className="break-words">{l.notes.trim()}</span> : <span className="text-slate-400 dark:text-slate-500">—</span>}
                     </td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
@@ -658,7 +657,7 @@ export function AdminShareRoute() {
               })}
               {visibleLinks.length === 0 ? (
                 <tr>
-                  <td className="py-4 text-slate-500 dark:text-slate-400" colSpan={4}>
+                  <td className="py-4 text-slate-500 dark:text-slate-400" colSpan={5}>
                     {t('adminNoLinksForFilter')}
                   </td>
                 </tr>
