@@ -255,14 +255,21 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
     setUploadState('uploading')
     setUploadError(null)
     try {
+      // Convert blob → base64 to avoid binary body transport issues with Azure SWA managed functions
+      const arrayBuffer = await blob.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      let binary = ''
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+      const base64 = btoa(binary)
+
       const res = await fetch('/api/manage/profile/image', {
         method: 'PUT',
         credentials: 'same-origin',
         headers: {
-          'content-type': blob.type,
+          'content-type': 'application/json',
           'x-cv-admin': '1',
         },
-        body: blob,
+        body: JSON.stringify({ data: base64, mimeType: blob.type }),
       })
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string }

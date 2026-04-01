@@ -1,7 +1,6 @@
 import { deleteProfileImage, readProfileImage, writeProfileImage } from '../lib/profileBlobStore'
 import { readAllowedOriginsFromEnv, requireAdminMutationHeader, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { requireAdmin } from '../lib/swaAuth'
-import { getHeaderInsensitive } from '../lib/httpHeaders'
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024 // 2 MB
 const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png']
@@ -39,14 +38,6 @@ function jsonResponse(status: number, body: unknown) {
 
 function readServerConfiguredProfileSlug() {
   return (process.env.CV_PROFILE_SLUG ?? '').trim()
-}
-
-function extractBodyBuffer(req: HttpRequest): Buffer | null {
-  if (Buffer.isBuffer(req.body)) return req.body
-  if (req.body instanceof Uint8Array) return Buffer.from(req.body)
-  if (ArrayBuffer.isView(req.body)) return Buffer.from(req.body.buffer as ArrayBuffer, req.body.byteOffset, req.body.byteLength)
-  if (req.body instanceof ArrayBuffer) return Buffer.from(req.body)
-  return null
 }
 
 export default async function (context: Context, req: HttpRequest) {
@@ -95,24 +86,33 @@ export default async function (context: Context, req: HttpRequest) {
         return
       }
 
-      const rawContentType = (getHeaderInsensitive(req.headers, 'content-type') ?? '').toLowerCase()
-      const contentType = rawContentType.split(';')[0].trim()
-      if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
-        context.res = jsonResponse(415, { error: `Content-Type must be one of: ${ALLOWED_CONTENT_TYPES.join(', ')}.` })
+      // Accept JSON body: { data: <base64>, mimeType: "image/jpeg" | "image/png" }
+      const jsonBody = req.body as { data?: unknown; mimeType?: unknown } | null | undefined
+      const mimeType = typeof jsonBody?.mimeType === 'string' ? jsonBody.mimeType.toLowerCase().trim() : ''
+      const base64Data = typeof jsonBody?.data === 'string' ? jsonBody.data : ''
+
+      if (!ALLOWED_CONTENT_TYPES.includes(mimeType)) {
+        context.res = jsonResponse(415, { error: `mimeType must be one of: ${ALLOWED_CONTENT_TYPES.join(', ')}.` })
+        return
+      }
+      if (!base64Data) {
+        context.res = jsonResponse(400, { error: 'Request body must include a base64-encoded "data" field.' })
         return
       }
 
-      const bodyBuffer = extractBodyBuffer(req)
-      if (!bodyBuffer) {
-        context.res = jsonResponse(400, { error: 'Request body must be binary image data.' })
+      let imageBuffer: Buffer
+      try {
+        imageBuffer = Buffer.from(base64Data, 'base64')
+      } catch {
+        context.res = jsonResponse(400, { error: 'Invalid base64 data.' })
         return
       }
-      if (bodyBuffer.byteLength > MAX_IMAGE_BYTES) {
+      if (imageBuffer.byteLength > MAX_IMAGE_BYTES) {
         context.res = jsonResponse(413, { error: 'Image exceeds maximum size of 2 MB.' })
         return
       }
 
-      await writeProfileImage(slug, bodyBuffer, contentType)
+      await writeProfileImage(slug, imageBuffer, mimeType)
       context.res = jsonResponse(200, { ok: true })
       return
     }
