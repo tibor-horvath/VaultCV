@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
 import { normalizeLocale } from '../lib/localeRegistry'
 import { readProfileJsonV2 } from '../lib/profileBlobStore'
+import { getSigningSecret, readAccessToken, verifySessionToken } from '../lib/sessionAuth'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -17,134 +18,10 @@ type HttpRequest = {
   headers?: Record<string, string | undefined>
 }
 
-type TokenVerificationResult =
-  | { ok: true; exp: number }
-  | { ok: false; reason: 'missing_token' | 'invalid_format' | 'missing_signing_secret' | 'signature_mismatch' | 'invalid_payload' | 'expired' }
-
-type AccessTokenReadResult = {
-  token: string
-  source: 'authorization' | 'x-cv-session-token' | 'cookie' | 'none'
-  hasAuthorizationHeader: boolean
-  authorizationHeaderHasBearer: boolean
-  hasSessionHeader: boolean
-  hasCookieHeader: boolean
-}
-
-const SESSION_COOKIE_NAME = 'cv_session'
 const SESSION_EXP_HEADER = 'x-cv-session-exp'
 
 function readServerConfiguredProfileSlug() {
   return (process.env.CV_PROFILE_SLUG ?? '').trim()
-}
-
-function constantTimeEqual(a: string, b: string) {
-  const aBuf = Buffer.from(a)
-  const bBuf = Buffer.from(b)
-  if (aBuf.length !== bBuf.length) return false
-  return crypto.timingSafeEqual(aBuf, bBuf)
-}
-
-function getSigningSecret() {
-  return (process.env.CV_SESSION_SIGNING_KEY ?? '').trim()
-}
-
-function toBase64Url(input: string | Buffer) {
-  return Buffer.from(input).toString('base64url')
-}
-
-function verifySessionToken(token: string): TokenVerificationResult {
-  if (!token) return { ok: false, reason: 'missing_token' }
-  const [encodedPayload, providedSig] = token.split('.')
-  if (!encodedPayload || !providedSig) return { ok: false, reason: 'invalid_format' }
-
-  const signingSecret = getSigningSecret()
-  if (!signingSecret) return { ok: false, reason: 'missing_signing_secret' }
-
-  const expectedSig = toBase64Url(crypto.createHmac('sha256', signingSecret).update(encodedPayload).digest())
-  if (!constantTimeEqual(providedSig, expectedSig)) return { ok: false, reason: 'signature_mismatch' }
-
-  try {
-    const payloadJson = Buffer.from(encodedPayload, 'base64url').toString('utf8')
-    const payload = JSON.parse(payloadJson) as { exp?: number }
-    const exp = payload.exp ?? 0
-    if (!Number.isFinite(exp)) return { ok: false, reason: 'invalid_payload' }
-    if (Math.floor(Date.now() / 1000) >= exp) return { ok: false, reason: 'expired' }
-    return { ok: true, exp }
-  } catch {
-    return { ok: false, reason: 'invalid_payload' }
-  }
-}
-
-function readBearerToken(authHeader: string | undefined) {
-  if (!authHeader) return ''
-  const normalized = authHeader.trim()
-  const match = /^Bearer\s+(.+)$/i.exec(normalized)
-  return match?.[1]?.trim() ?? ''
-}
-
-function readCookieValue(cookieHeader: string | undefined, name: string) {
-  if (!cookieHeader) return ''
-  const cookieParts = cookieHeader.split(';')
-  for (const part of cookieParts) {
-    const [rawName, ...rawValueParts] = part.split('=')
-    const cookieName = rawName?.trim()
-    if (cookieName !== name) continue
-    const rawValue = rawValueParts.join('=').trim()
-    if (!rawValue) return ''
-    try {
-      return decodeURIComponent(rawValue)
-    } catch {
-      return rawValue
-    }
-  }
-  return ''
-}
-
-function readAccessToken(req: HttpRequest): AccessTokenReadResult {
-  const authorizationHeader = getHeaderInsensitive(req.headers, 'authorization')
-  const sessionHeader = getHeaderInsensitive(req.headers, 'x-cv-session-token')
-  const cookieHeader = getHeaderInsensitive(req.headers, 'cookie')
-  const sessionToken = sessionHeader?.trim() ?? ''
-  if (sessionToken) {
-    return {
-      token: sessionToken,
-      source: 'x-cv-session-token',
-      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
-      authorizationHeaderHasBearer: Boolean(readBearerToken(authorizationHeader)),
-      hasSessionHeader: true,
-      hasCookieHeader: Boolean(cookieHeader?.trim()),
-    }
-  }
-  const cookieToken = readCookieValue(cookieHeader, SESSION_COOKIE_NAME).trim()
-  if (cookieToken) {
-    return {
-      token: cookieToken,
-      source: 'cookie',
-      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
-      authorizationHeaderHasBearer: Boolean(readBearerToken(authorizationHeader)),
-      hasSessionHeader: Boolean(sessionHeader?.trim()),
-      hasCookieHeader: true,
-    }
-  }
-  const bearer = readBearerToken(authorizationHeader)
-  if (bearer) {
-    return {
-      token: bearer,
-      source: 'authorization',
-      hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
-      authorizationHeaderHasBearer: true,
-      hasSessionHeader: Boolean(sessionHeader?.trim()),
-      hasCookieHeader: Boolean(cookieHeader?.trim()),
-    }
-  }
-  return {
-    token: '',
-    source: 'none',
-    hasAuthorizationHeader: Boolean(authorizationHeader?.trim()),
-    authorizationHeaderHasBearer: false,
-    hasSessionHeader: Boolean(sessionHeader?.trim()),
-    hasCookieHeader: Boolean(cookieHeader?.trim()),
-  }
 }
 
 function jsonResponse(status: number, body: unknown) {
@@ -186,7 +63,7 @@ function attachDebugHeaders(
 }
 
 export default async function (context: Context, req: HttpRequest) {
-  const tokenRead = readAccessToken(req)
+  const tokenRead = readAccessToken(req.headers)
   const accessToken = tokenRead.token
   const acceptLanguage = getHeaderInsensitive(req.headers, 'accept-language')
   const requestedLocale = normalizeLocale(firstLanguageTagFromAcceptLanguage(acceptLanguage))
@@ -266,11 +143,11 @@ export default async function (context: Context, req: HttpRequest) {
     if (data && typeof data === 'object') {
       const dataObj = data as Record<string, unknown>
       if (!dataObj.locale) dataObj.locale = resolvedLocale
-      // Rewrite legacy admin-only photo URL to the public endpoint so token
-      // holders (who are not Azure AD admins) can load the profile image.
+      // Rewrite legacy admin-only photo URL to the token-authenticated
+      // endpoint so token holders (who are not Azure AD admins) can load it.
       const basics = dataObj.basics as Record<string, unknown> | undefined
-      if (basics && basics.photoUrl === '/api/manage/profile/image') {
-        basics.photoUrl = '/api/public-profile/image'
+      if (basics && (basics.photoUrl === '/api/manage/profile/image' || basics.photoUrl === '/api/public-profile/image')) {
+        basics.photoUrl = '/api/private-profile/image'
       }
     }
 
