@@ -66,7 +66,11 @@ export function CvPdfRoute() {
       {!pdfDevPreview && state.kind === 'locked' ? (
         <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
           <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              {t('lockedHintPrefix')}
+            {t('lockedHintPrefix')}{' '}
+            <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+              /?s=SHARE_ID
+              {locale !== 'en' ? `&lang=${locale}` : ''}
+            </code>
           </p>
           <button
             type="button"
