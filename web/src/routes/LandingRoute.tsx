@@ -88,7 +88,7 @@ export function LandingRoute() {
 
   const effectiveToken = urlShare.trim() || tokenInput.trim()
   const isUnlocked = Boolean(effectiveToken)
-  const isAccessDetected = isUnlocked
+  const isAccessDetected = Boolean(urlShare.trim())
 
   useEffect(() => {
     const trimmed = initialUrlAccess
