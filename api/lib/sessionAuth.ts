@@ -33,7 +33,9 @@ function toBase64Url(input: string | Buffer) {
 
 export function verifySessionToken(token: string): TokenVerificationResult {
   if (!token) return { ok: false, reason: 'missing_token' }
-  const [encodedPayload, providedSig] = token.split('.')
+  const parts = token.split('.')
+  if (parts.length !== 2) return { ok: false, reason: 'invalid_format' }
+  const [encodedPayload, providedSig] = parts
   if (!encodedPayload || !providedSig) return { ok: false, reason: 'invalid_format' }
 
   const signingSecret = getSigningSecret()
