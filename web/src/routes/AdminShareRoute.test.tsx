@@ -7,9 +7,14 @@ import { AdminShareRoute } from './AdminRoute'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-vi.mock('qrcode.react', () => ({
-  QRCodeCanvas: () => null,
-}))
+vi.mock('qrcode.react', async () => {
+  const { forwardRef, createElement } = await import('react')
+  return {
+    QRCodeCanvas: forwardRef<HTMLCanvasElement>(
+      (_: unknown, ref) => createElement('canvas', { ref }),
+    ),
+  }
+})
 
 type MockResponse = {
   ok: boolean
