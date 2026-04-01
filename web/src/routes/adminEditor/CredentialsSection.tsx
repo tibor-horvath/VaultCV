@@ -59,63 +59,63 @@ export function CredentialsSection(props: {
                 />
               </div>
               {rowErrors?.[idx] ? <div className="text-[11px] text-red-700 dark:text-red-300">{rowErrors[idx]}</div> : null}
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Issuer
-                  {(() => {
-                    const currentSelectValue = ISSUER_OPTIONS.includes(c.issuer as (typeof ISSUER_OPTIONS)[number]) ? c.issuer : CUSTOM_OPTION
-                    const options = [
-                      { value: '', label: 'Select issuer...' },
-                      { value: 'microsoft', label: 'microsoft', icon: <CredentialIssuerIcon issuer="microsoft" className="h-3.5 w-3.5" /> },
-                      { value: 'aws', label: 'aws', icon: <CredentialIssuerIcon issuer="aws" className="h-3.5 w-3.5" /> },
-                      { value: 'google', label: 'google', icon: <CredentialIssuerIcon issuer="google" className="h-3.5 w-3.5" /> },
-                      { value: 'school', label: 'school', icon: <CredentialIssuerIcon issuer="school" className="h-3.5 w-3.5" /> },
-                      { value: 'language', label: 'language', icon: <CredentialIssuerIcon issuer="language" className="h-3.5 w-3.5" /> },
-                      { value: 'other', label: 'other', icon: <CredentialIssuerIcon issuer="other" className="h-3.5 w-3.5" /> },
-                      { value: CUSTOM_OPTION, label: 'Custom' },
-                    ]
-                    return (
-                      <>
-                        <IconSelect
-                          value={currentSelectValue}
-                          onChange={(next) =>
-                            setCredentials((cur) =>
-                              cur.map((x, i) => {
-                                if (i !== idx) return x
-                                if (next === CUSTOM_OPTION) {
-                                  const keepCustom = ISSUER_OPTIONS.includes(x.issuer as (typeof ISSUER_OPTIONS)[number]) ? '' : x.issuer
-                                  return { ...x, issuer: keepCustom }
-                                }
-                                if (!next) return { ...x, issuer: '' }
-                                return { ...x, issuer: next }
-                              }),
-                            )
-                          }
-                          options={options}
-                          placeholder="Select issuer..."
-                          ariaLabel="Credential issuer"
-                        />
-                        {currentSelectValue === CUSTOM_OPTION ? (
-                          <input
-                            value={c.issuer}
-                            onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: e.target.value } : x)))}
-                            className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                            placeholder="custom issuer"
+              <div className="space-y-2 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Issuer
+                    {(() => {
+                      const currentSelectValue = ISSUER_OPTIONS.includes(c.issuer as (typeof ISSUER_OPTIONS)[number]) ? c.issuer : CUSTOM_OPTION
+                      const options = [
+                        { value: '', label: 'Select issuer...' },
+                        { value: 'microsoft', label: 'microsoft', icon: <CredentialIssuerIcon issuer="microsoft" className="h-3.5 w-3.5" /> },
+                        { value: 'aws', label: 'aws', icon: <CredentialIssuerIcon issuer="aws" className="h-3.5 w-3.5" /> },
+                        { value: 'google', label: 'google', icon: <CredentialIssuerIcon issuer="google" className="h-3.5 w-3.5" /> },
+                        { value: 'school', label: 'school', icon: <CredentialIssuerIcon issuer="school" className="h-3.5 w-3.5" /> },
+                        { value: 'language', label: 'language', icon: <CredentialIssuerIcon issuer="language" className="h-3.5 w-3.5" /> },
+                        { value: 'other', label: 'other', icon: <CredentialIssuerIcon issuer="other" className="h-3.5 w-3.5" /> },
+                        { value: CUSTOM_OPTION, label: 'Custom' },
+                      ]
+                      return (
+                        <>
+                          <IconSelect
+                            value={currentSelectValue}
+                            onChange={(next) =>
+                              setCredentials((cur) =>
+                                cur.map((x, i) => {
+                                  if (i !== idx) return x
+                                  if (next === CUSTOM_OPTION) {
+                                    const keepCustom = ISSUER_OPTIONS.includes(x.issuer as (typeof ISSUER_OPTIONS)[number]) ? '' : x.issuer
+                                    return { ...x, issuer: keepCustom }
+                                  }
+                                  if (!next) return { ...x, issuer: '' }
+                                  return { ...x, issuer: next }
+                                }),
+                              )
+                            }
+                            options={options}
+                            placeholder="Select issuer..."
+                            ariaLabel="Credential issuer"
                           />
-                        ) : null}
-                      </>
-                    )
-                  })()}
-                </label>
-                <div className="pt-5">
-                  <ToggleButton
-                    pressed={Boolean(publicCredentials[idx]?.issuer)}
-                    onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: !x.issuer } : x)))}
-                  />
+                          {currentSelectValue === CUSTOM_OPTION ? (
+                            <input
+                              value={c.issuer}
+                              onChange={(e) => setCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: e.target.value } : x)))}
+                              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                              placeholder="custom issuer"
+                            />
+                          ) : null}
+                        </>
+                      )
+                    })()}
+                  </label>
+                  <div className="pt-5">
+                    <ToggleButton
+                      pressed={Boolean(publicCredentials[idx]?.issuer)}
+                      onClick={() => setPublicCredentials((cur) => cur.map((x, i) => (i === idx ? { ...x, issuer: !x.issuer } : x)))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
                 <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     Label
@@ -153,7 +153,7 @@ export function CredentialsSection(props: {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   Earned (YYYY-MM)
                   <input
@@ -165,9 +165,7 @@ export function CredentialsSection(props: {
                     placeholder="2025-01"
                   />
                 </label>
-              </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   Expires (YYYY-MM)
                   <input
