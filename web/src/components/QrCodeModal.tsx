@@ -54,7 +54,7 @@ export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }:
       await navigator.share({ files: [file] })
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return
-      throw e
+      console.error('Failed to share QR code image', e)
     }
   }
 
