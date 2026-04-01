@@ -54,7 +54,6 @@ export class RealApiClient implements ApiClient {
   async exchangeAccessCode(code: string): Promise<ApiResult<{ accessToken: string }>> {
     const url = '/api/auth'
     const normalized = code.trim()
-    const isGuidN = /^[0-9a-f]{32}$/i.test(normalized)
     let res: Response
     try {
       res = await fetch(url, {
@@ -63,7 +62,7 @@ export class RealApiClient implements ApiClient {
           accept: 'application/json',
           'content-type': 'application/json',
         },
-        body: JSON.stringify(isGuidN ? { code: normalized } : { shareId: normalized }),
+        body: JSON.stringify({ shareId: normalized }),
         credentials: 'same-origin',
       })
     } catch {

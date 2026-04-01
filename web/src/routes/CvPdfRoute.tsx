@@ -7,15 +7,12 @@ import { downloadCvPdf } from '../lib/downloadCvPdf'
 import { getMockCv } from '../lib/mockCv'
 import { useI18n } from '../lib/i18n'
 import { clearStoredAccessCode, getStoredAccessCode } from '../lib/accessSession'
-import { useConsumeUrlAccessToken } from '../lib/useConsumeUrlAccessToken'
 import { useCvRouteState } from '../hooks/useCvRouteState'
 
 export function CvPdfRoute() {
   const { locale, t } = useI18n()
   const [params] = useSearchParams()
-  useConsumeUrlAccessToken()
-  const urlToken = params.get('t')?.trim() ?? ''
-  const accessCode = urlToken || getStoredAccessCode()
+  const accessCode = getStoredAccessCode()
   const state = useCvRouteState(accessCode, locale)
   const captureRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
@@ -69,7 +66,11 @@ export function CvPdfRoute() {
       {!pdfDevPreview && state.kind === 'locked' ? (
         <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
           <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-            {t('lockedHintPrefix')} <span className="font-mono">/?t=TOKEN</span>
+            {t('lockedHintPrefix')}{' '}
+            <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+              /?s=SHARE_ID
+              {locale !== 'en' ? `&lang=${locale}` : ''}
+            </code>
           </p>
           <button
             type="button"

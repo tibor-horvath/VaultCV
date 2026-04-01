@@ -20,9 +20,9 @@ function readPreferredLocaleInput() {
   if (typeof window === 'undefined') return fallbackLocale
 
   const params = new URLSearchParams(window.location.search)
-  const token = params.get('t')?.trim()
+  const shareId = params.get('s')?.trim()
   const langFromShare = params.get('lang')?.trim()
-  if (token && langFromShare) {
+  if (shareId && langFromShare) {
     return langFromShare
   }
 

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import {
   BriefcaseBusiness,
   Calendar,
@@ -37,7 +36,6 @@ import { useTheme } from '../lib/themeContext'
 import {
   clearStoredAccessCode,
   getStoredAccessCode,
-  setStoredAccessCode,
 } from '../lib/accessSession'
 import { buildPhotoSrc } from '../lib/cvPresentation'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
@@ -240,9 +238,7 @@ export function CvRoute() {
   const { locale, t } = useI18n()
   const { goHome } = useAppView()
   const { theme, toggleTheme } = useTheme()
-  const [params] = useSearchParams()
-  const urlToken = params.get('t')?.trim() ?? ''
-  const accessCode = urlToken || getStoredAccessCode()
+  const accessCode = getStoredAccessCode()
   const state = useCvState(accessCode, locale)
   const sessionExpiresAt = state.kind === 'ready' ? state.sessionExpiresAt : undefined
   const publicName = usePublicName(locale)
@@ -265,17 +261,6 @@ export function CvRoute() {
   useEffect(() => {
     document.title = publicName
   }, [publicName])
-
-  useEffect(() => {
-    if (!urlToken) return
-    setStoredAccessCode(urlToken)
-    const url = new URL(window.location.href)
-    url.searchParams.delete('t')
-    url.searchParams.delete('lang')
-    const qs = url.searchParams.toString()
-    const nextUrl = `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`
-    window.history.replaceState(null, '', nextUrl)
-  }, [urlToken])
 
   useEffect(() => {
     if (state.kind !== 'expired') return
@@ -340,9 +325,6 @@ export function CvRoute() {
           <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             {t('lockedHintPrefix')}{' '}
             <span className="font-mono">/?s=SHARE_ID</span>
-            <span className="text-slate-500 dark:text-slate-400"> (or </span>
-            <span className="font-mono text-slate-700 dark:text-slate-300">/?t=TOKEN</span>
-            <span className="text-slate-500 dark:text-slate-400">)</span>
             <span className="text-slate-500 dark:text-slate-400"> ({t('lockedHintLangOptional')})</span>
           </div>
           <button
@@ -371,9 +353,7 @@ export function CvRoute() {
             {state.details ? ` ${state.details}` : ''}
           </div>
           <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            {t('serverConfigHint')} The server has
-            <span className="font-mono"> CV_ACCESS_TOKEN</span> and <span className="font-mono">PRIVATE_PROFILE_JSON_URL</span>{' '}
-            configured.
+            {t('serverConfigHint')}
           </div>
         </Section>
       ) : null}

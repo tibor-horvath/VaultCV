@@ -1,6 +1,6 @@
 # PDF export
 
-After a visitor unlocks your CV, they can download a print-ready **PDF** (A4, client-side) from the **Download PDF** control in the basics card header on the main CV view. Use the same access flow as the rest of the site (for example `/?t=TOKEN` or a stored session).
+After a visitor unlocks your CV, they can download a print-ready **PDF** (A4, client-side) from the **Download PDF** control in the basics card header on the main CV view. Use the same access flow as the rest of the site (share link or stored session).
 
 Contact rows in the PDF header currently include email and social/profile links. Phone reveal behavior is web-only (the PDF does not include the `basics.mobile` reveal interaction).
 

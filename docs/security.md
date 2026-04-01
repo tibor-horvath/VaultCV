@@ -12,15 +12,10 @@ Session details:
 ## Public vs private configuration
 
 - **Public (`VITE_*`)**: embedded into the built web bundle. Only use for non-sensitive values like display name, title, and branding links.
-- **Private (server-side app settings)**: never commit. This includes `CV_ACCESS_TOKEN`, `CV_SESSION_SIGNING_KEY`, and any deployment tokens.
+- **Private (server-side app settings)**: never commit. This includes `CV_SESSION_SIGNING_KEY` and any deployment tokens.
 
 Local-only files that should remain uncommitted:
 
 - `web/.env.local`
 - `api/local.settings.json`
 
-## Access token format
-
-The `CV_ACCESS_TOKEN` value is not an arbitrary string: both the value in Azure (`CV_ACCESS_TOKEN`) and the `code` sent to `POST /api/auth` must be exactly **32 hexadecimal characters** (no hyphens), matching a GUID in **"N"** form — for example PowerShell `[guid]::NewGuid().ToString("N")`. Other formats (including a 64-character hex string from `openssl rand -hex 32`) are rejected with **400 Invalid token format.**
-
-The shared `?t=` access code still behaves like a bearer secret: anyone you share it with can forward it. If you need identity-based, non-shareable access later, consider Azure AD or Azure AD B2C instead of a shared link.
