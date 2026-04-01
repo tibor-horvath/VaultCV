@@ -16,6 +16,18 @@ VaultCV supports two localization layers:
 - Message catalogs live in `web/src/i18n/messages/` (`en.ts`, `hu.ts`, `de.ts`, ...).
 - Locale governance is centralized in `web/src/i18n/localeRegistry.ts`.
 - Startup validation ensures every configured locale has message coverage (direct or base locale), with `en` as required fallback.
+- Admin UI copy (dashboard, editor, share page, save/status banners, and common controls) is localized through the same `t()` catalogs.
+
+## Admin locale management
+
+- The admin editor has two locale flows:
+  - **Current locale selector**: switches which localized CV payload (`private/public`) you are editing.
+  - **Add language**: explicitly enables a new content locale in the editor and switches to it.
+- Available admin locales are loaded from `GET /api/locales` (backed by API env var `SUPPORTED_LOCALES`).
+- If `/api/locales` is unavailable, admin falls back to `en`.
+- UI language and CV content locale remain separate:
+  - UI language comes from app locale settings.
+  - CV content locale comes from the editor's selected locale.
 
 ## Localized content payloads (API)
 
@@ -35,5 +47,6 @@ The API selects locale from the `Accept-Language` header (normalized by `api/lib
 3. Upload localized profile JSON blobs using the naming convention:
    - `{slug}-private-profile-{locale}.json`
    - `{slug}-public-profile-{locale}.json`
+4. It will automatically appear in admin locale-add flow when returned by `/api/locales`.
 
 After changing Azure settings, redeploy or restart the API so new locale env vars take effect.

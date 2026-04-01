@@ -1,6 +1,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { LocaleProvider } from '../../lib/i18n'
 import { ToggleButton } from './ToggleButton'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -13,7 +14,11 @@ function renderToggle(pressed: boolean, onClick = vi.fn()) {
   document.body.appendChild(mountedContainer)
   mountedRoot = createRoot(mountedContainer)
   act(() => {
-    mountedRoot!.render(<ToggleButton pressed={pressed} onClick={onClick} label="Skill" />)
+    mountedRoot!.render(
+      <LocaleProvider>
+        <ToggleButton pressed={pressed} onClick={onClick} label="Skill" />
+      </LocaleProvider>,
+    )
   })
   return onClick
 }

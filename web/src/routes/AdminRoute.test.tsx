@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AdminDashboardRoute } from './AdminDashboardRoute'
+import { LocaleProvider } from '../lib/i18n'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -38,7 +39,9 @@ function renderRoute() {
   act(() => {
     mountedRoot!.render(
       <MemoryRouter>
-        <AdminDashboardRoute />
+        <LocaleProvider>
+          <AdminDashboardRoute />
+        </LocaleProvider>
       </MemoryRouter>,
     )
   })

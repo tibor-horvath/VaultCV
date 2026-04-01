@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AdminEditorHeader } from './AdminEditorHeader'
+import { LocaleProvider } from '../../lib/i18n'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -16,18 +17,22 @@ function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn()) {
   act(() => {
     mountedRoot!.render(
       <MemoryRouter>
-        <AdminEditorHeader
-          locale="en"
-          locales={[
-            { locale: 'en', label: 'English' },
-            { locale: 'fr', label: 'French' },
-          ]}
-          setLocale={setLocale}
-          hasUnsavedChanges={hasUnsavedChanges}
-          loading={false}
-          saving={false}
-          onSave={() => {}}
-        />
+        <LocaleProvider>
+          <AdminEditorHeader
+            locale="en"
+            locales={[
+              { locale: 'en', label: 'English' },
+              { locale: 'de', label: 'Deutsch' },
+            ]}
+            addableLocales={[{ locale: 'hu', label: 'Magyar' }]}
+            setLocale={setLocale}
+            onAddLocale={() => {}}
+            hasUnsavedChanges={hasUnsavedChanges}
+            loading={false}
+            saving={false}
+            onSave={() => {}}
+          />
+        </LocaleProvider>
       </MemoryRouter>,
     )
   })

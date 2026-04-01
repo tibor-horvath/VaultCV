@@ -36,6 +36,15 @@ The admin editor reads/writes profile JSON blobs using the server-side app setti
 
 If `CV_PROFILE_SLUG` is missing, the admin profile endpoints return an error.
 
+## Localization in admin
+
+- Admin surfaces (`/admin`, `/admin/editor`, `/admin/share`) use shared i18n catalogs (`en`, `de`, `hu`) for UI labels, actions, confirmations, and status/error messages.
+- The editor locale selector controls which localized CV payload is being edited (`private/public` per locale), independent from current UI language.
+- The editor includes an explicit **Add language** action.
+  - Available locales are loaded from `/api/locales` (served from `SUPPORTED_LOCALES`).
+  - If locale loading fails, the editor falls back to `en`.
+  - When adding a locale, the editor switches to that locale immediately so content can be created.
+
 ## Share links
 
 The share page (`/admin/share`) creates links like:

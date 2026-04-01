@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink, KeyRound, LoaderCircle, Save, Shield } from 'lucide-react'
 import { redirectToLogin } from '../lib/authRedirect'
+import { useI18n } from '../lib/i18n'
+import { sanitizeSupportedLocales } from '../i18n/localeRegistry'
 import { AdminEditorHeader } from './adminEditor/AdminEditorHeader'
 import { BasicsSection } from './adminEditor/BasicsSection'
 import { CredentialsSection } from './adminEditor/CredentialsSection'
@@ -184,6 +186,7 @@ function clearChangedRowErrors<T, U>(params: {
 }
 
 export function AdminEditorRoute() {
+  const { t } = useI18n()
   const [me, setMe] = useState<ClientPrincipal | null>(null)
   const [meLoading, setMeLoading] = useState(true)
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
@@ -198,6 +201,7 @@ export function AdminEditorRoute() {
   const [isDirty, setIsDirty] = useState(false)
 
   const [locales, setLocales] = useState<LocaleItem[]>([{ locale: 'en', label: 'English' }])
+  const [supportedLocales, setSupportedLocales] = useState<string[]>(['en'])
   const [locale, setLocale] = useState('en')
 
   // Hand-crafted form state (covers the full schema by section).
@@ -329,17 +333,31 @@ export function AdminEditorRoute() {
         const res = await fetch('/api/locales', { credentials: 'same-origin' })
         if (!res.ok) return
         const payload = (await res.json()) as unknown
-        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return
-        const obj = payload as Record<string, unknown>
-        const list = Array.isArray(obj.locales) ? obj.locales : []
-        const next = list
-          .filter((x): x is { locale: unknown; label?: unknown } => Boolean(x && typeof x === 'object' && !Array.isArray(x)))
-          .map((x) => ({
-            locale: typeof x.locale === 'string' ? x.locale.trim().toLowerCase() : '',
-            label: typeof x.label === 'string' ? x.label.trim() : undefined,
-          }))
-          .filter((x) => Boolean(x.locale))
-        if (!cancelled && next.length) setLocales(next)
+        const fromResponse = Array.isArray(payload)
+          ? payload
+          : payload && typeof payload === 'object' && !Array.isArray(payload)
+            ? (payload as { locales?: unknown }).locales
+            : []
+        const normalized = sanitizeSupportedLocales(Array.isArray(fromResponse) ? fromResponse : [])
+        const nextSupported = normalized.length ? normalized : ['en']
+        const nextLocales: LocaleItem[] = nextSupported.map((code) => ({
+          locale: code,
+          label: code.toUpperCase(),
+        }))
+        if (!cancelled) {
+          setSupportedLocales(nextSupported)
+          setLocales((current) => {
+            const seen = new Set(current.map((x) => x.locale))
+            const merged = [...current]
+            for (const item of nextLocales) {
+              if (!seen.has(item.locale)) {
+                seen.add(item.locale)
+                merged.push(item)
+              }
+            }
+            return merged
+          })
+        }
       } catch {
         // Ignore; fallback to 'en'.
       }
@@ -348,6 +366,11 @@ export function AdminEditorRoute() {
       cancelled = true
     }
   }, [])
+
+  const addableLocales = useMemo(
+    () => supportedLocales.filter((code) => !locales.some((item) => item.locale === code)).map((code) => ({ locale: code, label: code.toUpperCase() })),
+    [locales, supportedLocales],
+  )
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 767px)')
@@ -695,7 +718,7 @@ export function AdminEditorRoute() {
       setHasLoadedOnce(true)
     } catch (e: unknown) {
       suppressDirtyTrackingRef.current = false
-      setError(toErrorMessage(e, 'Failed loading profile.'))
+      setError(toErrorMessage(e, t('adminLoadProfileFailed')))
     } finally {
       setHasLoadedOnce(true)
       setLoading(false)
@@ -705,9 +728,22 @@ export function AdminEditorRoute() {
   function handleLocaleChange(nextLocale: string) {
     if (nextLocale === locale) return
     if (isDirty) {
-      const confirmed = window.confirm('You have unsaved changes. Switch locale and discard them?')
+      const confirmed = window.confirm(t('adminUnsavedSwitchLocaleConfirm'))
       if (!confirmed) return
     }
+    setLocale(nextLocale)
+  }
+
+  function handleAddLocale(nextLocale: string) {
+    if (!nextLocale) return
+    if (isDirty) {
+      const confirmed = window.confirm(t('adminUnsavedSwitchLocaleConfirm'))
+      if (!confirmed) return
+    }
+    setLocales((current) => {
+      if (current.some((x) => x.locale === nextLocale)) return current
+      return [...current, { locale: nextLocale, label: nextLocale.toUpperCase() }]
+    })
     setLocale(nextLocale)
   }
 
@@ -977,7 +1013,7 @@ export function AdminEditorRoute() {
 
       if (hasPublicValidationErrors(nextValidation)) {
         setPublicValidation(nextValidation)
-        setError('Fix the highlighted public visibility issues before saving.')
+        setError(t('adminFixPublicValidation'))
         queueMicrotask(() => focusFirstValidationIssue(nextValidation))
         return
       }
@@ -1108,9 +1144,9 @@ export function AdminEditorRoute() {
       await load()
       setIsDirty(false)
       setPublicValidation(emptyPublicValidation())
-      setStatus('Profile saved.')
+      setStatus(t('adminProfileSaved'))
     } catch (e: unknown) {
-      setError(toErrorMessage(e, 'Failed saving profile.'))
+      setError(toErrorMessage(e, t('adminSaveProfileFailed')))
     } finally {
       setIsSaving(false)
       setLoading(false)
@@ -1121,7 +1157,7 @@ export function AdminEditorRoute() {
     return (
       <div className="w-full space-y-4 py-10">
         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-          <LoaderCircle className="h-4 w-4 animate-spin" /> Checking admin session…
+          <LoaderCircle className="h-4 w-4 animate-spin" /> {t('adminSessionChecking')}
         </div>
       </div>
     )
@@ -1133,20 +1169,20 @@ export function AdminEditorRoute() {
         <div className="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/30">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white">
             <Shield className="h-5 w-5" />
-            <div className="text-lg font-semibold">Admin editor</div>
+            <div className="text-lg font-semibold">{t('adminEditor')}</div>
           </div>
           <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-            Sign in with Entra ID to edit your profile.
+            {t('adminEditorSignInHint')}
           </div>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <a
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
               href="/.auth/login/aad"
             >
-              <KeyRound className="h-4 w-4" /> Sign in <ExternalLink className="h-4 w-4 opacity-80" />
+              <KeyRound className="h-4 w-4" /> {t('adminSignIn')} <ExternalLink className="h-4 w-4 opacity-80" />
             </a>
             <Link className="text-xs font-medium text-slate-600 underline underline-offset-4 dark:text-slate-300" to="/">
-              Back to site
+              {t('adminBackToSite')}
             </Link>
           </div>
         </div>
@@ -1160,15 +1196,13 @@ export function AdminEditorRoute() {
         <div className="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/30">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white">
             <Shield className="h-5 w-5" />
-            <div className="text-lg font-semibold">Admin editor</div>
+            <div className="text-lg font-semibold">{t('adminEditor')}</div>
           </div>
           <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-            Signed in as <span className="font-mono">{me.userDetails ?? 'unknown'}</span>, but you don’t have the{' '}
-            <span className="font-mono">admin</span> role yet.
+            {t('adminNoRole').replace('{email}', me.userDetails ?? t('adminUnknownUser'))}
           </div>
           <div className="mt-4 rounded-2xl border border-slate-200/70 bg-white/70 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/20 dark:text-slate-300">
-            In Azure Portal → Static Web App → Role assignments: add role <span className="font-mono">admin</span> to the
-            identity you see in <span className="font-mono">/.auth/me</span>.
+            {t('adminRoleAssignmentHint')}
           </div>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <a
@@ -1177,10 +1211,10 @@ export function AdminEditorRoute() {
               target="_blank"
               rel="noreferrer"
             >
-              Open `/.auth/me` <ExternalLink className="h-4 w-4 opacity-80" />
+              {t('adminOpenAuthMe')} <ExternalLink className="h-4 w-4 opacity-80" />
             </a>
             <a className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" href="/.auth/logout">
-              Sign out
+              {t('adminSignOut')}
             </a>
           </div>
         </div>
@@ -1193,7 +1227,9 @@ export function AdminEditorRoute() {
       <AdminEditorHeader
         locale={locale}
         locales={locales}
+        addableLocales={addableLocales}
         setLocale={handleLocaleChange}
+        onAddLocale={handleAddLocale}
         hasUnsavedChanges={isDirty}
         loading={loading}
         saving={isSaving}
@@ -1228,7 +1264,7 @@ export function AdminEditorRoute() {
           className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
         >
           <span className="inline-flex items-center gap-2">
-            <LoaderCircle className="h-4 w-4 animate-spin" /> Saving profile...
+            <LoaderCircle className="h-4 w-4 animate-spin" /> {t('adminSavingProfile')}
           </span>
         </div>
       ) : null}
@@ -1239,7 +1275,7 @@ export function AdminEditorRoute() {
           className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
         >
           <span className="inline-flex items-center gap-2">
-            <LoaderCircle className="h-4 w-4 animate-spin" /> Loading profile editor…
+            <LoaderCircle className="h-4 w-4 animate-spin" /> {t('adminLoadingProfileEditor')}
           </span>
         </div>
       ) : null}
@@ -1335,7 +1371,7 @@ export function AdminEditorRoute() {
               className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
             >
               {isSaving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? t('adminSaving') : t('adminSave')}
             </button>
           </div>
 
@@ -1347,7 +1383,7 @@ export function AdminEditorRoute() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
             >
               {isSaving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? t('adminSaving') : t('adminSave')}
             </button>
           </div>
         </>
