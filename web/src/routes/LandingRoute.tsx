@@ -120,6 +120,7 @@ export function LandingRoute() {
 
   useEffect(() => {
     if (initialUrlAccess) return
+    if (tokenInput.trim()) return
     let cancelled = false
     queueMicrotask(() => {
       setSessionProbePending(true)

@@ -13,7 +13,7 @@ You can turn the URL into a QR code using any free QR generator (search "free QR
 
 The SPA/API auth flow uses the code like this:
 
-- `POST /api/auth` with body `{"shareId":"<SHARE_ID>"}` **or** `{"code":"<TOKEN>"}` to obtain a short-lived signed session token
+- `POST /api/auth` with body `{"shareId":"<SHARE_ID>"}` to obtain a short-lived signed session token
 - `POST /api/auth` sets `Set-Cookie: cv_session=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=<ttl>`
 - `GET /api/cv` with the `cv_session` cookie (sent automatically by the browser) and an `Accept-Language` request header for locale selection (the React app sets this from the UI language picker)
 - `GET /api/public-profile` uses the same `Accept-Language` pattern for localized public profile JSON
