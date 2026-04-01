@@ -10,7 +10,9 @@ import {
   LoaderCircle,
   LogOut,
   PlusCircle,
+  QrCode,
   RefreshCw,
+  Share2,
   Shield,
   SquarePen,
   Trash2,
@@ -20,6 +22,7 @@ import { redirectToLogin } from '../lib/authRedirect'
 import { useI18n } from '../lib/i18n'
 import { IconSelect } from './adminEditor/IconSelect'
 import { AdminPageHeader } from './AdminPageHeader'
+import { QrCodeModal } from '../components/QrCodeModal'
 
 type ClientPrincipal = {
   identityProvider?: string
@@ -117,6 +120,7 @@ export function AdminShareRoute() {
   const [status, setStatus] = useState<string | null>(null)
   const [shareLang, setShareLang] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => readStatusFilterFromUrl())
+  const [qrLink, setQrLink] = useState<ShareLink | null>(null)
 
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
   const signedInEmail = useMemo(() => extractEmailFromPrincipal(me), [me])
@@ -343,6 +347,14 @@ export function AdminShareRoute() {
 
   return (
     <div className="w-full space-y-6 py-10">
+      {qrLink ? (
+        <QrCodeModal
+          shareUrlBase={`${window.location.origin}/?s=${encodeURIComponent(qrLink.rowKey)}`}
+          initialLang={shareLang}
+          langOptions={shareLanguageOptions}
+          onClose={() => setQrLink(null)}
+        />
+      ) : null}
       <AdminPageHeader
         title={t('adminShareCv')}
         icon={<Shield className="h-5 w-5" />}
@@ -554,6 +566,22 @@ export function AdminShareRoute() {
                   >
                     {t('adminCopy')}
                   </button>
+                  {'share' in navigator ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
+                      onClick={() =>
+                        void navigator
+                          .share({ url: shareUrl })
+                          .catch((e: unknown) => {
+                            if (e instanceof Error && e.name === 'AbortError') return
+                            throw e
+                          })
+                      }
+                    >
+                      <Share2 className="h-3.5 w-3.5" /> {t('adminShareAction')}
+                    </button>
+                  ) : null}
                   <a
                     className="rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
                     href={shareUrl}
@@ -562,6 +590,13 @@ export function AdminShareRoute() {
                   >
                     {t('adminOpen')} <ExternalLink className="inline h-3.5 w-3.5" />
                   </a>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
+                    onClick={() => setQrLink(l)}
+                  >
+                    <QrCode className="h-3.5 w-3.5" /> {t('adminQrCode')}
+                  </button>
                   <button
                     type="button"
                     disabled={loading || isRevoked}
@@ -629,6 +664,22 @@ export function AdminShareRoute() {
                         >
                           {t('adminCopy')}
                         </button>
+                        {'share' in navigator ? (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
+                            onClick={() =>
+                              void navigator
+                                .share({ url: shareUrl })
+                                .catch((e: unknown) => {
+                                  if (e instanceof Error && e.name === 'AbortError') return
+                                  throw e
+                                })
+                            }
+                          >
+                            <Share2 className="h-3.5 w-3.5" /> {t('adminShareAction')}
+                          </button>
+                        ) : null}
                         <a
                           className="rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
                           href={shareUrl}
@@ -637,6 +688,13 @@ export function AdminShareRoute() {
                         >
                           {t('adminOpen')} <ExternalLink className="inline h-3.5 w-3.5" />
                         </a>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-2 py-1 text-[11px] hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
+                          onClick={() => setQrLink(l)}
+                        >
+                          <QrCode className="h-3.5 w-3.5" /> {t('adminQrCode')}
+                        </button>
                         <button
                           type="button"
                           disabled={loading || isRevoked}

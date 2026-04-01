@@ -7,6 +7,10 @@ import { AdminShareRoute } from './AdminRoute'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
+vi.mock('qrcode.react', () => ({
+  QRCodeCanvas: () => null,
+}))
+
 type MockResponse = {
   ok: boolean
   status: number
@@ -95,6 +99,11 @@ beforeEach(() => {
     value: { writeText: vi.fn(async () => {}) },
     configurable: true,
   })
+  Object.defineProperty(navigator, 'share', {
+    value: vi.fn(async () => {}),
+    configurable: true,
+    writable: true,
+  })
 })
 
 afterEach(() => {
@@ -161,5 +170,87 @@ describe('AdminShareRoute', () => {
 
     expect(document.body.textContent).toContain('Showing 3 of 3 links')
     expect(window.location.search).toContain('status=all')
+  })
+
+  it('shows a QR Code button for each visible active link', async () => {
+    renderRoute()
+    await flushEffects()
+
+    const qrButtons = Array.from(document.querySelectorAll('button')).filter(
+      (btn) => btn.textContent?.includes('QR Code'),
+    )
+    expect(qrButtons.length).toBeGreaterThan(0)
+  })
+
+  it('opens QR modal when QR Code button is clicked', async () => {
+    renderRoute()
+    await flushEffects()
+
+    const qrButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('QR Code'),
+    ) as HTMLButtonElement
+    expect(qrButton).toBeTruthy()
+
+    await act(async () => {
+      qrButton.click()
+      await Promise.resolve()
+    })
+
+    const dialog = document.querySelector('[role="dialog"]')
+    expect(dialog).toBeTruthy()
+    expect(dialog?.getAttribute('aria-modal')).toBe('true')
+  })
+
+  it('closes QR modal on Escape key', async () => {
+    renderRoute()
+    await flushEffects()
+
+    const qrButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('QR Code'),
+    ) as HTMLButtonElement
+
+    await act(async () => {
+      qrButton.click()
+      await Promise.resolve()
+    })
+
+    expect(document.querySelector('[role="dialog"]')).toBeTruthy()
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+      await Promise.resolve()
+    })
+
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
+  })
+
+  it('shows a Share button for each visible active link', async () => {
+    renderRoute()
+    await flushEffects()
+
+    const shareButtons = Array.from(document.querySelectorAll('button')).filter(
+      (btn) => btn.textContent?.trim() === 'Share',
+    )
+    expect(shareButtons.length).toBeGreaterThan(0)
+  })
+
+  it('calls navigator.share with the link URL when Share is clicked', async () => {
+    renderRoute()
+    await flushEffects()
+
+    const shareButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.trim() === 'Share',
+    ) as HTMLButtonElement
+    expect(shareButton).toBeTruthy()
+
+    await act(async () => {
+      shareButton.click()
+      await Promise.resolve()
+    })
+
+    const shareMock = navigator.share as ReturnType<typeof vi.fn>
+    expect(shareMock).toHaveBeenCalledTimes(1)
+    const payload = shareMock.mock.calls[0][0] as { url?: string }
+    expect(payload.url).toContain('abc123')
   })
 })

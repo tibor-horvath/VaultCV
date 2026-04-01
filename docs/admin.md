@@ -64,6 +64,10 @@ These links are stored in Azure Table Storage and support:
 - revoke
 - optional admin-only metadata (`sharedWith`, `notes`) that is never returned by public endpoints
 
+For each active link, click the **QR Code** button to open a modal with a scannable QR code and a **Download PNG** option. When `SUPPORTED_LOCALES` includes more than one locale, a language selector inside the modal lets you switch the encoded language without closing the modal — the QR code and URL update immediately. The modal pre-selects the language already chosen in the page-level language selector. On devices that support the [Web Share API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API) file sharing (iOS 12.1+, Android Chrome 61+), a **Share image** button also appears, letting you send the QR code PNG directly via the OS share sheet. See [qr-code-url-format.md](qr-code-url-format.md) for the full URL format.
+
+Each share link row has a **Share** button (next to **Copy**) on devices where `navigator.share` is available. Tapping it opens the native OS share sheet with the link URL.
+
 ## Public visibility model
 
 The editor (`/admin/editor`) supports per-field visibility controls for fields that can be shown on the public landing page.
