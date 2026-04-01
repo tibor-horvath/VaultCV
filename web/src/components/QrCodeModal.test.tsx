@@ -138,6 +138,16 @@ describe('QrCodeModal', () => {
     expect(document.querySelector('select')).toBeNull()
   })
 
+  it('hides language selector when Auto and a single real locale are provided', () => {
+    renderModal('https://example.com/?s=abc123', vi.fn(), {
+      langOptions: [
+        { value: '', label: 'Auto' },
+        { value: 'en', label: 'EN - English' },
+      ],
+    })
+    expect(document.querySelector('select')).toBeNull()
+  })
+
   it('updates displayed URL when language is changed', () => {
     renderModal('https://example.com/?s=abc123')
     const select = document.querySelector('select') as HTMLSelectElement
@@ -157,9 +167,14 @@ describe('QrCodeModal', () => {
     expect(document.body.textContent).toContain('lang=en')
   })
 
-  it('shows Share image button when navigator.canShare is available', () => {
+  it('shows Share image button when navigator.canShare and navigator.share are available', () => {
     Object.defineProperty(navigator, 'canShare', {
       value: vi.fn(() => true),
+      configurable: true,
+      writable: true,
+    })
+    Object.defineProperty(navigator, 'share', {
+      value: vi.fn(async () => {}),
       configurable: true,
       writable: true,
     })
@@ -169,6 +184,7 @@ describe('QrCodeModal', () => {
     )
     expect(btn).toBeTruthy()
     delete (navigator as Partial<Navigator>).canShare
+    delete (navigator as Partial<Navigator>).share
   })
 
   it('hides Share image button when navigator.canShare is not available', () => {
@@ -182,6 +198,25 @@ describe('QrCodeModal', () => {
     )
     expect(btn).toBeUndefined()
     if (desc) Object.defineProperty(navigator, 'canShare', desc)
+  })
+
+  it('hides Share image button when navigator.share is not available', () => {
+    Object.defineProperty(navigator, 'canShare', {
+      value: vi.fn(() => true),
+      configurable: true,
+      writable: true,
+    })
+    const shareDesc = Object.getOwnPropertyDescriptor(navigator, 'share')
+    if (shareDesc) {
+      Object.defineProperty(navigator, 'share', { value: undefined, configurable: true, writable: true })
+    }
+    renderModal('https://example.com/?s=abc123')
+    const btn = Array.from(document.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Share image'),
+    )
+    expect(btn).toBeUndefined()
+    delete (navigator as Partial<Navigator>).canShare
+    if (shareDesc) Object.defineProperty(navigator, 'share', shareDesc)
   })
 
   it('calls navigator.share with a PNG file when Share image is clicked', async () => {

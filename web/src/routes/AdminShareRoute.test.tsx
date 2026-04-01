@@ -24,6 +24,7 @@ type MockResponse = {
 
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
+let originalShareDescriptor: PropertyDescriptor | undefined
 
 function jsonResponse(body: unknown, status = 200): MockResponse {
   const text = JSON.stringify(body)
@@ -104,6 +105,7 @@ beforeEach(() => {
     value: { writeText: vi.fn(async () => {}) },
     configurable: true,
   })
+  originalShareDescriptor = Object.getOwnPropertyDescriptor(navigator, 'share')
   Object.defineProperty(navigator, 'share', {
     value: vi.fn(async () => {}),
     configurable: true,
@@ -113,6 +115,11 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  if (originalShareDescriptor !== undefined) {
+    Object.defineProperty(navigator, 'share', originalShareDescriptor)
+  } else {
+    delete (navigator as Partial<Navigator>).share
+  }
   if (mountedRoot && mountedContainer) {
     act(() => {
       mountedRoot!.unmount()

@@ -22,7 +22,7 @@ export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }:
     [shareUrlBase, lang],
   )
 
-  const showLangSelector = langOptions.length > 1
+  const showLangSelector = langOptions.filter((o) => o.value !== '').length > 1
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -32,7 +32,10 @@ export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }:
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const canShareFiles = typeof navigator !== 'undefined' && 'canShare' in navigator
+  const canShareFiles =
+    typeof navigator !== 'undefined' &&
+    typeof navigator.share === 'function' &&
+    typeof navigator.canShare === 'function'
 
   function downloadPng() {
     const canvas = canvasRef.current
