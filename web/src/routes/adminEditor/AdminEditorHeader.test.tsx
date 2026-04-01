@@ -25,6 +25,7 @@ function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn()) {
           setLocale={setLocale}
           hasUnsavedChanges={hasUnsavedChanges}
           loading={false}
+          saving={false}
           onSave={() => {}}
         />
       </MemoryRouter>,
