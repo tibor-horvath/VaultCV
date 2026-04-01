@@ -52,7 +52,9 @@ export function LandingRoute() {
   const [params] = useSearchParams()
   const urlShare = params.get('s') ?? ''
   const initialUrlAccess = urlShare.trim()
-  const [urlTokenValidating, setUrlTokenValidating] = useState(() => Boolean(initialUrlAccess))
+  const [shareLinkAccessLoading, setShareLinkAccessLoading] = useState(() => Boolean(initialUrlAccess))
+  const urlTokenValidating = shareLinkAccessLoading
+  const setUrlTokenValidating = setShareLinkAccessLoading
   const [sessionProbePending, setSessionProbePending] = useState(() => !initialUrlAccess)
   const [tokenInput, setTokenInput] = useState('')
   const [isTokenVisible, setIsTokenVisible] = useState(false)
