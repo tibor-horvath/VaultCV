@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { ArrowRight, Eye, EyeOff, KeyRound, Moon, ShieldCheck, Sun } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { EducationList } from '../components/cv/EducationList'
@@ -48,7 +48,6 @@ export function LandingRoute() {
   const { locale, t } = useI18n()
   const { openCv } = useAppView()
   const { theme, toggleTheme } = useTheme()
-  const navigate = useNavigate()
   const [params] = useSearchParams()
   const urlShare = params.get('s') ?? ''
   const initialUrlAccess = urlShare.trim()
@@ -111,7 +110,7 @@ export function LandingRoute() {
     // `CvRoute` exchanges the token; doing it here too doubles share-link view counts.
     setStoredAccessCode(trimmed)
     openCv()
-  }, [initialUrlAccess, openCv, navigate])
+  }, [initialUrlAccess, openCv])
 
   useEffect(() => {
     if (!tokenInput.trim()) return
