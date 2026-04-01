@@ -38,8 +38,9 @@ async function isPhotoPublic(slug: string, locale: string): Promise<boolean> {
   const raw = await readProfileJsonV2({ kind: 'public', locale, slugFromName: slug })
   if (!raw.trim()) return false
   const data = JSON.parse(raw) as Record<string, unknown>
-  const basics = data?.basics as Record<string, unknown> | undefined
-  return Boolean(basics?.photoUrl)
+  const basics = data?.basics as { photoUrl?: unknown } | undefined
+  const photoUrl = basics?.photoUrl
+  return typeof photoUrl === 'string' && photoUrl.startsWith('/api/public-profile/image')
 }
 
 export default async function (context: Context, req: HttpRequest) {
