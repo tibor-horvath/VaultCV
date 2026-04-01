@@ -34,15 +34,11 @@ function readServerConfiguredProfileSlug() {
 }
 
 async function isPhotoPublic(slug: string): Promise<boolean> {
-  try {
-    const raw = await readProfileJsonV2({ kind: 'public', locale: fallbackLocale, slugFromName: slug })
-    if (!raw.trim()) return false
-    const data = JSON.parse(raw) as Record<string, unknown>
-    const basics = data?.basics as Record<string, unknown> | undefined
-    return Boolean(basics?.photoUrl)
-  } catch {
-    return false
-  }
+  const raw = await readProfileJsonV2({ kind: 'public', locale: fallbackLocale, slugFromName: slug })
+  if (!raw.trim()) return false
+  const data = JSON.parse(raw) as Record<string, unknown>
+  const basics = data?.basics as Record<string, unknown> | undefined
+  return Boolean(basics?.photoUrl)
 }
 
 export default async function (context: Context, _req: HttpRequest) {
