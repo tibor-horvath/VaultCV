@@ -1,11 +1,11 @@
 import { ToggleButton } from './ToggleButton'
 import { ConfirmButton } from './ConfirmButton'
-import { BadgeCheck, GraduationCap, Languages, Plus, ShieldCheck, Trash2 } from 'lucide-react'
-import { SiGoogleIcon } from '../../components/icons/SimpleBrandIcons'
+import { BadgeCheck, Plus, Trash2 } from 'lucide-react'
 import type { CredentialRow, PublicCredentialFlags } from './types'
 import { IconSelect } from './IconSelect'
+import { CredentialIssuerIcon } from '../../components/cv/CredentialIssuerIcon'
 
-const ISSUER_OPTIONS = ['microsoft', 'aws', 'google', 'cisco', 'comptia', 'oracle', 'ibm', 'isc2', 'hashicorp', 'redhat', 'vmware', 'cncf'] as const
+const ISSUER_OPTIONS = ['microsoft', 'aws', 'google', 'school', 'language', 'other'] as const
 const CUSTOM_OPTION = '__custom__'
 
 export function CredentialsSection(props: {
@@ -66,21 +66,12 @@ export function CredentialsSection(props: {
                     const currentSelectValue = ISSUER_OPTIONS.includes(c.issuer as (typeof ISSUER_OPTIONS)[number]) ? c.issuer : CUSTOM_OPTION
                     const options = [
                       { value: '', label: 'Select issuer...' },
-                      { value: 'microsoft', label: 'microsoft', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'aws', label: 'aws', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'google', label: 'google', icon: <SiGoogleIcon className="h-3.5 w-3.5" /> },
-                      { value: 'cisco', label: 'cisco', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'comptia', label: 'comptia', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'oracle', label: 'oracle', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'ibm', label: 'ibm', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'isc2', label: 'isc2', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'hashicorp', label: 'hashicorp', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'redhat', label: 'redhat', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'vmware', label: 'vmware', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'cncf', label: 'cncf', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
-                      { value: 'school', label: 'school', icon: <GraduationCap className="h-3.5 w-3.5" /> },
-                      { value: 'language', label: 'language', icon: <Languages className="h-3.5 w-3.5" /> },
-                      { value: 'other', label: 'other', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+                      { value: 'microsoft', label: 'microsoft', icon: <CredentialIssuerIcon issuer="microsoft" className="h-3.5 w-3.5" /> },
+                      { value: 'aws', label: 'aws', icon: <CredentialIssuerIcon issuer="aws" className="h-3.5 w-3.5" /> },
+                      { value: 'google', label: 'google', icon: <CredentialIssuerIcon issuer="google" className="h-3.5 w-3.5" /> },
+                      { value: 'school', label: 'school', icon: <CredentialIssuerIcon issuer="school" className="h-3.5 w-3.5" /> },
+                      { value: 'language', label: 'language', icon: <CredentialIssuerIcon issuer="language" className="h-3.5 w-3.5" /> },
+                      { value: 'other', label: 'other', icon: <CredentialIssuerIcon issuer="other" className="h-3.5 w-3.5" /> },
                       { value: CUSTOM_OPTION, label: 'Custom' },
                     ]
                     return (
