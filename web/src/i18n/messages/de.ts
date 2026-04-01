@@ -111,7 +111,13 @@ export const deMessages: Partial<MessageCatalog> = {
   adminViews: 'Aufrufe: {count} ({date})',
   adminNever: 'nie',
   adminCopy: 'Kopieren',
+  adminShareAction: 'Teilen',
   adminOpen: 'Öffnen',
+  adminQrCode: 'QR-Code',
+  adminQrCodeFor: 'QR-Code für {url}',
+  adminQrDownload: 'PNG herunterladen',
+  adminQrShare: 'Bild teilen',
+  adminQrClose: 'Schließen',
   adminRevoke: 'Widerrufen',
   adminRevokeShareConfirm:
     'Diesen Freigabelink widerrufen? Nutzer verlieren sofort den Zugriff.',
