@@ -22,18 +22,27 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
+  // displaySize: pixel dimensions of the image at scale=1 (cover-fits the frame)
+  const [displaySize, setDisplaySize] = useState<{ w: number; h: number } | null>(null)
   const dragRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null)
 
-  // Constrain offset so the image always fills the crop frame
-  function constrainOffset(ox: number, oy: number, s: number, imgNatW: number, imgNatH: number, frameSize: number): { x: number; y: number } {
-    // In display coords (frame is frameSize x frameSize):
-    // scaled image size
-    const scaledW = imgNatW * s
-    const scaledH = imgNatH * s
-    // Max drag: half of (scaled dimension - frame dimension), clamped to 0
+  // Constrain offset so the image always fills the crop frame.
+  // baseW/baseH are the display pixel dimensions of the image at scale=1.
+  function constrainOffset(ox: number, oy: number, s: number, baseW: number, baseH: number, frameSize: number): { x: number; y: number } {
+    const scaledW = baseW * s
+    const scaledH = baseH * s
     const maxX = Math.max(0, (scaledW - frameSize) / 2)
     const maxY = Math.max(0, (scaledH - frameSize) / 2)
     return { x: clamp(ox, -maxX, maxX), y: clamp(oy, -maxY, maxY) }
+  }
+
+  function handleImgLoad() {
+    if (!imgRef.current || !containerRef.current) return
+    const frameSize = containerRef.current.clientWidth || 320
+    const { naturalWidth: nw, naturalHeight: nh } = imgRef.current
+    // Cover: scale up so the shorter side equals frameSize
+    const bs = Math.max(frameSize / nw, frameSize / nh)
+    setDisplaySize({ w: nw * bs, h: nh * bs })
   }
 
   function getFrameSize() {
@@ -46,17 +55,16 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragRef.current || !imgRef.current) return
+    if (!dragRef.current || !imgRef.current || !displaySize) return
     const dx = e.clientX - dragRef.current.startX
     const dy = e.clientY - dragRef.current.startY
-    const img = imgRef.current
     const frameSize = getFrameSize()
     const constrained = constrainOffset(
       dragRef.current.startOffsetX + dx,
       dragRef.current.startOffsetY + dy,
       scale,
-      img.naturalWidth,
-      img.naturalHeight,
+      displaySize.w,
+      displaySize.h,
       frameSize,
     )
     setOffset(constrained)
@@ -67,27 +75,31 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handleScaleChange(newScale: number) {
-    if (!imgRef.current) return
+    if (!imgRef.current || !displaySize) return
     const frameSize = getFrameSize()
-    const constrained = constrainOffset(offset.x, offset.y, newScale, imgRef.current.naturalWidth, imgRef.current.naturalHeight, frameSize)
+    const constrained = constrainOffset(offset.x, offset.y, newScale, displaySize.w, displaySize.h, frameSize)
     setScale(newScale)
     setOffset(constrained)
   }
 
   function handleConfirm() {
-    if (!imgRef.current) return
+    if (!imgRef.current || !displaySize) return
     const img = imgRef.current
     const frameSize = getFrameSize()
-    const scaledW = img.naturalWidth * scale
-    const scaledH = img.naturalHeight * scale
+    // effectiveScale maps display pixels → natural pixels inverse
+    // At scale=1, image renders at displaySize.w × displaySize.h pixels
+    const baseRatio = img.naturalWidth / displaySize.w // natural pixels per display pixel at scale=1
+    const effectiveDisplayScale = scale // CSS scale multiplier on top of baseRatio
+    const scaledW = displaySize.w * effectiveDisplayScale
+    const scaledH = displaySize.h * effectiveDisplayScale
     // Top-left of the scaled image in frame coords
     const imgLeft = (frameSize - scaledW) / 2 + offset.x
     const imgTop = (frameSize - scaledH) / 2 + offset.y
     // Crop rect in natural image coords
-    const sx = Math.max(0, (-imgLeft / scale))
-    const sy = Math.max(0, (-imgTop / scale))
-    const sw = Math.min(img.naturalWidth - sx, frameSize / scale)
-    const sh = Math.min(img.naturalHeight - sy, frameSize / scale)
+    const sx = Math.max(0, (-imgLeft * baseRatio) / effectiveDisplayScale)
+    const sy = Math.max(0, (-imgTop * baseRatio) / effectiveDisplayScale)
+    const sw = Math.min(img.naturalWidth - sx, (frameSize * baseRatio) / effectiveDisplayScale)
+    const sh = Math.min(img.naturalHeight - sy, (frameSize * baseRatio) / effectiveDisplayScale)
 
     const canvas = document.createElement('canvas')
     canvas.width = OUTPUT_SIZE
@@ -132,10 +144,14 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
             src={imageSrc}
             alt=""
             draggable={false}
+            onLoad={handleImgLoad}
             style={{
               position: 'absolute',
               left: '50%',
               top: '50%',
+              width: displaySize?.w,
+              height: displaySize?.h,
+              opacity: displaySize ? 1 : 0,
               transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,
               transformOrigin: 'center',
               maxWidth: 'none',
