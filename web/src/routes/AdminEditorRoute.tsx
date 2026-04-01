@@ -83,13 +83,9 @@ export function AdminEditorRoute() {
       sectionErrors={editor.publicValidation.sections}
       links={editor.links}
       setLinks={editor.setLinks}
-      publicLinks={editor.publicLinks}
-      setPublicLinks={editor.setPublicLinks}
       linkRowErrors={mergeRowErrors(editor.publicValidation.links, editor.privateValidation.links)}
       credentials={editor.credentials}
       setCredentials={editor.setCredentials}
-      publicCredentials={editor.publicCredentials}
-      setPublicCredentials={editor.setPublicCredentials}
       credentialRowErrors={mergeRowErrors(editor.publicValidation.credentials, editor.privateValidation.credentials)}
       experience={editor.experience}
       setExperience={editor.setExperience}

@@ -2,13 +2,12 @@ import type {
   CredentialRow,
   EducationRow,
   ExperienceRow,
+  LabeledUrl,
   LinkRow,
   ProjectRow,
   PublicBasicsFlags,
-  PublicCredentialFlags,
   PublicEducationFlags,
   PublicExperienceFlags,
-  PublicLinkFlags,
   PublicProjectFlags,
   PublicSectionsFlags,
 } from './types'
@@ -24,7 +23,7 @@ export function hasAnyEnabledFlag(flags: Record<string, boolean> | undefined) {
   return Object.values(flags).some(Boolean)
 }
 
-export function normalizeExperienceLinks(input: unknown): LinkRow[] {
+export function normalizeExperienceLinks(input: unknown): LabeledUrl[] {
   const links = asArray(input)
     .map((x) => {
       const o = asObject(x)
@@ -33,7 +32,7 @@ export function normalizeExperienceLinks(input: unknown): LinkRow[] {
       if (!label || !url) return null
       return { label, url }
     })
-    .filter((x): x is LinkRow => Boolean(x))
+    .filter((x): x is LabeledUrl => Boolean(x))
   return links
 }
 
@@ -117,8 +116,6 @@ export function buildDraftSignature(input: {
   projects: ProjectRow[]
   publicBasics: PublicBasicsFlags
   publicSections: PublicSectionsFlags
-  publicLinks: PublicLinkFlags[]
-  publicCredentials: PublicCredentialFlags[]
   publicExperience: PublicExperienceFlags[]
   publicEducation: PublicEducationFlags[]
   publicProjects: PublicProjectFlags[]

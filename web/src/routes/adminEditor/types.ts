@@ -13,15 +13,14 @@ export type PublicSectionsFlags = {
   languages: boolean
 }
 
-export type LinkRow = { label: string; url: string }
-export type PublicLinkFlags = { label: boolean; url: boolean }
+export type LabeledUrl = { label: string; url: string }
+export type LinkRow = LabeledUrl & { isPublic: boolean }
 
-export type CredentialRow = { issuer: string; label: string; url: string; dateEarned?: string; dateExpires?: string }
-export type PublicCredentialFlags = { issuer: boolean; label: boolean; url: boolean }
+export type CredentialRow = { issuer: string; label: string; url: string; isPublic: boolean; dateEarned?: string; dateExpires?: string }
 
 export type ExperienceRow = {
   company: string
-  links?: Array<{ label: string; url: string }>
+  links?: LabeledUrl[]
   role: string
   start: string
   end: string
@@ -64,6 +63,6 @@ export type PublicEducationFlags = {
   highlights: boolean
 }
 
-export type ProjectRow = { name: string; description: string; tags?: string[]; links?: Array<{ label: string; url: string }> }
+export type ProjectRow = { name: string; description: string; tags?: string[]; links?: LabeledUrl[] }
 export type PublicProjectFlags = { name: boolean; tags: boolean; description: boolean }
 

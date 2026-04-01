@@ -16,10 +16,8 @@ import type {
   LocaleItem,
   ProjectRow,
   PublicBasicsFlags,
-  PublicCredentialFlags,
   PublicEducationFlags,
   PublicExperienceFlags,
-  PublicLinkFlags,
   PublicProjectFlags,
   PublicSectionsFlags,
 } from './types'
@@ -79,14 +77,10 @@ export function AdminEditorPage(props: {
 
   links: LinkRow[]
   setLinks: (updater: (cur: LinkRow[]) => LinkRow[]) => void
-  publicLinks: PublicLinkFlags[]
-  setPublicLinks: (updater: (cur: PublicLinkFlags[]) => PublicLinkFlags[]) => void
   linkRowErrors?: string[]
 
   credentials: CredentialRow[]
   setCredentials: (updater: (cur: CredentialRow[]) => CredentialRow[]) => void
-  publicCredentials: PublicCredentialFlags[]
-  setPublicCredentials: (updater: (cur: PublicCredentialFlags[]) => PublicCredentialFlags[]) => void
   credentialRowErrors?: string[]
 
   experience: ExperienceRow[]
@@ -155,13 +149,9 @@ export function AdminEditorPage(props: {
     sectionErrors,
     links,
     setLinks,
-    publicLinks,
-    setPublicLinks,
     linkRowErrors,
     credentials,
     setCredentials,
-    publicCredentials,
-    setPublicCredentials,
     credentialRowErrors,
     experience,
     setExperience,
@@ -349,8 +339,6 @@ export function AdminEditorPage(props: {
           <LinksSection
             links={links}
             setLinks={setLinks}
-            publicLinks={publicLinks}
-            setPublicLinks={setPublicLinks}
             isMobile={isMobile}
             rowErrors={linkRowErrors}
           />
@@ -358,8 +346,6 @@ export function AdminEditorPage(props: {
           <CredentialsSection
             credentials={credentials}
             setCredentials={setCredentials}
-            publicCredentials={publicCredentials}
-            setPublicCredentials={setPublicCredentials}
             isMobile={isMobile}
             rowErrors={credentialRowErrors}
           />
