@@ -674,7 +674,9 @@ export function AdminShareRoute() {
                                 .share({ url: shareUrl })
                                 .catch((e: unknown) => {
                                   if (e instanceof Error && e.name === 'AbortError') return
-                                  throw e
+                                  // Log unexpected share errors instead of rethrowing to avoid unhandled promise rejections
+                                  // eslint-disable-next-line no-console
+                                  console.error('navigator.share failed', e)
                                 })
                             }
                           >
