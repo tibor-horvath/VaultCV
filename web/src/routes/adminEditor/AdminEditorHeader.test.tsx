@@ -57,7 +57,7 @@ describe('AdminEditorHeader', () => {
   it('blocks back navigation when unsaved changes are not confirmed', () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderHeader(true)
-    const backLink = Array.from(document.querySelectorAll('a')).find((node) => node.textContent?.includes('Back to admin')) as HTMLAnchorElement
+    const backLink = Array.from(document.querySelectorAll('a')).find((node) => node.textContent?.includes('Dashboard')) as HTMLAnchorElement
     const prevented = !backLink.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
     expect(confirmSpy).toHaveBeenCalledTimes(1)
     expect(prevented).toBe(true)

@@ -1197,6 +1197,7 @@ export function AdminEditorRoute() {
         hasUnsavedChanges={isDirty}
         loading={loading}
         saving={isSaving}
+        signedInEmail={me.userDetails}
         onSave={() => void save()}
       />
 
