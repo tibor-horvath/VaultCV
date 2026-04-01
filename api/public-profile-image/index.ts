@@ -1,5 +1,6 @@
 import { readProfileImage, readProfileJsonV2 } from '../lib/profileBlobStore'
-import { fallbackLocale } from '../lib/localeRegistry'
+import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib/httpHeaders'
+import { normalizeLocale } from '../lib/localeRegistry'
 
 type Context = {
   res?: {
@@ -33,15 +34,15 @@ function readServerConfiguredProfileSlug() {
   return (process.env.CV_PROFILE_SLUG ?? '').trim()
 }
 
-async function isPhotoPublic(slug: string): Promise<boolean> {
-  const raw = await readProfileJsonV2({ kind: 'public', locale: fallbackLocale, slugFromName: slug })
+async function isPhotoPublic(slug: string, locale: string): Promise<boolean> {
+  const raw = await readProfileJsonV2({ kind: 'public', locale, slugFromName: slug })
   if (!raw.trim()) return false
   const data = JSON.parse(raw) as Record<string, unknown>
   const basics = data?.basics as Record<string, unknown> | undefined
   return Boolean(basics?.photoUrl)
 }
 
-export default async function (context: Context, _req: HttpRequest) {
+export default async function (context: Context, req: HttpRequest) {
   try {
     const slug = readServerConfiguredProfileSlug()
     if (!slug) {
@@ -49,7 +50,10 @@ export default async function (context: Context, _req: HttpRequest) {
       return
     }
 
-    if (!(await isPhotoPublic(slug))) {
+    const acceptLanguage = getHeaderInsensitive(req.headers, 'accept-language')
+    const locale = normalizeLocale(firstLanguageTagFromAcceptLanguage(acceptLanguage))
+
+    if (!(await isPhotoPublic(slug, locale))) {
       context.res = jsonResponse(404, { error: 'No profile image found.' })
       return
     }

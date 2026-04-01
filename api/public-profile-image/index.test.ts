@@ -32,7 +32,7 @@ describe('/api/public-profile/image', () => {
     process.env.CV_PROFILE_SLUG = ''
     const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
 
-    await handler(context, {})
+    await handler(context, { headers: { 'accept-language': 'en' } })
 
     expect(context.res).toMatchObject({
       status: 500,
@@ -46,7 +46,7 @@ describe('/api/public-profile/image', () => {
 
     const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
 
-    await handler(context, {})
+    await handler(context, { headers: { 'accept-language': 'en' } })
 
     expect(readProfileJsonV2).toHaveBeenCalledWith(
       expect.objectContaining({ kind: 'public', locale: 'en', slugFromName: 'john-doe' }),
@@ -63,7 +63,7 @@ describe('/api/public-profile/image', () => {
 
     const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
 
-    await handler(context, {})
+    await handler(context, { headers: { 'accept-language': 'en' } })
 
     expect(context.res).toMatchObject({
       status: 404,
@@ -84,7 +84,7 @@ describe('/api/public-profile/image', () => {
 
     const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
 
-    await handler(context, {})
+    await handler(context, { headers: { 'accept-language': 'en' } })
 
     expect(context.res).toMatchObject({
       status: 200,
@@ -105,11 +105,32 @@ describe('/api/public-profile/image', () => {
 
     const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
 
-    await handler(context, {})
+    await handler(context, { headers: { 'accept-language': 'en' } })
 
     expect(context.res).toMatchObject({
       status: 404,
       body: { error: 'No profile image found.' },
     })
+  })
+
+  it('uses Accept-Language to resolve locale for photo visibility check', async () => {
+    process.env.CV_PROFILE_SLUG = 'john-doe'
+    const imageBuffer = Buffer.from('fake-image-data')
+    ;(readProfileJsonV2 as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      '{"basics":{"name":"Jana","photoUrl":"/api/public-profile/image"}}',
+    )
+    ;(readProfileImage as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      buffer: imageBuffer,
+      contentType: 'image/png',
+    })
+
+    const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
+
+    await handler(context, { headers: { 'accept-language': 'de' } })
+
+    expect(readProfileJsonV2).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'public', locale: 'de', slugFromName: 'john-doe' }),
+    )
+    expect(context.res).toMatchObject({ status: 200 })
   })
 })
