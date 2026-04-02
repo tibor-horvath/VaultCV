@@ -120,7 +120,7 @@ jobs:
 
           # Keep this repository's workflow customization instead of upstream version.
           git checkout HEAD^1 -- .github/workflows/sync-template.yml
-          if ! git diff --quiet -- .github/workflows/sync-template.yml; then
+          if ! git diff --quiet HEAD -- .github/workflows/sync-template.yml; then
             git add .github/workflows/sync-template.yml
             git commit -m "chore: keep repo-specific sync workflow override"
           fi
