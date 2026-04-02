@@ -108,6 +108,10 @@ export function AdminShareRoute() {
         redirectToLogin('/admin/share')
         return
       }
+      if (res.status === 403) {
+        setError(t('adminNoRole').replace('{email}', signedInEmail || t('adminUnknownUser')))
+        return
+      }
       const body = await readJsonOrNull<{ links?: ShareLink[]; error?: string }>(res)
       if (!res.ok) {
         throw new Error(body?.error || `Request failed (${res.status})`)
@@ -159,6 +163,10 @@ export function AdminShareRoute() {
         redirectToLogin('/admin/share')
         return
       }
+      if (res.status === 403) {
+        setError(t('adminNoRole').replace('{email}', signedInEmail || t('adminUnknownUser')))
+        return
+      }
       const body = await readJsonOrNull<{ id?: string; error?: string }>(res)
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
       await refresh()
@@ -183,6 +191,10 @@ export function AdminShareRoute() {
       })
       if (res.status === 401) {
         redirectToLogin('/admin/share')
+        return
+      }
+      if (res.status === 403) {
+        setError(t('adminNoRole').replace('{email}', signedInEmail || t('adminUnknownUser')))
         return
       }
       const body = await readJsonOrNull<{ ok?: boolean; error?: string }>(res)
