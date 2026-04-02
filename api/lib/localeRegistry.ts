@@ -1,4 +1,4 @@
-import { readProfileJsonV2 } from './profileBlobStore'
+import { readProfileJsonV2, readSettingsJson } from './profileBlobStore'
 
 export const fallbackLocale = 'en'
 export const defaultSupportedLocales = [fallbackLocale, 'hu', 'de']
@@ -23,6 +23,20 @@ export function normalizeLocale(input: string | undefined) {
   return normalized
 }
 
+function parseSupportedLocales(locales: unknown) {
+  const unique: string[] = []
+  if (!Array.isArray(locales)) return null
+
+  for (const candidate of locales) {
+    const locale = parseLocale(typeof candidate === 'string' ? candidate : undefined)
+    if (!locale) continue
+    if (!unique.includes(locale)) unique.push(locale)
+  }
+
+  if (!unique.includes(fallbackLocale)) unique.unshift(fallbackLocale)
+  return unique.length ? unique : null
+}
+
 export function invalidateLocalesCache(slug?: string) {
   if (slug !== undefined) {
     localesCache.delete(slug)
@@ -34,6 +48,21 @@ export function invalidateLocalesCache(slug?: string) {
   }
 }
 
+export async function readSupportedLocalesFromBlob(slug: string) {
+  const jsonText = await readSettingsJson({ slugFromName: slug })
+  if (!jsonText.trim()) return null
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(jsonText)
+  } catch {
+    return null
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+  return parseSupportedLocales((parsed as { supportedLocales?: unknown }).supportedLocales)
+}
+
 export async function readSupportedLocalesCached(slug: string) {
   const now = Date.now()
   const cached = localesCache.get(slug)
@@ -41,7 +70,8 @@ export async function readSupportedLocalesCached(slug: string) {
     return [...cached.value]
   }
 
-  const nextValue = [...defaultSupportedLocales]
+  const fromBlob = await readSupportedLocalesFromBlob(slug)
+  const nextValue = fromBlob && fromBlob.length ? fromBlob : [...defaultSupportedLocales]
   localesCache.set(slug, {
     value: nextValue,
     expiresAt: now + LOCALES_CACHE_TTL_MS,
