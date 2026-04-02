@@ -40,6 +40,7 @@ import {
 import { buildPhotoSrc } from '../lib/cvPresentation'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../lib/pdfCaptureLayout'
+import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
 
 type CvRouteState =
   | { kind: 'locked' }
@@ -245,6 +246,19 @@ export function CvRoute() {
   const { basicsSentinelRef, isBasicsInView } = useBasicsVisibility(state.kind)
   const pdfCaptureRef = useRef<HTMLDivElement>(null)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [availablePrivateLocales, setAvailablePrivateLocales] = useState<string[] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const locales = await fetchProfileScopedLocales('private')
+      if (cancelled) return
+      setAvailablePrivateLocales(locales)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function handleDownloadPdf() {
     const el = pdfCaptureRef.current
@@ -376,7 +390,7 @@ export function CvRoute() {
                     <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
                     {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
                   </button>
-                  <LanguageSelector />
+                  <LanguageSelector allowedLocales={availablePrivateLocales ?? undefined} />
                   {themeToggle}
                 </div>
               }

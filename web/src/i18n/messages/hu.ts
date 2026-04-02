@@ -156,8 +156,6 @@ export const huMessages: Partial<MessageCatalog> = {
   adminUnknownUser: 'ismeretlen',
   adminEditCvTileDescription: 'Profil szekciók, láthatósági kapcsolók és többnyelvű tartalom frissítése.',
   adminShareCvTileDescription: 'Linkek létrehozása, szűrése és visszavonása szükség esetén.',
-  adminSettingsTileDescription: 'Állítsa be, mely nyelvek legyenek elérhetők szerkesztéshez és megosztáshoz.',
-  adminSupportedLocales: 'Támogatott nyelvek',
-  adminSupportedLocalesHint: 'Ezek a nyelvek jelennek meg a /api/locales válaszában, és ezeket validálják az admin profil API-k.',
   adminNoMoreLocalesToAdd: 'Nincs több hozzáadható nyelv a UI katalógusokból.',
+  adminSelected: 'Kijelölve',
 }

@@ -1,12 +1,14 @@
-import { readSettingsJson } from './profileBlobStore'
+import { readProfileJsonV2 } from './profileBlobStore'
 
 export const fallbackLocale = 'en'
-export const defaultSupportedLocales = [fallbackLocale]
+export const defaultSupportedLocales = [fallbackLocale, 'hu', 'de']
 
 const localePattern = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i
 const LOCALES_CACHE_TTL_MS = 60_000
 
 const localesCache = new Map<string, { value: string[]; expiresAt: number }>()
+const profileLocalesCache = new Map<string, { value: string[]; expiresAt: number }>()
+type ProfileKind = 'public' | 'private'
 
 export function parseLocale(input: string | undefined) {
   const normalized = input?.trim().toLowerCase()
@@ -21,41 +23,14 @@ export function normalizeLocale(input: string | undefined) {
   return normalized
 }
 
-function parseSupportedLocales(locales: unknown) {
-  const unique: string[] = []
-  if (!Array.isArray(locales)) return null
-
-  for (const candidate of locales) {
-    const locale = parseLocale(typeof candidate === 'string' ? candidate : undefined)
-    if (!locale) continue
-    if (!unique.includes(locale)) unique.push(locale)
-  }
-
-  if (!unique.includes(fallbackLocale)) unique.unshift(fallbackLocale)
-  return unique.length ? unique : null
-}
-
-export async function readSupportedLocalesFromBlob(slug: string) {
-  const jsonText = await readSettingsJson({ slugFromName: slug })
-  if (!jsonText.trim()) return null
-
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(jsonText)
-  } catch {
-    return null
-  }
-
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
-  const supportedLocales = (parsed as { supportedLocales?: unknown }).supportedLocales
-  return parseSupportedLocales(supportedLocales)
-}
-
 export function invalidateLocalesCache(slug?: string) {
   if (slug !== undefined) {
     localesCache.delete(slug)
+    profileLocalesCache.delete(`${slug}:public`)
+    profileLocalesCache.delete(`${slug}:private`)
   } else {
     localesCache.clear()
+    profileLocalesCache.clear()
   }
 }
 
@@ -66,13 +41,36 @@ export async function readSupportedLocalesCached(slug: string) {
     return [...cached.value]
   }
 
-  const fromBlob = await readSupportedLocalesFromBlob(slug)
-  const nextValue = fromBlob && fromBlob.length ? fromBlob : [...defaultSupportedLocales]
+  const nextValue = [...defaultSupportedLocales]
   localesCache.set(slug, {
     value: nextValue,
     expiresAt: now + LOCALES_CACHE_TTL_MS,
   })
   return [...nextValue]
+}
+
+export async function readSupportedLocalesForProfileCached(slug: string, kind: ProfileKind) {
+  const now = Date.now()
+  const cacheKey = `${slug}:${kind}`
+  const cached = profileLocalesCache.get(cacheKey)
+  if (cached && cached.expiresAt > now) {
+    return [...cached.value]
+  }
+
+  const supported = await readSupportedLocalesCached(slug)
+  const available: string[] = []
+  for (const locale of supported) {
+    const raw = await readProfileJsonV2({ kind, locale, slugFromName: slug, legacyFallback: false })
+    if (raw.trim()) {
+      available.push(locale)
+    }
+  }
+
+  profileLocalesCache.set(cacheKey, {
+    value: available,
+    expiresAt: now + LOCALES_CACHE_TTL_MS,
+  })
+  return [...available]
 }
 
 export function localeEnvCandidates(prefix: string, locale: string) {
@@ -89,15 +87,6 @@ export function localeEnvCandidates(prefix: string, locale: string) {
         { key: baseName, resolvedLocale: base },
         { key: prefix, resolvedLocale: fallbackLocale },
       ]
-}
-
-export function readLocalizedEnvJson(prefix: string, locale: string) {
-  return readLocalizedEnvValue(prefix, locale)
-}
-
-export function readLocalizedEnvValue(prefix: string, locale: string) {
-  const result = readLocalizedEnvValueWithKey(prefix, locale)
-  return { raw: result.raw, resolvedLocale: result.resolvedLocale }
 }
 
 export function readLocalizedEnvValueWithKey(prefix: string, locale: string) {

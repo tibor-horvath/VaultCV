@@ -77,6 +77,22 @@ afterEach(() => {
 })
 
 describe('AdminDashboardRoute', () => {
+  it('shows language selector when not logged in', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) {
+        return jsonResponse({ clientPrincipal: null })
+      }
+      return jsonResponse({}, 404)
+    }))
+
+    renderRoute()
+    await flushEffects()
+
+    const selector = document.querySelector('button[aria-label="Language"]')
+    expect(selector).toBeTruthy()
+  })
+
   it('shows editor and share tiles', async () => {
     renderRoute()
     await flushEffects()

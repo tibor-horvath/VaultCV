@@ -1,31 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
-import { Check, ChevronDown, Globe } from 'lucide-react'
-import {
-  CZ,
-  DE,
-  ES,
-  FR,
-  GB,
-  HU,
-  IT,
-  PL,
-  PT,
-  SK,
-} from 'country-flag-icons/react/3x2'
+import { Check, ChevronDown } from 'lucide-react'
 import { useI18n, type Locale, type LocaleOption } from '../lib/i18n'
-
-const flagComponentsByCountryCode = {
-  GB,
-  HU,
-  CZ,
-  DE,
-  FR,
-  ES,
-  IT,
-  PT,
-  PL,
-  SK,
-} as const
+import { LocaleFlag } from './LocaleFlag'
 
 function LocaleRow({
   option,
@@ -34,17 +10,9 @@ function LocaleRow({
   option: LocaleOption
   selected: boolean
 }) {
-  const Flag =
-    option.countryCode && option.countryCode in flagComponentsByCountryCode
-      ? flagComponentsByCountryCode[option.countryCode as keyof typeof flagComponentsByCountryCode]
-      : null
   return (
     <>
-      {Flag ? (
-        <Flag aria-hidden="true" className="h-3.5 w-5 rounded-sm object-cover" />
-      ) : (
-        <Globe aria-hidden="true" className="h-3.5 w-5 opacity-70" />
-      )}
+      <LocaleFlag countryCode={option.countryCode} />
       <span className="min-w-8 font-semibold">{option.code.toUpperCase()}</span>
       <span className="truncate">{option.label}</span>
       {selected ? <Check className="ml-auto h-3.5 w-3.5 opacity-80" aria-hidden="true" /> : null}
@@ -52,7 +20,7 @@ function LocaleRow({
   )
 }
 
-export function LanguageSelector() {
+export function LanguageSelector({ allowedLocales }: { allowedLocales?: readonly string[] }) {
   const { locale, localeOptions, setLocale, t } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -61,14 +29,20 @@ export function LanguageSelector() {
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
   const listId = useId()
 
+  const visibleOptions = useMemo(() => {
+    if (!allowedLocales) return localeOptions
+    const allowSet = new Set(allowedLocales)
+    return localeOptions.filter((option) => allowSet.has(option.code))
+  }, [allowedLocales, localeOptions])
+
   const selectedOption = useMemo(
-    () => localeOptions.find((option) => option.code === locale) ?? localeOptions[0] ?? null,
-    [locale, localeOptions],
+    () => visibleOptions.find((option) => option.code === locale) ?? visibleOptions[0] ?? null,
+    [locale, visibleOptions],
   )
 
   useEffect(() => {
     if (!isOpen) return
-    const selectedIndex = localeOptions.findIndex((option) => option.code === selectedOption?.code)
+    const selectedIndex = visibleOptions.findIndex((option) => option.code === selectedOption?.code)
     const nextIndex = selectedIndex >= 0 ? selectedIndex : 0
     queueMicrotask(() => {
       setActiveIndex(nextIndex)
@@ -76,7 +50,7 @@ export function LanguageSelector() {
         itemRefs.current[nextIndex]?.focus()
       })
     })
-  }, [isOpen, localeOptions, selectedOption?.code])
+  }, [isOpen, visibleOptions, selectedOption?.code])
 
   useEffect(() => {
     if (!isOpen) return
@@ -108,11 +82,11 @@ export function LanguageSelector() {
     }
   }, [isOpen])
 
-  if (localeOptions.length <= 1) return null
+  if (visibleOptions.length <= 1) return null
   if (!selectedOption) return null
 
   function selectAt(index: number) {
-    const option = localeOptions[index]
+    const option = visibleOptions[index]
     if (!option) return
     setLocale(option.code as Locale)
     setIsOpen(false)
@@ -120,7 +94,7 @@ export function LanguageSelector() {
   }
 
   function onMenuKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
-    const count = localeOptions.length
+    const count = visibleOptions.length
     if (!count) return
     if (event.key === 'ArrowDown') {
       event.preventDefault()
@@ -183,7 +157,7 @@ export function LanguageSelector() {
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-50 mt-2 min-w-52 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-1 shadow-lg dark:border-slate-700/80 dark:bg-slate-900"
         >
-          {localeOptions.map((option, index) => {
+          {visibleOptions.map((option, index) => {
             const selected = option.code === selectedOption.code
             return (
               <button

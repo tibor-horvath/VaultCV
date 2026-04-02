@@ -105,7 +105,6 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 >
 > - `{CV_PROFILE_SLUG}-private-profile-{locale}.json`
 > - `{CV_PROFILE_SLUG}-public-profile-{locale}.json`
-> - `{CV_PROFILE_SLUG}-settings.json` (managed by `/admin/settings`, stores `supportedLocales`)
 >
 > The admin editor endpoints (`/api/manage/profile/*`) also use `CV_PROFILE_SLUG`.
 >
