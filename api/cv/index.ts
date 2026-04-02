@@ -3,6 +3,7 @@ import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib
 import { normalizeLocale } from '../lib/localeRegistry'
 import { readProfileJsonV2 } from '../lib/profileBlobStore'
 import { getSigningSecret, readAccessToken, verifySessionToken } from '../lib/sessionAuth'
+import { validateShareLink } from '../lib/shareLinksTable'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -99,6 +100,52 @@ export default async function (context: Context, req: HttpRequest) {
     const response = jsonResponse(401, body)
     attachDebugHeaders(response, signingSecret, {
       'x-cv-debug-reason': tokenVerification.reason,
+      'x-cv-debug-token-source': tokenRead.source,
+    })
+    context.res = response
+    return
+  }
+
+  // Verify share link is still valid (not revoked or expired).
+  // Fail closed: tokens without a shareId (e.g. legacy tokens) are rejected.
+  if (!tokenVerification.shareId) {
+    context.log('Unauthorized /api/cv request: token missing shareId')
+    const body: { error: string; debug?: Record<string, unknown> } = { error: 'Unauthorized' }
+    if (isDebugAuthEnabled()) {
+      body.debug = { reason: 'missing_share_id' }
+    }
+    const response = jsonResponse(401, body)
+    attachDebugHeaders(response, signingSecret, {
+      'x-cv-debug-reason': 'missing_share_id',
+      'x-cv-debug-token-source': tokenRead.source,
+    })
+    context.res = response
+    return
+  }
+
+  let shareLinkValidation: Awaited<ReturnType<typeof validateShareLink>>
+  try {
+    shareLinkValidation = await validateShareLink(tokenVerification.shareId)
+  } catch (err) {
+    context.log('Error validating share link for /api/cv', { shareId: tokenVerification.shareId, err })
+    context.res = jsonResponse(500, { error: 'Internal server error.' })
+    return
+  }
+  if (!shareLinkValidation.ok) {
+    context.log('Unauthorized /api/cv request: share link invalid', {
+      reason: shareLinkValidation.reason,
+      shareId: tokenVerification.shareId,
+    })
+    const body: { error: string; debug?: Record<string, unknown> } = { error: 'Unauthorized' }
+    if (isDebugAuthEnabled()) {
+      body.debug = {
+        reason: shareLinkValidation.reason,
+        shareId: tokenVerification.shareId,
+      }
+    }
+    const response = jsonResponse(401, body)
+    attachDebugHeaders(response, signingSecret, {
+      'x-cv-debug-reason': `share_link_${shareLinkValidation.reason}`,
       'x-cv-debug-token-source': tokenRead.source,
     })
     context.res = response

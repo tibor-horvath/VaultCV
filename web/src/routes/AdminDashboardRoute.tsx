@@ -93,9 +93,15 @@ export function AdminDashboardRoute() {
             {t('adminNoRole').replace('{email}', me.userDetails ?? t('adminUnknownUser'))}
           </div>
           <div className="mt-5">
-            <a className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" href="/.auth/logout">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = '/.auth/logout'
+              }}
+              className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            >
               {t('adminSignOut')}
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -111,9 +117,15 @@ export function AdminDashboardRoute() {
           </div>
           <div className="text-xs text-slate-600 dark:text-slate-300">{t('adminChooseManage')}</div>
         </div>
-        <a className="text-xs font-medium text-slate-600 underline dark:text-slate-300" href="/.auth/logout">
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = '/.auth/logout'
+          }}
+          className="text-xs font-medium text-slate-600 underline dark:text-slate-300"
+        >
           {t('adminSignOut')}
-        </a>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

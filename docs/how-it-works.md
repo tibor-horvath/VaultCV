@@ -4,9 +4,9 @@
 2. You deploy this app to Azure Static Web Apps (free tier). It hosts the website and the API together.
 3. You generate a random secret token and store it in Azure too.
 4. Your shareable link looks like `https://your-site.azurestaticapps.net/?s=SHARE_ID`, where `SHARE_ID` is a random high-entropy id you create from the admin page. Share links can expire and can be revoked. Optionally add `&lang=<locale>` (e.g. `&lang=de`) so the recipient opens the UI and CV content in that language.
-5. The app exchanges that access code using `POST /api/auth` (JSON body) for a short-lived signed session token.
+5. The app exchanges that access code using `POST /api/auth` (JSON body) for a short-lived signed session token. The token is cryptographically bound to the share link ID so that revocation can be enforced.
 6. `/api/auth` also sets a secure `HttpOnly` cookie (`cv_session`) so revisits can stay unlocked until expiry.
-7. The app loads CV data from `/api/cv` using the `cv_session` cookie (set by `/api/auth`). The cookie is `HttpOnly`, so the browser sends it automatically; JS never reads the session token.
+7. The app loads CV data from `/api/cv` using the `cv_session` cookie (set by `/api/auth`). On each request, the server validates both the token signature **and** the share link status — if the link has been revoked or expired, the request fails with 401 even if the token is still valid. The cookie is `HttpOnly`, so the browser sends it automatically; JS never reads the session token.
 
 ## Admin navigation
 

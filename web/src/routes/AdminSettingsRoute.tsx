@@ -1,4 +1,4 @@
-import { ExternalLink, KeyRound, LoaderCircle, Save, Settings, Shield, Trash2 } from 'lucide-react'
+import { ExternalLink, KeyRound, LoaderCircle, Save, Shield, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { registeredUiLocales, sanitizeSupportedLocales, toLocaleOptions } from '../i18n/localeRegistry'
@@ -203,9 +203,15 @@ export function AdminSettingsRoute() {
           </div>
           <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">{t('adminNoRole').replace('{email}', signedInEmail || t('adminUnknownUser'))}</div>
           <div className="mt-5">
-            <a className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" href="/.auth/logout">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = '/.auth/logout'
+              }}
+              className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            >
               {t('adminSignOut')}
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -216,7 +222,8 @@ export function AdminSettingsRoute() {
     <div className="w-full space-y-6 py-10">
       <AdminPageHeader
         title={t('adminSettings')}
-        icon={<Settings className="h-5 w-5" />}
+        icon={<Shield className="h-5 w-5" />}
+        headingLevel="h1"
         signedInEmail={signedInEmail}
         actions={
           <>

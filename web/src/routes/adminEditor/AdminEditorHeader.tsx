@@ -32,6 +32,7 @@ export function AdminEditorHeader(props: {
     <AdminPageHeader
       title={t('adminEditCv')}
       icon={<SquarePen className="h-5 w-5" />}
+      headingLevel="h1"
       signedInEmail={signedInEmail}
       actions={
         <>

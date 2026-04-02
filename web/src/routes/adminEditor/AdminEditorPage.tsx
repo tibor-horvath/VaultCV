@@ -230,12 +230,15 @@ export function AdminEditorPage(props: {
             >
               {t('adminOpenAuthMe')} <ExternalLink className="h-4 w-4 opacity-80" />
             </a>
-            <a
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = '/.auth/logout'
+              }}
               className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-              href="/.auth/logout"
             >
               {t('adminSignOut')}
-            </a>
+            </button>
           </div>
         </div>
       </div>

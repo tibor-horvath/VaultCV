@@ -1,29 +1,33 @@
 import type { ReactNode } from 'react'
+import { PageHeader } from '../components/PageHeader'
 import { useI18n } from '../lib/i18n'
 
-export function AdminPageHeader(props: {
+type AdminPageHeaderProps = {
   title: string
   icon: ReactNode
   signedInEmail?: string
   actions: ReactNode
-}) {
-  const { title, icon, signedInEmail, actions } = props
+  headingLevel?: 'h1' | 'h2' | 'h3'
+}
+
+export function AdminPageHeader(props: AdminPageHeaderProps) {
+  const { title, icon, signedInEmail, actions, headingLevel = 'h1' } = props
   const { t } = useI18n()
+
+  const subtitleContent = signedInEmail ? (
+    <>
+      {t('adminSignedInAsPrefix')} <span className="font-mono">{signedInEmail}</span>
+    </>
+  ) : undefined
+
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2 text-slate-900 dark:text-white">
-          {icon}
-          <div className="text-lg font-semibold">{title}</div>
-        </div>
-        {signedInEmail ? (
-          <div className="text-xs text-slate-600 dark:text-slate-300">
-            {t('adminSignedInAsPrefix')} <span className="font-mono">{signedInEmail}</span>
-          </div>
-        ) : null}
-      </div>
-      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-3">{actions}</div>
-    </div>
+    <PageHeader
+      title={title}
+      icon={icon}
+      subtitle={subtitleContent}
+      actions={actions}
+      headingLevel={headingLevel}
+    />
   )
 }
 

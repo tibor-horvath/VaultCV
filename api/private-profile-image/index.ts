@@ -1,5 +1,6 @@
 import { readProfileImage } from '../lib/profileBlobStore'
 import { getSigningSecret, readAccessToken, verifySessionToken } from '../lib/sessionAuth'
+import { validateShareLink } from '../lib/shareLinksTable'
 
 type Context = {
   res?: {
@@ -44,6 +45,25 @@ export default async function (context: Context, req: HttpRequest) {
     const tokenRead = readAccessToken(req.headers)
     const tokenVerification = verifySessionToken(tokenRead.token)
     if (!tokenVerification.ok) {
+      context.res = jsonResponse(401, { error: 'Unauthorized' })
+      return
+    }
+
+    // Verify share link is still valid (not revoked or expired).
+    // Fail closed: tokens without a shareId (e.g. legacy tokens) are rejected.
+    if (!tokenVerification.shareId) {
+      context.res = jsonResponse(401, { error: 'Unauthorized' })
+      return
+    }
+
+    let shareLinkValidation: Awaited<ReturnType<typeof validateShareLink>>
+    try {
+      shareLinkValidation = await validateShareLink(tokenVerification.shareId)
+    } catch {
+      context.res = jsonResponse(500, { error: 'Internal server error.' })
+      return
+    }
+    if (!shareLinkValidation.ok) {
       context.res = jsonResponse(401, { error: 'Unauthorized' })
       return
     }
