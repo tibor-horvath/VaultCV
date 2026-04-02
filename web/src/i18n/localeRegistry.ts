@@ -65,6 +65,8 @@ function validateFallbackCatalogCoverage() {
 
 validateFallbackCatalogCoverage()
 
+export const registeredUiLocales: Locale[] = sanitizeSupportedLocales(Object.keys(messages))
+
 export function sanitizeSupportedLocales(inputs: Array<string | null | undefined>): Locale[] {
   const unique: Locale[] = []
   for (const raw of inputs) {

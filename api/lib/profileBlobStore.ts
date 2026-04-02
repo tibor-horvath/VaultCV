@@ -54,6 +54,12 @@ function blobNameV2(args: { kind: 'public' | 'private'; locale: string; slugFrom
   return `${slug}-${args.kind}-profile-${locale}.json`
 }
 
+function settingsBlobName(slugFromName: string) {
+  const slug = safeSlugFromName(slugFromName)
+  if (!slug) throw new Error('Profile slug is empty (basics.name is required).')
+  return `${slug}-settings.json`
+}
+
 async function readBlobText(client: ReturnType<typeof getBlobClientByName>) {
   try {
     const download = await client.download()
@@ -100,6 +106,16 @@ export async function readProfileJsonV2(args: { kind: 'public' | 'private'; loca
 
 export async function writeProfileJsonV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string; jsonText: string }) {
   const name = blobNameV2(args)
+  return writeBlobText(getBlobClientByName(name), args.jsonText)
+}
+
+export async function readSettingsJson(args: { slugFromName: string }) {
+  const name = settingsBlobName(args.slugFromName)
+  return readBlobText(getBlobClientByName(name))
+}
+
+export async function writeSettingsJson(args: { slugFromName: string; jsonText: string }) {
+  const name = settingsBlobName(args.slugFromName)
   return writeBlobText(getBlobClientByName(name), args.jsonText)
 }
 

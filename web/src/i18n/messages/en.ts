@@ -81,6 +81,7 @@ export const enMessages = {
   adminDashboard: 'Dashboard',
   adminEditCv: 'Edit CV',
   adminShareCv: 'Share CV',
+  adminSettings: 'Settings',
   adminBackToSite: 'Back to site',
   adminOpenAuthMe: 'Open `/.auth/me`',
   adminRefresh: 'Refresh',
@@ -129,6 +130,9 @@ export const enMessages = {
   adminLoadProfileFailed: 'Failed loading profile.',
   adminSaveProfileFailed: 'Failed saving profile.',
   adminProfileSaved: 'Profile saved.',
+  adminSettingsSaved: 'Settings saved.',
+  adminLoadSettingsFailed: 'Failed loading settings.',
+  adminSaveSettingsFailed: 'Failed saving settings.',
   adminSave: 'Save',
   adminLocale: 'Locale',
   adminAddLanguage: 'Add language',
@@ -150,6 +154,10 @@ export const enMessages = {
   adminUnknownUser: 'unknown',
   adminEditCvTileDescription: 'Update profile sections, visibility toggles, and localized content.',
   adminShareCvTileDescription: 'Create links, filter active/revoked/expired, and revoke access when needed.',
+  adminSettingsTileDescription: 'Choose which locales are enabled for profile editing and sharing.',
+  adminSupportedLocales: 'Supported locales',
+  adminSupportedLocalesHint: 'These locales are exposed by /api/locales and validated by admin profile APIs.',
+  adminNoMoreLocalesToAdd: 'No additional locales are available in UI catalogs.',
 }
 
 export type MessageCatalog = typeof enMessages

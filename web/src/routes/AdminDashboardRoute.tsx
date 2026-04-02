@@ -1,4 +1,4 @@
-import { ExternalLink, KeyRound, Link2, Shield, SquarePen } from 'lucide-react'
+import { ExternalLink, KeyRound, Link2, Settings, Shield, SquarePen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n } from '../lib/i18n'
@@ -116,7 +116,7 @@ export function AdminDashboardRoute() {
         </a>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Link
           to="/admin/editor"
           className="rounded-2xl border border-slate-200/70 bg-white/70 p-5 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/30"
@@ -135,6 +135,16 @@ export function AdminDashboardRoute() {
             <Link2 className="h-4 w-4" /> {t('adminShareCv')}
           </div>
           <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">{t('adminShareCvTileDescription')}</div>
+        </Link>
+
+        <Link
+          to="/admin/settings"
+          className="rounded-2xl border border-slate-200/70 bg-white/70 p-5 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/30"
+        >
+          <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+            <Settings className="h-4 w-4" /> {t('adminSettings')}
+          </div>
+          <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">{t('adminSettingsTileDescription')}</div>
         </Link>
       </div>
     </div>

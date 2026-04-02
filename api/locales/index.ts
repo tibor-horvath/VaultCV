@@ -1,4 +1,4 @@
-import { readSupportedLocales } from '../lib/localeRegistry'
+import { readSupportedLocalesCached } from '../lib/localeRegistry'
 
 type Context = {
   res?: {
@@ -20,6 +20,13 @@ function jsonResponse(status: number, body: unknown) {
 }
 
 export default async function (context: Context) {
-  context.res = jsonResponse(200, { locales: readSupportedLocales() })
+  const slug = (process.env.CV_PROFILE_SLUG ?? '').trim()
+  if (!slug) {
+    context.res = jsonResponse(500, { error: 'CV_PROFILE_SLUG is not configured.' })
+    return
+  }
+
+  const locales = await readSupportedLocalesCached(slug)
+  context.res = jsonResponse(200, { locales })
 }
 
