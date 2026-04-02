@@ -180,16 +180,38 @@ jobs:
 
           if [ -n "${PR_LABELS:-}" ]; then
             echo "Applying labels: ${PR_LABELS}"
-            gh api --method POST \
-              "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" \
-              -f labels="${PR_LABELS}" \
-              || echo "Warning: Failed to apply one or more labels."
+            IFS=',' read -ra LABEL_LIST <<< "${PR_LABELS}"
+            LABEL_ARGS=()
+            for label in "${LABEL_LIST[@]}"; do
+              label_trimmed="${label#"${label%%[![:space:]]*}"}"
+              label_trimmed="${label_trimmed%"${label_trimmed##*[![:space:]]}"}"
+              [ -n "${label_trimmed}" ] && LABEL_ARGS+=(-f "labels[]=${label_trimmed}")
+            done
+            if [ "${#LABEL_ARGS[@]}" -gt 0 ]; then
+              gh api --method POST \
+                "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" \
+                "${LABEL_ARGS[@]}" \
+                || echo "Warning: Failed to apply one or more labels."
+            else
+              echo "No valid labels to apply after parsing."
+            fi
           fi
 
           if [ -n "${PR_ASSIGNEES:-}" ]; then
             echo "Applying assignees: ${PR_ASSIGNEES}"
-            gh api --method POST \
-              "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/assignees" \
-              -f assignees="${PR_ASSIGNEES}" \
-              || echo "Warning: Failed to apply one or more assignees."
+            IFS=',' read -ra ASSIGNEE_LIST <<< "${PR_ASSIGNEES}"
+            ASSIGNEE_ARGS=()
+            for assignee in "${ASSIGNEE_LIST[@]}"; do
+              assignee_trimmed="${assignee#"${assignee%%[![:space:]]*}"}"
+              assignee_trimmed="${assignee_trimmed%"${assignee_trimmed##*[![:space:]]}"}"
+              [ -n "${assignee_trimmed}" ] && ASSIGNEE_ARGS+=(-f "assignees[]=${assignee_trimmed}")
+            done
+            if [ "${#ASSIGNEE_ARGS[@]}" -gt 0 ]; then
+              gh api --method POST \
+                "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/assignees" \
+                "${ASSIGNEE_ARGS[@]}" \
+                || echo "Warning: Failed to apply one or more assignees."
+            else
+              echo "No valid assignees to apply after parsing."
+            fi
           fi
