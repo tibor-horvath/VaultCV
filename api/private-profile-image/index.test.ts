@@ -8,7 +8,14 @@ vi.mock('../lib/profileBlobStore', () => {
   }
 })
 
+vi.mock('../lib/shareLinksTable', () => {
+  return {
+    validateShareLink: vi.fn(async () => ({ ok: true, entity: {} })),
+  }
+})
+
 import { readProfileImage } from '../lib/profileBlobStore'
+import { validateShareLink } from '../lib/shareLinksTable'
 
 const originalEnv = { ...process.env }
 
@@ -22,8 +29,8 @@ function resetEnv() {
   }
 }
 
-function signToken(exp: number, signingSecret: string) {
-  const payload = Buffer.from(JSON.stringify({ exp })).toString('base64url')
+function signToken(exp: number, signingSecret: string, shareId: string = 'test-share-id') {
+  const payload = Buffer.from(JSON.stringify({ exp, shareId })).toString('base64url')
   const signature = crypto.createHmac('sha256', signingSecret).update(payload).digest('base64url')
   return `${payload}.${signature}`
 }
@@ -143,6 +150,46 @@ describe('/api/private-profile/image', () => {
     expect(context.res).toMatchObject({
       status: 200,
       headers: { 'content-type': 'image/jpeg' },
+    })
+  })
+
+  it('returns 401 when share link is revoked', async () => {
+    const signingSecret = 'test-signing-secret'
+    process.env.CV_SESSION_SIGNING_KEY = signingSecret
+    process.env.CV_PROFILE_SLUG = 'john-doe'
+    const token = signToken(Math.floor(Date.now() / 1000) + 3600, signingSecret, 'revoked-share-id')
+    ;(validateShareLink as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      reason: 'revoked',
+    })
+    const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
+
+    await handler(context, { headers: { authorization: `Bearer ${token}` } })
+
+    expect(validateShareLink).toHaveBeenCalledWith('revoked-share-id')
+    expect(context.res).toMatchObject({
+      status: 401,
+      body: { error: 'Unauthorized' },
+    })
+  })
+
+  it('returns 401 when share link is expired', async () => {
+    const signingSecret = 'test-signing-secret'
+    process.env.CV_SESSION_SIGNING_KEY = signingSecret
+    process.env.CV_PROFILE_SLUG = 'john-doe'
+    const token = signToken(Math.floor(Date.now() / 1000) + 3600, signingSecret, 'expired-share-id')
+    ;(validateShareLink as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      reason: 'expired',
+    })
+    const context: { res?: { status: number; headers?: Record<string, string>; body?: unknown } } = {}
+
+    await handler(context, { headers: { authorization: `Bearer ${token}` } })
+
+    expect(validateShareLink).toHaveBeenCalledWith('expired-share-id')
+    expect(context.res).toMatchObject({
+      status: 401,
+      body: { error: 'Unauthorized' },
     })
   })
 })

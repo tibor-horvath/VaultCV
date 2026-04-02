@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { getHeaderInsensitive } from './httpHeaders'
 
 export type TokenVerificationResult =
-  | { ok: true; exp: number }
+  | { ok: true; exp: number; shareId?: string }
   | { ok: false; reason: 'missing_token' | 'invalid_format' | 'missing_signing_secret' | 'signature_mismatch' | 'invalid_payload' | 'expired' }
 
 export type AccessTokenReadResult = {
@@ -46,11 +46,11 @@ export function verifySessionToken(token: string): TokenVerificationResult {
 
   try {
     const payloadJson = Buffer.from(encodedPayload, 'base64url').toString('utf8')
-    const payload = JSON.parse(payloadJson) as { exp?: number }
+    const payload = JSON.parse(payloadJson) as { exp?: number; shareId?: string }
     const exp = payload.exp ?? 0
     if (!Number.isFinite(exp)) return { ok: false, reason: 'invalid_payload' }
     if (Math.floor(Date.now() / 1000) >= exp) return { ok: false, reason: 'expired' }
-    return { ok: true, exp }
+    return { ok: true, exp, shareId: payload.shareId }
   } catch {
     return { ok: false, reason: 'invalid_payload' }
   }

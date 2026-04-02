@@ -3,6 +3,7 @@ import { firstLanguageTagFromAcceptLanguage, getHeaderInsensitive } from '../lib
 import { normalizeLocale } from '../lib/localeRegistry'
 import { readProfileJsonV2 } from '../lib/profileBlobStore'
 import { getSigningSecret, readAccessToken, verifySessionToken } from '../lib/sessionAuth'
+import { validateShareLink } from '../lib/shareLinksTable'
 
 type Context = {
   log: (...args: unknown[]) => void
@@ -103,6 +104,31 @@ export default async function (context: Context, req: HttpRequest) {
     })
     context.res = response
     return
+  }
+
+  // Verify share link is still valid (not revoked or expired)
+  if (tokenVerification.shareId) {
+    const shareLinkValidation = await validateShareLink(tokenVerification.shareId)
+    if (!shareLinkValidation.ok) {
+      context.log('Unauthorized /api/cv request: share link invalid', {
+        reason: shareLinkValidation.reason,
+        shareId: tokenVerification.shareId,
+      })
+      const body: { error: string; debug?: Record<string, unknown> } = { error: 'Unauthorized' }
+      if (isDebugAuthEnabled()) {
+        body.debug = {
+          reason: shareLinkValidation.reason,
+          shareId: tokenVerification.shareId,
+        }
+      }
+      const response = jsonResponse(401, body)
+      attachDebugHeaders(response, signingSecret, {
+        'x-cv-debug-reason': `share_link_${shareLinkValidation.reason}`,
+        'x-cv-debug-token-source': tokenRead.source,
+      })
+      context.res = response
+      return
+    }
   }
 
   let raw = ''

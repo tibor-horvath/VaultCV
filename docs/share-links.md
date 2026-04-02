@@ -10,7 +10,10 @@ Access to the CV is granted exclusively through **share links** created from the
 
 ## Revoking a share link
 
-Open `/admin/share`, find the link, and click **Revoke**. The share ID is immediately invalidated — anyone using an old link or QR code will get a 401.
+Open `/admin/share`, find the link, and click **Revoke**. The share ID is immediately invalidated:
+- New attempts to authenticate with that link will be rejected
+- **Existing sessions** using that share link will be terminated on their next API request (no need to wait for token expiry)
+- Anyone using an old link or QR code will get a 401
 
 ## Rotating access
 

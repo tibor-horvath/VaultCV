@@ -1,5 +1,6 @@
 import { readProfileImage } from '../lib/profileBlobStore'
 import { getSigningSecret, readAccessToken, verifySessionToken } from '../lib/sessionAuth'
+import { validateShareLink } from '../lib/shareLinksTable'
 
 type Context = {
   res?: {
@@ -46,6 +47,15 @@ export default async function (context: Context, req: HttpRequest) {
     if (!tokenVerification.ok) {
       context.res = jsonResponse(401, { error: 'Unauthorized' })
       return
+    }
+
+    // Verify share link is still valid (not revoked or expired)
+    if (tokenVerification.shareId) {
+      const shareLinkValidation = await validateShareLink(tokenVerification.shareId)
+      if (!shareLinkValidation.ok) {
+        context.res = jsonResponse(401, { error: 'Unauthorized' })
+        return
+      }
     }
 
     const slug = readServerConfiguredProfileSlug()

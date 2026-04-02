@@ -23,7 +23,7 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 | Deployment (Azure Static Web Apps) | [docs/deployment-azure.md](docs/deployment-azure.md) |
 | Admin mode (Entra roles, profile management) | [docs/admin.md](docs/admin.md) |
 | Shareable links, QR, API auth flow | [docs/qr-code-url-format.md](docs/qr-code-url-format.md) |
-| Access code rotation (~6 months) | [docs/access-code-rotation.md](docs/access-code-rotation.md) |
+| Share link management & rotation | [docs/share-links.md](docs/share-links.md) |
 | Mock CV for local UI testing | [docs/mock-data.md](docs/mock-data.md) |
 | Syncing with the upstream template | [docs/template-sync.md](docs/template-sync.md) |
 | PDF export (basics card; html2canvas + jsPDF) | [docs/pdf-export.md](docs/pdf-export.md) |

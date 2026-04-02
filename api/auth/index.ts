@@ -73,10 +73,10 @@ function getSessionTtlSeconds() {
   return parsed
 }
 
-function issueSessionToken(expSecondsFromNow: number) {
+function issueSessionToken(expSecondsFromNow: number, shareId: string) {
   const signingSecret = getSigningSecret()
   const exp = Math.floor(Date.now() / 1000) + expSecondsFromNow
-  const encodedPayload = toBase64Url(JSON.stringify({ exp }))
+  const encodedPayload = toBase64Url(JSON.stringify({ exp, shareId }))
   const signature = toBase64Url(crypto.createHmac('sha256', signingSecret).update(encodedPayload).digest())
   return `${encodedPayload}.${signature}`
 }
@@ -121,7 +121,7 @@ export default async function (context: Context, req: HttpRequest) {
   await markShareLinkViewed(shareId)
 
   const ttlSeconds = getSessionTtlSeconds()
-  const sessionToken = issueSessionToken(ttlSeconds)
+  const sessionToken = issueSessionToken(ttlSeconds, shareId)
   const response = jsonResponse(200, { accessToken: sessionToken })
   response.headers = {
     ...(response.headers ?? {}),
