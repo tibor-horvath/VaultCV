@@ -49,13 +49,23 @@ export default async function (context: Context, req: HttpRequest) {
       return
     }
 
-    // Verify share link is still valid (not revoked or expired)
-    if (tokenVerification.shareId) {
-      const shareLinkValidation = await validateShareLink(tokenVerification.shareId)
-      if (!shareLinkValidation.ok) {
-        context.res = jsonResponse(401, { error: 'Unauthorized' })
-        return
-      }
+    // Verify share link is still valid (not revoked or expired).
+    // Fail closed: tokens without a shareId (e.g. legacy tokens) are rejected.
+    if (!tokenVerification.shareId) {
+      context.res = jsonResponse(401, { error: 'Unauthorized' })
+      return
+    }
+
+    let shareLinkValidation: Awaited<ReturnType<typeof validateShareLink>>
+    try {
+      shareLinkValidation = await validateShareLink(tokenVerification.shareId)
+    } catch {
+      context.res = jsonResponse(500, { error: 'Internal server error.' })
+      return
+    }
+    if (!shareLinkValidation.ok) {
+      context.res = jsonResponse(401, { error: 'Unauthorized' })
+      return
     }
 
     const slug = readServerConfiguredProfileSlug()

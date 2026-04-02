@@ -19,7 +19,7 @@ When a share link is revoked via the admin panel:
 3. If the link is no longer valid (revoked, expired, or deleted), the API returns 401 and the session ends
 4. The user must re-authenticate with a new or different share link
 
-This ensures that revoking a share link is effective and cannot be bypassed by holding a still-valid JWT token. The validation is synchronous and happens on every protected endpoint (`/api/cv`, `/api/private-profile/image`, etc.).
+This ensures that revoking a share link is effective and cannot be bypassed by holding a still-valid session token. The validation is synchronous and happens on every protected endpoint (`/api/cv`, `/api/private-profile/image`, etc.).
 
 ## Public vs private configuration
 
