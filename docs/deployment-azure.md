@@ -52,7 +52,7 @@ Azure will add a workflow file at `.github/workflows/azure-static-web-apps-<name
 
 If any of these are wrong, edit the file (directly or via a follow-up commit/PR) before the next deployment runs. Wrong values cause the GitHub Actions deployment to fail immediately. You can watch the progress under the **Actions** tab in your GitHub repo.
 
-Before your first production deploy, verify `api/.funcignore` exists and excludes `node_modules/`. Azure SWA zips the `api/` folder for deployment; without `.funcignore`, the package can exceed the size limit because `node_modules` includes build-only and platform-native dependencies that are not needed at runtime.
+Before your first production deploy, verify `api/.funcignore` exists and excludes `node_modules/`. Azure SWA zips the `api/` folder for deployment; without `.funcignore`, the package can exceed the size limit. In this repository the Functions’ `scriptFile` values point at bundled output under `api/dist/`, so dependencies are already included in the bundle and the `node_modules/` tree is not needed at runtime. If you adapt this setup without bundling, make sure you do not exclude any runtime dependencies your Functions need.
 
 > **Using this template?** This repository does not include a pre-configured deployment workflow. When you link your new repository to an Azure SWA resource, Azure adds a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` containing your app-specific secret name and resource identifier. Check and correct the build settings in that file (see table above) before or immediately after the first deployment runs.
 
