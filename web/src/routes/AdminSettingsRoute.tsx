@@ -345,6 +345,7 @@ export function AdminSettingsRoute() {
                 onChange={(e) => setSelectedLocaleToAdd(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white sm:w-72"
                 disabled={!addableLocales.length}
+                aria-label="Select locale to add"
               >
                 {addableLocales.map((option) => (
                   <option key={option.code} value={option.code}>
