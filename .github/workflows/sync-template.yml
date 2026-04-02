@@ -7,7 +7,6 @@ on:
         description: 'Upstream template repository (owner/repo) — defaults to tibor-horvath/VaultCV'
         required: false
         default: 'tibor-horvath/VaultCV'
-  # Uncomment to enable scheduled automatic syncs:
   # schedule:
   #   - cron: '0 8,20 * * *'  # Every day at 08:00 and 20:00 UTC
 
@@ -21,6 +20,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.SYNC_PAT }}
+          persist-credentials: false
 
       - name: Resolve upstream repo
         id: upstream
@@ -60,6 +61,8 @@ jobs:
       - name: Create sync branch and merge
         if: steps.diff.outputs.count != '0'
         id: merge
+        env:
+          SYNC_PAT: ${{ secrets.SYNC_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -115,6 +118,14 @@ jobs:
             run_git git commit -m "$MERGE_MSG"
           fi
 
+          # Keep this repository's workflow customization instead of upstream version.
+          git checkout HEAD^1 -- .github/workflows/sync-template.yml
+          if ! git diff --quiet -- .github/workflows/sync-template.yml; then
+            git add .github/workflows/sync-template.yml
+            git commit -m "chore: keep repo-specific sync workflow override"
+          fi
+
+          git remote set-url origin "https://x-access-token:${SYNC_PAT}@github.com/${GITHUB_REPOSITORY}.git"
           git push --force-with-lease origin "$BRANCH"
 
       - name: Record last synced upstream commit
@@ -141,8 +152,26 @@ jobs:
           UPSTREAM_HEAD: ${{ steps.diff.outputs.upstream_head }}
         run: |
           TITLE="chore: sync with template (${UPSTREAM_REPO})"
-          PR_LABELS=$(gh api /repos/${GITHUB_REPOSITORY}/actions/variables/SYNC_TEMPLATE_PR_LABELS --jq '.value' 2>/dev/null || true)
-          PR_ASSIGNEES=$(gh api /repos/${GITHUB_REPOSITORY}/actions/variables/SYNC_TEMPLATE_PR_ASSIGNEES --jq '.value' 2>/dev/null || true)
+
+          get_repo_variable() {
+            local var_name="$1"
+            local value
+
+            if value=$(gh variable get "${var_name}" --repo "${GITHUB_REPOSITORY}" --json value --jq '.value' 2>/dev/null); then
+              if [ -n "${value}" ]; then
+                echo "Variable ${var_name} loaded: ${value}" >&2
+              else
+                echo "Variable ${var_name} is set but empty." >&2
+              fi
+              printf '%s' "${value}"
+            else
+              echo "Variable ${var_name} not found; skipping related PR metadata updates." >&2
+              printf ''
+            fi
+          }
+
+          PR_LABELS=$(get_repo_variable "SYNC_TEMPLATE_PR_LABELS")
+          PR_ASSIGNEES=$(get_repo_variable "SYNC_TEMPLATE_PR_ASSIGNEES")
           REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
 
           BODY_FILE=$(mktemp)
@@ -178,20 +207,35 @@ jobs:
 
           echo "PR number: $PR_NUMBER"
 
+          normalize_list() {
+            local raw="$1"
+            local -n out_ref=$2
+            local item
+
+            # Accept CSV ("a,b") and JSON-ish arrays ("[\"a\",\"b\"]").
+            raw="${raw#[}"
+            raw="${raw%]}"
+            raw="${raw//\"/}"
+            raw="${raw//$'\n'/,}"
+
+            IFS=',' read -ra _items <<< "${raw}"
+            out_ref=()
+            for item in "${_items[@]}"; do
+              item="${item#"${item%%[![:space:]]*}"}"
+              item="${item%"${item##*[![:space:]]}"}"
+              [ -n "${item}" ] && out_ref+=("${item}")
+            done
+          }
+
           if [ -n "${PR_LABELS:-}" ]; then
             echo "Applying labels: ${PR_LABELS}"
-            IFS=',' read -ra LABEL_LIST <<< "${PR_LABELS}"
-            LABEL_ARGS=()
-            for label in "${LABEL_LIST[@]}"; do
-              label_trimmed="${label#"${label%%[![:space:]]*}"}"
-              label_trimmed="${label_trimmed%"${label_trimmed##*[![:space:]]}"}"
-              [ -n "${label_trimmed}" ] && LABEL_ARGS+=(-f "labels[]=${label_trimmed}")
-            done
-            if [ "${#LABEL_ARGS[@]}" -gt 0 ]; then
-              gh api --method POST \
-                "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" \
-                "${LABEL_ARGS[@]}" \
-                || echo "Warning: Failed to apply one or more labels."
+            LABEL_LIST=()
+            normalize_list "${PR_LABELS}" LABEL_LIST
+            if [ "${#LABEL_LIST[@]}" -gt 0 ]; then
+              for label in "${LABEL_LIST[@]}"; do
+                gh pr edit "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --add-label "${label}" \
+                  || echo "Warning: Failed to apply label '${label}'."
+              done
             else
               echo "No valid labels to apply after parsing."
             fi
@@ -199,18 +243,13 @@ jobs:
 
           if [ -n "${PR_ASSIGNEES:-}" ]; then
             echo "Applying assignees: ${PR_ASSIGNEES}"
-            IFS=',' read -ra ASSIGNEE_LIST <<< "${PR_ASSIGNEES}"
-            ASSIGNEE_ARGS=()
-            for assignee in "${ASSIGNEE_LIST[@]}"; do
-              assignee_trimmed="${assignee#"${assignee%%[![:space:]]*}"}"
-              assignee_trimmed="${assignee_trimmed%"${assignee_trimmed##*[![:space:]]}"}"
-              [ -n "${assignee_trimmed}" ] && ASSIGNEE_ARGS+=(-f "assignees[]=${assignee_trimmed}")
-            done
-            if [ "${#ASSIGNEE_ARGS[@]}" -gt 0 ]; then
-              gh api --method POST \
-                "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/assignees" \
-                "${ASSIGNEE_ARGS[@]}" \
-                || echo "Warning: Failed to apply one or more assignees."
+            ASSIGNEE_LIST=()
+            normalize_list "${PR_ASSIGNEES}" ASSIGNEE_LIST
+            if [ "${#ASSIGNEE_LIST[@]}" -gt 0 ]; then
+              for assignee in "${ASSIGNEE_LIST[@]}"; do
+                gh pr edit "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --add-assignee "${assignee}" \
+                  || echo "Warning: Failed to apply assignee '${assignee}'."
+              done
             else
               echo "No valid assignees to apply after parsing."
             fi

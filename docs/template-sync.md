@@ -13,8 +13,9 @@ When new commits are found on the upstream `main` branch, the workflow:
 
 1. Checks out the long-lived `sync/template` branch (creating it if it doesn't exist yet).
 2. Merges upstream changes into it using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
-3. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new commits.
-4. Opens a pull request from `sync/template` to `main` (or updates the existing one) so you can review and merge at your own pace.
+3. Restores this repository's `.github/workflows/sync-template.yml` after merge so upstream changes to this workflow file do not overwrite your local customization.
+4. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new commits.
+5. Opens a pull request from `sync/template` to `main` (or updates the existing one) so you can review and merge at your own pace.
 
 If there are no new upstream commits the workflow exits early without touching anything.
 
@@ -40,6 +41,8 @@ In your repository go to **Settings → Secrets and variables → Actions → Ne
 
 - **Name**: `SYNC_PAT`
 - **Value**: the token you just created
+
+This same token is also used by `actions/checkout` and by an authenticated `git push`, because `persist-credentials` is disabled in the workflow.
 
 ### 3. Workflow permissions
 
@@ -80,6 +83,8 @@ Both variables are optional. If absent, the PR is created without labels or assi
 ## Conflict resolution strategy
 
 The merge uses `-X theirs`, meaning **upstream changes win on conflicts**. This keeps the sync simple but means any local edits that touch the same lines as an upstream change will be overwritten in the sync branch.
+
+Exception: `.github/workflows/sync-template.yml` is intentionally restored from your repository after merge, so your local workflow behavior stays in place even if the upstream template modifies that file.
 
 Review the `sync/template` branch carefully before merging the PR. If you need to keep a local customization, resolve the conflict manually before merging.
 
