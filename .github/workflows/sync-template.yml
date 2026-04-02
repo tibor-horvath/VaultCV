@@ -25,7 +25,7 @@ jobs:
       - name: Resolve upstream repo
         id: upstream
         run: |
-          REPO="${{ inputs.upstream_repo }}"
+          REPO="${{ github.event.inputs.upstream_repo || 'tibor-horvath/VaultCV' }}"
           echo "repo=$REPO" >> "$GITHUB_OUTPUT"
           BRANCH="sync/template"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
