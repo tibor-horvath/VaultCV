@@ -41,6 +41,15 @@ export function LanguageSelector({ allowedLocales }: { allowedLocales?: readonly
   )
 
   useEffect(() => {
+    if (!allowedLocales) return
+    const firstVisible = visibleOptions[0]
+    if (!firstVisible) return
+    if (!visibleOptions.find((option) => option.code === locale)) {
+      setLocale(firstVisible.code as Locale)
+    }
+  }, [allowedLocales, locale, visibleOptions, setLocale])
+
+  useEffect(() => {
     if (!isOpen) return
     const selectedIndex = visibleOptions.findIndex((option) => option.code === selectedOption?.code)
     const nextIndex = selectedIndex >= 0 ? selectedIndex : 0

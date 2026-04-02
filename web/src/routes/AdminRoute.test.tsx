@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AdminDashboardRoute } from './AdminDashboardRoute'
 import { LocaleProvider } from '../lib/i18n'
+import { enMessages } from '../i18n/messages'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -89,7 +90,7 @@ describe('AdminDashboardRoute', () => {
     renderRoute()
     await flushEffects()
 
-    const selector = document.querySelector('button[aria-label="Language"]')
+    const selector = document.querySelector(`button[aria-label="${enMessages.languageSelectorLabel}"]`)
     expect(selector).toBeTruthy()
   })
 

@@ -43,14 +43,14 @@ const localeToCountryCode: Record<string, string> = {
 const nativeLocaleLabels: Record<string, string> = {
   en: 'English',
   hu: 'magyar',
-  cs: 'cestina',
+  cs: 'čeština',
   de: 'Deutsch',
-  fr: 'francais',
-  es: 'espanol',
+  fr: 'français',
+  es: 'español',
   it: 'italiano',
-  pt: 'portugues',
+  pt: 'português',
   pl: 'polski',
-  sk: 'slovencina',
+  sk: 'slovenčina',
 }
 
 function getLocaleLabel(locale: string) {

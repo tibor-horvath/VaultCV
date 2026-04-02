@@ -58,13 +58,17 @@ export async function readSupportedLocalesForProfileCached(slug: string, kind: P
   }
 
   const supported = await readSupportedLocalesCached(slug)
-  const available: string[] = []
-  for (const locale of supported) {
-    const raw = await readProfileJsonV2({ kind, locale, slugFromName: slug, legacyFallback: false })
-    if (raw.trim()) {
-      available.push(locale)
-    }
-  }
+
+  const results = await Promise.all(
+    supported.map(async (locale) => {
+      const raw = await readProfileJsonV2({ kind, locale, slugFromName: slug, legacyFallback: false })
+      return { locale, raw }
+    }),
+  )
+
+  const available: string[] = results
+    .filter((result) => result.raw.trim())
+    .map((result) => result.locale)
 
   profileLocalesCache.set(cacheKey, {
     value: available,
