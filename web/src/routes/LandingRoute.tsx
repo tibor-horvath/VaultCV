@@ -15,6 +15,7 @@ import { LanguageSelector } from '../components/LanguageSelector'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
 import { fetchCv } from '../lib/api'
+import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
 import type { CvData } from '../types/cv'
 
 function getPublicText(value: string | undefined, fallback: string) {
@@ -57,6 +58,7 @@ export function LandingRoute() {
   const [sessionProbePending, setSessionProbePending] = useState(() => !initialUrlAccess)
   const [tokenInput, setTokenInput] = useState('')
   const [isTokenVisible, setIsTokenVisible] = useState(false)
+  const [availablePublicLocales, setAvailablePublicLocales] = useState<string[] | null>(null)
   const [publicCv, setPublicCv] = useState<Partial<CvData>>(() => ({
     basics: { name: '', headline: '' },
   }))
@@ -77,6 +79,18 @@ export function LandingRoute() {
       cancelled = true
     }
   }, [locale])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const locales = await fetchProfileScopedLocales('public')
+      if (cancelled) return
+      setAvailablePublicLocales(locales)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const publicName = getPublicText(import.meta.env.VITE_PUBLIC_NAME as string | undefined, publicCv.basics?.name ?? 'CV')
 
@@ -179,7 +193,7 @@ export function LandingRoute() {
     <div className="mx-auto w-full">
       <div className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-[0_30px_70px_-35px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/45 sm:p-8">
         <div className="flex items-center justify-end gap-2">
-          <LanguageSelector />
+          <LanguageSelector allowedLocales={availablePublicLocales ?? undefined} />
           <button
             type="button"
             onClick={toggleTheme}

@@ -40,9 +40,24 @@ const localeToCountryCode: Record<string, string> = {
   sk: 'SK',
 }
 
+const nativeLocaleLabels: Record<string, string> = {
+  en: 'English',
+  hu: 'magyar',
+  cs: 'čeština',
+  de: 'Deutsch',
+  fr: 'français',
+  es: 'español',
+  it: 'italiano',
+  pt: 'português',
+  pl: 'polski',
+  sk: 'slovenčina',
+}
+
 function getLocaleLabel(locale: string) {
+  const base = getLocaleBase(locale)
+  if (nativeLocaleLabels[base]) return nativeLocaleLabels[base]
   try {
-    const display = new Intl.DisplayNames([locale], { type: 'language' }).of(getLocaleBase(locale))
+    const display = new Intl.DisplayNames([locale], { type: 'language' }).of(base)
     return display ?? locale.toUpperCase()
   } catch {
     return locale.toUpperCase()
@@ -78,15 +93,6 @@ export function sanitizeSupportedLocales(inputs: Array<string | null | undefined
 
   if (!unique.includes(fallbackLocale)) unique.unshift(fallbackLocale)
   return unique
-}
-
-export function parseSupportedLocalesCsv(raw: string | null | undefined) {
-  if (!raw?.trim()) return [...defaultSupportedLocales]
-  const parsed = raw
-    .split(',')
-    .map((x) => x.trim())
-    .filter(Boolean)
-  return sanitizeSupportedLocales(parsed)
 }
 
 export function toLocaleOptions(supportedLocales: readonly Locale[]): LocaleOption[] {

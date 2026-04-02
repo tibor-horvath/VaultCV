@@ -1,25 +1,9 @@
-import { ExternalLink, KeyRound, Link2, Settings, Shield, SquarePen } from 'lucide-react'
+import { ExternalLink, KeyRound, Link2, Shield, SquarePen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { LanguageSelector } from '../components/LanguageSelector'
+import { fetchAuthMe, type ClientPrincipal } from '../lib/adminAuth'
 import { useI18n } from '../lib/i18n'
-
-type ClientPrincipal = {
-  userDetails?: string
-  userRoles?: string[]
-}
-
-async function fetchAuthMe(): Promise<ClientPrincipal | null> {
-  try {
-    const res = await fetch('/.auth/me', { credentials: 'same-origin' })
-    if (!res.ok) return null
-    const text = await res.text()
-    if (!text.trim()) return null
-    const data = JSON.parse(text) as { clientPrincipal?: ClientPrincipal }
-    return data?.clientPrincipal ?? null
-  } catch {
-    return null
-  }
-}
 
 export function AdminDashboardRoute() {
   const { t } = useI18n()
@@ -52,9 +36,12 @@ export function AdminDashboardRoute() {
     return (
       <div className="w-full space-y-6 py-10">
         <div className="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="flex items-center gap-2 text-slate-900 dark:text-white">
-            <Shield className="h-5 w-5" />
-            <div className="text-lg font-semibold">{t('adminPortal')}</div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+              <Shield className="h-5 w-5" />
+              <div className="text-lg font-semibold">{t('adminPortal')}</div>
+            </div>
+            <LanguageSelector />
           </div>
           <div className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             {t('adminSignInHint')}
@@ -149,15 +136,6 @@ export function AdminDashboardRoute() {
           <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">{t('adminShareCvTileDescription')}</div>
         </Link>
 
-        <Link
-          to="/admin/settings"
-          className="rounded-2xl border border-slate-200/70 bg-white/70 p-5 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/30"
-        >
-          <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
-            <Settings className="h-4 w-4" /> {t('adminSettings')}
-          </div>
-          <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">{t('adminSettingsTileDescription')}</div>
-        </Link>
       </div>
     </div>
   )

@@ -165,10 +165,6 @@ export const deMessages: Partial<MessageCatalog> = {
     'Aktualisiere Profilabschnitte, Sichtbarkeitsschalter und lokalisierte Inhalte.',
   adminShareCvTileDescription:
     'Erstelle Links, filtere aktiv/widerrufen/abgelaufen und widerrufe Zugriff bei Bedarf.',
-  adminSettingsTileDescription:
-    'Lege fest, welche Sprachen für Bearbeitung und Freigabe aktiviert sind.',
-  adminSupportedLocales: 'Unterstützte Sprachen',
-  adminSupportedLocalesHint:
-    'Diese Sprachen werden über /api/locales bereitgestellt und von den Admin-Profil-APIs validiert.',
   adminNoMoreLocalesToAdd: 'Keine weiteren Sprachen in den UI-Katalogen verfügbar.',
+  adminSelected: 'Ausgewählt',
 }

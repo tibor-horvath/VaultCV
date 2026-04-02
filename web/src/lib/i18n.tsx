@@ -6,7 +6,7 @@ import {
   fallbackLocale,
   getUiDictionary,
   localeStorageKey,
-  parseSupportedLocalesCsv,
+  sanitizeSupportedLocales,
   resolveSupportedLocale,
   resolveUiLocale,
   toLocaleOptions,
@@ -69,10 +69,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         })
         if (!res.ok) return
         const body = (await res.json()) as { locales?: unknown }
-        const csv = Array.isArray(body.locales)
-          ? body.locales.filter((x): x is string => typeof x === 'string').join(',')
-          : ''
-        setSupportedLocales(parseSupportedLocalesCsv(csv))
+        const nextSupported = Array.isArray(body.locales)
+          ? sanitizeSupportedLocales(body.locales.filter((x): x is string => typeof x === 'string'))
+          : [...defaultSupportedLocales]
+        setSupportedLocales(nextSupported.length ? nextSupported : [...defaultSupportedLocales])
       } catch {
         // Keep fallback locale set when endpoint is unavailable.
       }

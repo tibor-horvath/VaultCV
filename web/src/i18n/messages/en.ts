@@ -154,10 +154,8 @@ export const enMessages = {
   adminUnknownUser: 'unknown',
   adminEditCvTileDescription: 'Update profile sections, visibility toggles, and localized content.',
   adminShareCvTileDescription: 'Create links, filter active/revoked/expired, and revoke access when needed.',
-  adminSettingsTileDescription: 'Choose which locales are enabled for profile editing and sharing.',
-  adminSupportedLocales: 'Supported locales',
-  adminSupportedLocalesHint: 'These locales are exposed by /api/locales and validated by admin profile APIs.',
   adminNoMoreLocalesToAdd: 'No additional locales are available in UI catalogs.',
+  adminSelected: 'Selected',
 }
 
 export type MessageCatalog = typeof enMessages

@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AdminDashboardRoute } from './AdminDashboardRoute'
 import { LocaleProvider } from '../lib/i18n'
+import { enMessages } from '../i18n/messages'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -77,6 +78,22 @@ afterEach(() => {
 })
 
 describe('AdminDashboardRoute', () => {
+  it('shows language selector when not logged in', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) {
+        return jsonResponse({ clientPrincipal: null })
+      }
+      return jsonResponse({}, 404)
+    }))
+
+    renderRoute()
+    await flushEffects()
+
+    const selector = document.querySelector(`button[aria-label="${enMessages.languageSelectorLabel}"]`)
+    expect(selector).toBeTruthy()
+  })
+
   it('shows editor and share tiles', async () => {
     renderRoute()
     await flushEffects()

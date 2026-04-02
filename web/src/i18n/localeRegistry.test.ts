@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  defaultSupportedLocales,
   fallbackLocale,
   getLocaleBase,
   getUiDictionary,
   normalizeLocale,
-  parseSupportedLocalesCsv,
   resolveSupportedLocale,
   resolveUiLocale,
   sanitizeSupportedLocales,
@@ -42,19 +40,6 @@ describe('sanitizeSupportedLocales', () => {
   })
 })
 
-describe('parseSupportedLocalesCsv', () => {
-  it('returns defaults when empty', () => {
-    expect(parseSupportedLocalesCsv('')).toEqual([...defaultSupportedLocales])
-  })
-
-  it('parses csv', () => {
-    const parsed = parseSupportedLocalesCsv('de, hu, ')
-    expect(parsed).toContain('de')
-    expect(parsed).toContain('hu')
-    expect(parsed[0]).toBe(fallbackLocale)
-  })
-})
-
 describe('resolveSupportedLocale', () => {
   const supported = ['en', 'de'] as const
 
@@ -84,5 +69,10 @@ describe('toLocaleOptions', () => {
     const opts = toLocaleOptions(['en', 'de'])
     expect(opts.map((o) => o.code)).toEqual(['en', 'de'])
     expect(opts.every((o) => o.label.length > 0)).toBe(true)
+  })
+
+  it('uses native language labels for shipped locales', () => {
+    const opts = toLocaleOptions(['en', 'hu', 'de'])
+    expect(opts.map((o) => o.label)).toEqual(['English', 'magyar', 'Deutsch'])
   })
 })
