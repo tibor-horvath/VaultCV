@@ -1,0 +1,22 @@
+# Keep Azure Functions deployment package minimal.
+# Runtime code is bundled by esbuild into dist/<function>/index.js.
+
+# Build/test dependencies are not needed at runtime.
+node_modules/
+coverage/
+.nyc_output/
+
+# Source-only TypeScript and test files.
+**/*.ts
+**/*.test.ts
+
+# Local/dev configuration and tooling files.
+vitest.config.ts
+tsconfig.json
+esbuild.config.mjs
+local.settings.json
+local.settings.example.json
+
+# Editor and misc local files.
+.vscode/
+*.log

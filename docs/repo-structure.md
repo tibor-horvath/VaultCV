@@ -1,7 +1,7 @@
 # Repo structure
 
 - `web/`: React + TypeScript SPA (Vite) — the website visitors see
-- `api/`: Azure Functions (TypeScript) — the server-side API that guards your CV data
+- `api/`: Azure Functions (TypeScript) — the server-side API that guards your CV data. Deployment packaging is controlled by `api/.funcignore` so build-only files (especially `node_modules/`) are excluded from SWA uploads.
 - `scripts/`: build helpers (for example `sync-swa-config.mjs`)
 - `staticwebapp.config.json`: routing and security headers config
 

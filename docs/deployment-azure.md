@@ -52,6 +52,8 @@ Azure will add a workflow file at `.github/workflows/azure-static-web-apps-<name
 
 If any of these are wrong, edit the file (directly or via a follow-up commit/PR) before the next deployment runs. Wrong values cause the GitHub Actions deployment to fail immediately. You can watch the progress under the **Actions** tab in your GitHub repo.
 
+Before your first production deploy, verify `api/.funcignore` exists and excludes `node_modules/`. Azure SWA zips the `api/` folder for deployment; without `.funcignore`, the package can exceed the size limit because `node_modules` includes build-only and platform-native dependencies that are not needed at runtime.
+
 > **Using this template?** This repository does not include a pre-configured deployment workflow. When you link your new repository to an Azure SWA resource, Azure adds a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` containing your app-specific secret name and resource identifier. Check and correct the build settings in that file (see table above) before or immediately after the first deployment runs.
 
 ### Option B — Azure CLI
@@ -132,6 +134,7 @@ In the Azure Portal, open your Static Web App → **Settings** → **Environment
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
+| SWA deployment fails with package/upload size limit error (around 250 MB) | `api/node_modules` was included in the API deployment artifact | Add `api/.funcignore` and exclude at least `node_modules/` plus source-only files (for example `**/*.ts`). This project runs bundled API handlers from `api/dist/*/index.js`, so TypeScript source and dev dependencies are not required at runtime. |
 | GitHub Actions workflow fails on first deploy after SWA creation | `api_location` or `output_location` wrong in the auto-generated workflow file | Open `.github/workflows/azure-static-web-apps-<name>.yml` and set `api_location: "api"` and `output_location: "dist"` (Azure often defaults `api_location` to `""` and `output_location` to `"build"`). |
 | GitHub Actions workflow fails | Build error in the code | Check the **Actions** tab in your GitHub repo for the error message. |
 | API returns 401 for every request | Expired or revoked share link | Create a fresh share link from the admin page. Increase `CV_SESSION_TTL_SECONDS` if your intended session window is longer. |
