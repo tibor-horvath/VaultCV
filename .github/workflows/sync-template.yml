@@ -1,0 +1,217 @@
+name: Sync with template
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_repo:
+        description: 'Upstream template repository (owner/repo) — defaults to tibor-horvath/VaultCV'
+        required: false
+        default: 'tibor-horvath/VaultCV'
+  # Uncomment to enable scheduled automatic syncs:
+  # schedule:
+  #   - cron: '0 8,20 * * *'  # Every day at 08:00 and 20:00 UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve upstream repo
+        id: upstream
+        run: |
+          REPO="${{ github.event.inputs.upstream_repo || 'tibor-horvath/VaultCV' }}"
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          BRANCH="sync/template"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "https://github.com/${{ steps.upstream.outputs.repo }}.git"
+          git fetch upstream main --no-tags
+
+      - name: Check for new upstream commits
+        id: diff
+        run: |
+          UPSTREAM_HEAD=$(git rev-parse upstream/main)
+          echo "upstream_head=$UPSTREAM_HEAD" >> "$GITHUB_OUTPUT"
+
+          LAST_SHA="${{ vars.LAST_TEMPLATE_SYNC }}"
+          if [ -n "$LAST_SHA" ]; then
+            echo "Last synced upstream commit: $LAST_SHA"
+            COUNT=$(git rev-list ${LAST_SHA}..upstream/main --count 2>/dev/null || echo "unknown")
+          else
+            echo "No sync record found — first run."
+            COUNT=$(git rev-list HEAD..upstream/main --count)
+          fi
+
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$COUNT" = "0" ]; then
+            echo "Already up to date with ${{ steps.upstream.outputs.repo }}."
+          else
+            echo "$COUNT new commit(s) found upstream."
+          fi
+
+      - name: Create sync branch and merge
+        if: steps.diff.outputs.count != '0'
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="${{ steps.upstream.outputs.branch }}"
+          MERGE_MSG="chore: sync with template (${{ steps.upstream.outputs.repo }})"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+          fi
+
+          if ! git merge upstream/main \
+            --no-edit \
+            --allow-unrelated-histories \
+            -X theirs \
+            -m "$MERGE_MSG"; then
+            echo "Merge conflicts detected. Auto-resolving in favor of upstream/template..."
+
+            run_git() {
+              local attempts=0
+              while true; do
+                if "$@"; then
+                  return 0
+                fi
+
+                attempts=$((attempts + 1))
+                if [ -f .git/index.lock ] && [ "$attempts" -lt 5 ]; then
+                  echo "Detected stale .git/index.lock, retrying ($attempts/4)..."
+                  rm -f .git/index.lock
+                  sleep 1
+                  continue
+                fi
+
+                return 1
+              done
+            }
+
+            # Resolve all unresolved entries: keep theirs when present, otherwise
+            # remove files deleted upstream (modify/delete conflict).
+            CONFLICT_FILE=$(mktemp)
+            git diff --name-only --diff-filter=U > "$CONFLICT_FILE"
+
+            while IFS= read -r path; do
+              [ -n "$path" ] || continue
+              if git show ":3:$path" >/dev/null 2>&1; then
+                run_git git checkout --theirs -- "$path"
+                run_git git add -- "$path"
+              else
+                run_git git rm -f -- "$path"
+              fi
+            done < "$CONFLICT_FILE"
+
+            run_git git commit -m "$MERGE_MSG"
+          fi
+
+          git push --force-with-lease origin "$BRANCH"
+
+      - name: Record last synced upstream commit
+        if: steps.diff.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+          NEW_SHA: ${{ steps.diff.outputs.upstream_head }}
+        run: |
+          if gh api /repos/${{ github.repository }}/actions/variables/LAST_TEMPLATE_SYNC &>/dev/null; then
+            gh api --method PATCH /repos/${{ github.repository }}/actions/variables/LAST_TEMPLATE_SYNC \
+              -f value="$NEW_SHA"
+          else
+            gh api --method POST /repos/${{ github.repository }}/actions/variables \
+              -f name=LAST_TEMPLATE_SYNC -f value="$NEW_SHA"
+          fi
+          echo "LAST_TEMPLATE_SYNC set to $NEW_SHA"
+
+      - name: Create or update sync PR
+        if: steps.diff.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+          BRANCH: ${{ steps.upstream.outputs.branch }}
+          UPSTREAM_REPO: ${{ steps.upstream.outputs.repo }}
+          UPSTREAM_HEAD: ${{ steps.diff.outputs.upstream_head }}
+        run: |
+          TITLE="chore: sync with template (${UPSTREAM_REPO})"
+          PR_LABELS=$(gh api /repos/${GITHUB_REPOSITORY}/actions/variables/SYNC_TEMPLATE_PR_LABELS --jq '.value' 2>/dev/null || true)
+          PR_ASSIGNEES=$(gh api /repos/${GITHUB_REPOSITORY}/actions/variables/SYNC_TEMPLATE_PR_ASSIGNEES --jq '.value' 2>/dev/null || true)
+          REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
+
+          BODY_FILE=$(mktemp)
+          cat > "$BODY_FILE" <<EOF
+          Automated sync from template repository.
+
+          - Upstream: ${UPSTREAM_REPO}
+          - Upstream commit: ${UPSTREAM_HEAD}
+          - Workflow: ${GITHUB_WORKFLOW}
+          - Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+
+          PR_NUMBER=$(gh api \
+            "/repos/${GITHUB_REPOSITORY}/pulls?state=open&head=${REPO_OWNER}:${BRANCH}&base=main&per_page=1" \
+            --jq '.[0].number // empty')
+
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Updating existing PR #$PR_NUMBER"
+            gh api --method PATCH \
+              "/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+              -f title="$TITLE" \
+              -f body="$(cat "$BODY_FILE")"
+          else
+            echo "Creating new PR from ${BRANCH} to main"
+            PR_NUMBER=$(gh api --method POST \
+              "/repos/${GITHUB_REPOSITORY}/pulls" \
+              -f title="$TITLE" \
+              -f head="${BRANCH}" \
+              -f base="main" \
+              -f body="$(cat "$BODY_FILE")" \
+              --jq '.number')
+          fi
+
+          echo "PR number: $PR_NUMBER"
+
+          if [ -n "${PR_LABELS:-}" ]; then
+            echo "Applying labels: ${PR_LABELS}"
+            IFS=',' read -ra LABEL_LIST <<< "${PR_LABELS}"
+            LABEL_ARGS=()
+            for label in "${LABEL_LIST[@]}"; do
+              label_trimmed="${label#"${label%%[![:space:]]*}"}"
+              label_trimmed="${label_trimmed%"${label_trimmed##*[![:space:]]}"}"
+              [ -n "${label_trimmed}" ] && LABEL_ARGS+=(-f "labels[]=${label_trimmed}")
+            done
+            if [ "${#LABEL_ARGS[@]}" -gt 0 ]; then
+              gh api --method POST \
+                "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" \
+                "${LABEL_ARGS[@]}" \
+                || echo "Warning: Failed to apply one or more labels."
+            else
+              echo "No valid labels to apply after parsing."
+            fi
+          fi
+
+          if [ -n "${PR_ASSIGNEES:-}" ]; then
+            echo "Applying assignees: ${PR_ASSIGNEES}"
+            IFS=',' read -ra ASSIGNEE_LIST <<< "${PR_ASSIGNEES}"
+            ASSIGNEE_ARGS=()
+            for assignee in "${ASSIGNEE_LIST[@]}"; do
+              assignee_trimmed="${assignee#"${assignee%%[![:space:]]*}"}"
+              assignee_trimmed="${assignee_trimmed%"${assignee_trimmed##*[![:space:]]}"}"
+              [ -n "${assignee_trimmed}" ] && ASSIGNEE_ARGS+=(-f "assignees[]=${assignee_trimmed}")
+            done
+            if [ "${#ASSIGNEE_ARGS[@]}" -gt 0 ]; then
+              gh api --method POST \
+                "/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/assignees" \
+                "${ASSIGNEE_ARGS[@]}" \
+                || echo "Warning: Failed to apply one or more assignees."
+            else
+              echo "No valid assignees to apply after parsing."
+            fi
+          fi
