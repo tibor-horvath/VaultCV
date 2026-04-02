@@ -35,7 +35,7 @@ export function FloatingBasicsMenu({
       }}
     >
       {/* Match AppShell footer outer padding/sizing */}
-      <div className="pointer-events-auto mx-auto w-[72%] max-w-[calc(80vw-0.4rem)] sm:w-full sm:max-w-[19.2rem] overflow-hidden pb-1.5">
+      <div className={`${visible ? 'pointer-events-auto' : 'pointer-events-none'} mx-auto w-[72%] max-w-[calc(80vw-0.4rem)] sm:w-full sm:max-w-[19.2rem] overflow-hidden pb-1.5`}>
         <div className="flex w-full min-w-0 items-center justify-between gap-2 rounded-2xl border border-slate-200/80 bg-white/75 box-border px-2 py-1.5 text-sm text-slate-600 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 dark:text-slate-300">
           <div className="flex min-w-0 items-center gap-2">
             <img
