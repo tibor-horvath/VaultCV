@@ -1,7 +1,7 @@
 # Keep Azure Functions deployment package minimal.
 # Runtime code is bundled by esbuild into dist/<function>/index.js.
 
-# Build/test dependencies are not needed at runtime.
+# Development-only dependencies and artifacts; runtime deps are bundled into dist/ by esbuild.
 node_modules/
 coverage/
 .nyc_output/
