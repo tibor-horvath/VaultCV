@@ -3,16 +3,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 vi.mock('./profileBlobStore', () => {
   return {
     readProfileJsonV2: vi.fn(async () => ''),
+    readSettingsJson: vi.fn(async () => ''),
   }
 })
 
-import { readProfileJsonV2 } from './profileBlobStore'
+import { readProfileJsonV2, readSettingsJson } from './profileBlobStore'
 import {
   defaultSupportedLocales,
   fallbackLocale,
   invalidateLocalesCache,
   localeEnvCandidates,
   normalizeLocale,
+  readSupportedLocalesFromBlob,
   readSupportedLocalesForProfileCached,
   readSupportedLocalesCached,
 } from './localeRegistry'
@@ -38,6 +40,14 @@ describe('readSupportedLocalesCached', () => {
     await expect(readSupportedLocalesCached('john-doe')).resolves.toEqual(defaultSupportedLocales)
   })
 
+  it('prefers persisted supported locales from settings blob', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      JSON.stringify({ supportedLocales: ['hu', 'de'] }),
+    )
+
+    await expect(readSupportedLocalesCached('john-doe')).resolves.toEqual(['en', 'hu', 'de'])
+  })
+
   it('returns cached value and remains stable after invalidation', async () => {
     const first = await readSupportedLocalesCached('john-doe')
     const second = await readSupportedLocalesCached('john-doe')
@@ -61,12 +71,31 @@ describe('readSupportedLocalesCached', () => {
 
 describe('readSupportedLocalesForProfileCached', () => {
   it('returns only locales that have an existing profile blob for the requested kind', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      JSON.stringify({ supportedLocales: ['en', 'hu', 'de'] }),
+    )
+
     ;(readProfileJsonV2 as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce('{"locale":"en"}')
       .mockResolvedValueOnce('{"locale":"hu"}')
       .mockResolvedValueOnce('')
 
     await expect(readSupportedLocalesForProfileCached('john-doe', 'public')).resolves.toEqual(['en', 'hu'])
+  })
+})
+
+describe('readSupportedLocalesFromBlob', () => {
+  it('normalizes, deduplicates, and injects fallback locale', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      JSON.stringify({ supportedLocales: ['HU', 'hu', '@@@', 'de'] }),
+    )
+
+    await expect(readSupportedLocalesFromBlob('john-doe')).resolves.toEqual(['en', 'hu', 'de'])
+  })
+
+  it('returns null for invalid settings payloads', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('{bad json')
+    await expect(readSupportedLocalesFromBlob('john-doe')).resolves.toBeNull()
   })
 })
 
