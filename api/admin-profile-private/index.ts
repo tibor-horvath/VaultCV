@@ -1,7 +1,7 @@
 import { readProfileJsonV2, writeProfileJsonV2 } from '../lib/profileBlobStore'
 import { readAllowedOriginsFromEnv, requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { getHeaderInsensitive, firstLanguageTagFromAcceptLanguage } from '../lib/httpHeaders'
-import { normalizeLocale, readSupportedLocales } from '../lib/localeRegistry'
+import { normalizeLocale, readSupportedLocalesCached } from '../lib/localeRegistry'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -46,15 +46,16 @@ export default async function (context: Context, req: HttpRequest) {
       return
     }
 
-    const supported = readSupportedLocales()
-    const requestedLocale = normalizeLocale(req.query?.locale ?? firstLanguageTagFromAcceptLanguage(getHeaderInsensitive(req.headers, 'accept-language')))
-    if (!supported.includes(requestedLocale)) {
-      context.res = jsonResponse(400, { error: 'Unsupported locale.' })
-      return
-    }
     const slugFromName = readServerConfiguredProfileSlug()
     if (!slugFromName) {
       context.res = jsonResponse(500, { error: 'CV_PROFILE_SLUG is not configured.' })
+      return
+    }
+
+    const supported = await readSupportedLocalesCached(slugFromName)
+    const requestedLocale = normalizeLocale(req.query?.locale ?? firstLanguageTagFromAcceptLanguage(getHeaderInsensitive(req.headers, 'accept-language')))
+    if (!supported.includes(requestedLocale)) {
+      context.res = jsonResponse(400, { error: 'Unsupported locale.' })
       return
     }
 

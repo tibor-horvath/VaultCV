@@ -84,6 +84,7 @@ export const deMessages: Partial<MessageCatalog> = {
   adminDashboard: 'Dashboard',
   adminEditCv: 'CV bearbeiten',
   adminShareCv: 'CV teilen',
+  adminSettings: 'Einstellungen',
   adminBackToSite: 'Zurück zur Website',
   adminOpenAuthMe: '`/.auth/me` öffnen',
   adminRefresh: 'Aktualisieren',
@@ -135,6 +136,9 @@ export const deMessages: Partial<MessageCatalog> = {
   adminLoadProfileFailed: 'Profil konnte nicht geladen werden.',
   adminSaveProfileFailed: 'Profil konnte nicht gespeichert werden.',
   adminProfileSaved: 'Profil gespeichert.',
+  adminSettingsSaved: 'Einstellungen gespeichert.',
+  adminLoadSettingsFailed: 'Einstellungen konnten nicht geladen werden.',
+  adminSaveSettingsFailed: 'Einstellungen konnten nicht gespeichert werden.',
   adminSave: 'Speichern',
   adminLocale: 'Sprache',
   adminAddLanguage: 'Sprache hinzufugen',
@@ -161,4 +165,10 @@ export const deMessages: Partial<MessageCatalog> = {
     'Aktualisiere Profilabschnitte, Sichtbarkeitsschalter und lokalisierte Inhalte.',
   adminShareCvTileDescription:
     'Erstelle Links, filtere aktiv/widerrufen/abgelaufen und widerrufe Zugriff bei Bedarf.',
+  adminSettingsTileDescription:
+    'Lege fest, welche Sprachen fur Bearbeitung und Freigabe aktiviert sind.',
+  adminSupportedLocales: 'Unterstutzte Sprachen',
+  adminSupportedLocalesHint:
+    'Diese Sprachen werden uber /api/locales bereitgestellt und von den Admin-Profil-APIs validiert.',
+  adminNoMoreLocalesToAdd: 'Keine weiteren Sprachen in den UI-Katalogen verfugbar.',
 }

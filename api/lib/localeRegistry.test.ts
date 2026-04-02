@@ -1,11 +1,26 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { fallbackLocale, localeEnvCandidates, normalizeLocale, readLocalizedEnvJson, readSupportedLocales } from './localeRegistry'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const originalSupported = process.env.SUPPORTED_LOCALES
+vi.mock('./profileBlobStore', () => {
+  return {
+    readSettingsJson: vi.fn(async () => ''),
+  }
+})
+
+import { readSettingsJson } from './profileBlobStore'
+import {
+  defaultSupportedLocales,
+  fallbackLocale,
+  invalidateLocalesCache,
+  localeEnvCandidates,
+  normalizeLocale,
+  readLocalizedEnvJson,
+  readSupportedLocalesCached,
+  readSupportedLocalesFromBlob,
+} from './localeRegistry'
 
 afterEach(() => {
-  if (originalSupported === undefined) delete process.env.SUPPORTED_LOCALES
-  else process.env.SUPPORTED_LOCALES = originalSupported
+  vi.clearAllMocks()
+  invalidateLocalesCache()
 })
 
 describe('normalizeLocale', () => {
@@ -19,18 +34,43 @@ describe('normalizeLocale', () => {
   })
 })
 
-describe('readSupportedLocales', () => {
-  it('defaults to en when unset', () => {
-    delete process.env.SUPPORTED_LOCALES
-    expect(readSupportedLocales()).toEqual([fallbackLocale])
+describe('readSupportedLocalesFromBlob', () => {
+  it('returns null when settings blob is missing or empty', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('')
+    await expect(readSupportedLocalesFromBlob('john-doe')).resolves.toBeNull()
   })
 
-  it('parses csv and ensures fallback', () => {
-    process.env.SUPPORTED_LOCALES = 'de, hu, de'
-    const locales = readSupportedLocales()
-    expect(locales).toContain('de')
-    expect(locales).toContain('hu')
-    expect(locales[0]).toBe(fallbackLocale)
+  it('parses supportedLocales and ensures fallback locale is included', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('{"supportedLocales":["de","hu","de"]}')
+    await expect(readSupportedLocalesFromBlob('john-doe')).resolves.toEqual(['en', 'de', 'hu'])
+  })
+
+  it('returns null on malformed payload', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('{"supportedLocales":"de"}')
+    await expect(readSupportedLocalesFromBlob('john-doe')).resolves.toBeNull()
+  })
+})
+
+describe('readSupportedLocalesCached', () => {
+  it('falls back to default locales when blob value is missing', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('')
+    await expect(readSupportedLocalesCached('john-doe')).resolves.toEqual(defaultSupportedLocales)
+  })
+
+  it('returns cached value without re-reading blob until invalidated', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('{"supportedLocales":["de"]}')
+    const first = await readSupportedLocalesCached('john-doe')
+    const second = await readSupportedLocalesCached('john-doe')
+
+    expect(first).toEqual(['en', 'de'])
+    expect(second).toEqual(['en', 'de'])
+    expect(readSettingsJson).toHaveBeenCalledTimes(1)
+
+    invalidateLocalesCache()
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('{"supportedLocales":["hu"]}')
+    const third = await readSupportedLocalesCached('john-doe')
+    expect(third).toEqual(['en', 'hu'])
+    expect(readSettingsJson).toHaveBeenCalledTimes(2)
   })
 })
 

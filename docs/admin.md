@@ -7,6 +7,7 @@ VaultCV includes admin-only routes for dashboard, profile editing, and share-lin
 - Admin dashboard: `/admin`
 - Admin editor: `/admin/editor`
 - Admin share tools: `/admin/share`
+- Admin settings: `/admin/settings`
 - Sign in (Entra ID): `/.auth/login/aad`
 - Verify identity: `/.auth/me`
 - Sign out: `/.auth/logout`
@@ -23,6 +24,8 @@ Primary admin API endpoints:
 - `GET /api/manage/links`
 - `POST /api/manage/links`
 - `POST /api/manage/links/{id}/revoke`
+- `GET /api/manage/settings`
+- `PUT /api/manage/settings`
 - `GET /api/manage/profile/private`
 - `PUT /api/manage/profile/private`
 - `GET /api/manage/profile/public`
@@ -48,9 +51,14 @@ If `CV_PROFILE_SLUG` is missing, the admin profile endpoints return an error.
 - Admin surfaces (`/admin`, `/admin/editor`, `/admin/share`) use shared i18n catalogs (`en`, `de`, `hu`) for UI labels, actions, confirmations, and status/error messages.
 - The editor locale selector controls which localized CV payload is being edited (`private/public` per locale), independent from current UI language.
 - The editor includes an explicit **Add language** action.
-  - Available locales are loaded from `/api/locales` (served from `SUPPORTED_LOCALES`).
+  - Available locales are loaded from `/api/locales` (backed by `/api/manage/settings`).
   - If locale loading fails, the editor falls back to `en`.
   - When adding a locale, the editor switches to that locale immediately so content can be created.
+
+- The admin settings page (`/admin/settings`) manages supported locales in Blob Storage:
+  - Blob name: `{CV_PROFILE_SLUG}-settings.json`
+  - JSON shape: `{ "supportedLocales": ["en", "de", "hu", ...] }`
+  - On first run (no settings blob yet), it pre-selects locales that have UI message catalogs and prompts save.
 
 ## Share links
 
@@ -64,7 +72,7 @@ These links are stored in Azure Table Storage and support:
 - revoke
 - optional admin-only metadata (`sharedWith`, `notes`) that is never returned by public endpoints
 
-For each active link, click the **QR Code** button to open a modal with a scannable QR code and a **Download PNG** option. When `SUPPORTED_LOCALES` includes more than one locale, a language selector inside the modal lets you switch the encoded language without closing the modal — the QR code and URL update immediately. The modal pre-selects the language already chosen in the page-level language selector. On devices that support the [Web Share API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API) file sharing (iOS 12.1+, Android Chrome 61+), a **Share image** button also appears, letting you send the QR code PNG directly via the OS share sheet. See [qr-code-url-format.md](qr-code-url-format.md) for the full URL format.
+For each active link, click the **QR Code** button to open a modal with a scannable QR code and a **Download PNG** option. When more than one locale is enabled in admin settings, a language selector inside the modal lets you switch the encoded language without closing the modal — the QR code and URL update immediately. The modal pre-selects the language already chosen in the page-level language selector. On devices that support the [Web Share API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API) file sharing (iOS 12.1+, Android Chrome 61+), a **Share image** button also appears, letting you send the QR code PNG directly via the OS share sheet. See [qr-code-url-format.md](qr-code-url-format.md) for the full URL format.
 
 Each share link row has a **Share** button (next to **Copy**) on devices where `navigator.share` is available. Tapping it opens the native OS share sheet with the link URL.
 
