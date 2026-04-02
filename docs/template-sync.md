@@ -53,7 +53,7 @@ By default the upstream is `tibor-horvath/VaultCV`. You can point a manual run a
 owner/repo
 ```
 
-The scheduled run always uses the default (`tibor-horvath/VaultCV`).
+Scheduled runs use the `upstream_repo` input value defined in the workflow file (by default, `tibor-horvath/VaultCV`).
 
 ## Enabling automatic scheduled syncs
 
