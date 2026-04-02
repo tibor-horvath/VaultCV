@@ -43,7 +43,7 @@ function clampInt(n: number, min: number, max: number) {
 export default async function (context: Context, req: HttpRequest) {
   const auth = requireAdmin(req.headers)
   if (!auth.ok) {
-    context.res = jsonResponse(401, { error: 'Unauthorized' })
+    context.res = jsonResponse(auth.status, { error: 'Unauthorized' })
     return
   }
 

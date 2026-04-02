@@ -29,6 +29,11 @@ function adminPrincipalHeader() {
   return Buffer.from(JSON.stringify(principal)).toString('base64')
 }
 
+function nonAdminPrincipalHeader() {
+  const principal = { userRoles: ['authenticated'] }
+  return Buffer.from(JSON.stringify(principal)).toString('base64')
+}
+
 /** Headers shared by all "admin GET" test requests. */
 function adminGetHeaders(): Record<string, string> {
   return { 'x-ms-client-principal': adminPrincipalHeader() }
@@ -62,6 +67,16 @@ describe('/api/manage/settings', () => {
     const context: Context = {}
     await handler(context, { method: 'GET', headers: {} })
     expect(context.res).toMatchObject({ status: 401, body: { error: 'Unauthorized' } })
+  })
+
+  it('returns 403 when principal is present but user lacks admin role', async () => {
+    process.env.CV_PROFILE_SLUG = 'john-doe'
+    const context: Context = {}
+    await handler(context, {
+      method: 'GET',
+      headers: { 'x-ms-client-principal': nonAdminPrincipalHeader() },
+    })
+    expect(context.res).toMatchObject({ status: 403, body: { error: 'Unauthorized' } })
   })
 
   it('returns 500 when CV_PROFILE_SLUG is not configured', async () => {

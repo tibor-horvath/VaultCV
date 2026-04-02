@@ -4,6 +4,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../lib/i18n'
 import { AdminSettingsRoute } from './AdminSettingsRoute'
+import { redirectToLogin } from '../lib/authRedirect'
+
+vi.mock('../lib/authRedirect', () => ({
+  redirectToLogin: vi.fn(),
+}))
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -70,6 +75,7 @@ function noRolePrincipalResponse() {
 
 beforeEach(() => {
   window.history.replaceState({}, '', '/admin/settings')
+  vi.mocked(redirectToLogin).mockReset()
 })
 
 afterEach(() => {
@@ -154,6 +160,34 @@ describe('AdminSettingsRoute', () => {
     await flushEffects()
 
     expect(document.body.textContent).toContain('Storage error')
+  })
+
+  it('redirects to login when settings API returns 401', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) return adminPrincipalResponse()
+      if (url.endsWith('/api/manage/settings')) return jsonResponse({ error: 'Unauthorized' }, 401)
+      return jsonResponse({}, 404)
+    }))
+
+    renderRoute()
+    await flushEffects()
+
+    expect(redirectToLogin).toHaveBeenCalledWith('/admin/settings')
+  })
+
+  it('does not redirect to login when settings API returns 403', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) return adminPrincipalResponse()
+      if (url.endsWith('/api/manage/settings')) return jsonResponse({ error: 'Unauthorized' }, 403)
+      return jsonResponse({}, 404)
+    }))
+
+    renderRoute()
+    await flushEffects()
+
+    expect(redirectToLogin).not.toHaveBeenCalled()
   })
 
   it('updates last-saved signature and shows success status after saving', async () => {

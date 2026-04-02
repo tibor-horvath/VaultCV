@@ -394,9 +394,12 @@ export function CvRoute() {
             />
           </div>
 
-          {!isBasicsInView ? (
-            <FloatingBasicsMenu basics={state.cv.basics} links={state.cv.links} profilePhotoSrc={profilePhotoSrc} />
-          ) : null}
+          <FloatingBasicsMenu
+            basics={state.cv.basics}
+            links={state.cv.links}
+            profilePhotoSrc={profilePhotoSrc}
+            visible={!isBasicsInView}
+          />
 
           {state.cv.credentials?.length ? (
             <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>

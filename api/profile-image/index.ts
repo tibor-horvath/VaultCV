@@ -44,7 +44,7 @@ export default async function (context: Context, req: HttpRequest) {
   try {
     const auth = requireAdmin(req.headers)
     if (!auth.ok) {
-      context.res = jsonResponse(401, { error: 'Unauthorized' })
+      context.res = jsonResponse(auth.status, { error: 'Unauthorized' })
       return
     }
 

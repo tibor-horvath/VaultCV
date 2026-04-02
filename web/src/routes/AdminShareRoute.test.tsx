@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../lib/i18n'
 import { AdminShareRoute } from './AdminRoute'
+import { redirectToLogin } from '../lib/authRedirect'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -15,6 +16,10 @@ vi.mock('qrcode.react', async () => {
     ),
   }
 })
+
+vi.mock('../lib/authRedirect', () => ({
+  redirectToLogin: vi.fn(),
+}))
 
 type MockResponse = {
   ok: boolean
@@ -59,6 +64,7 @@ function renderRoute() {
 
 beforeEach(() => {
   window.history.replaceState({}, '', '/admin/share')
+  vi.mocked(redirectToLogin).mockReset()
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (url.endsWith('/.auth/me')) {
@@ -131,6 +137,54 @@ afterEach(() => {
 })
 
 describe('AdminShareRoute', () => {
+  it('redirects to login when links API returns 401', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) {
+        return jsonResponse({
+          clientPrincipal: {
+            userDetails: 'admin@example.com',
+            userRoles: ['admin'],
+            claims: [{ typ: 'email', val: 'admin@example.com' }],
+          },
+        })
+      }
+      if (url.endsWith('/api/manage/links')) {
+        return jsonResponse({ error: 'Unauthorized' }, 401)
+      }
+      return jsonResponse({}, 404)
+    }))
+
+    renderRoute()
+    await flushEffects()
+
+    expect(redirectToLogin).toHaveBeenCalledWith('/admin/share')
+  })
+
+  it('does not redirect to login when links API returns 403', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) {
+        return jsonResponse({
+          clientPrincipal: {
+            userDetails: 'admin@example.com',
+            userRoles: ['admin'],
+            claims: [{ typ: 'email', val: 'admin@example.com' }],
+          },
+        })
+      }
+      if (url.endsWith('/api/manage/links')) {
+        return jsonResponse({ error: 'Unauthorized' }, 403)
+      }
+      return jsonResponse({}, 404)
+    }))
+
+    renderRoute()
+    await flushEffects()
+
+    expect(redirectToLogin).not.toHaveBeenCalled()
+  })
+
   it('asks for confirmation before revoking', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderRoute()

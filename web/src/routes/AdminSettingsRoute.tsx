@@ -84,6 +84,10 @@ export function AdminSettingsRoute() {
           redirectToLogin('/admin/settings')
           return
         }
+        if (res.status === 403) {
+          setError(t('adminNoRole').replace('{email}', signedInEmail || t('adminUnknownUser')))
+          return
+        }
 
         const body = await readJsonOrNull<{ supportedLocales?: unknown; error?: string }>(res)
         if (!res.ok) {
@@ -107,7 +111,7 @@ export function AdminSettingsRoute() {
     return () => {
       cancelled = true
     }
-  }, [isAdmin, meLoading, t])
+  }, [isAdmin, meLoading, signedInEmail, t])
 
   async function saveSettings() {
     setSaving(true)
@@ -122,6 +126,10 @@ export function AdminSettingsRoute() {
       })
       if (res.status === 401) {
         redirectToLogin('/admin/settings')
+        return
+      }
+      if (res.status === 403) {
+        setError(t('adminNoRole').replace('{email}', signedInEmail || t('adminUnknownUser')))
         return
       }
       const body = await readJsonOrNull<{ error?: string }>(res)

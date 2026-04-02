@@ -33,7 +33,7 @@ function jsonResponse(status: number, body: unknown) {
 export default async function (context: Context, req: HttpRequest) {
   const auth = requireAdmin(req.headers)
   if (!auth.ok) {
-    context.res = jsonResponse(401, { error: 'Unauthorized' })
+    context.res = jsonResponse(auth.status, { error: 'Unauthorized' })
     return
   }
 
