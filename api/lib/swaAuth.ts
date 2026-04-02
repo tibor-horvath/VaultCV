@@ -46,10 +46,10 @@ export function hasRole(principal: ClientPrincipal | null, role: string) {
 export function requireAdmin(headers: Record<string, string | undefined> | undefined) {
   const principal = readClientPrincipal(headers)
   if (!principal) {
-    return { ok: false as const, status: 401 as const }
+    return { ok: false as const, status: 401 as const, error: 'Unauthorized' }
   }
   if (!hasRole(principal, 'admin')) {
-    return { ok: false as const, status: 403 as const, principal }
+    return { ok: false as const, status: 403 as const, error: 'Forbidden', principal }
   }
   return { ok: true as const, principal }
 }
