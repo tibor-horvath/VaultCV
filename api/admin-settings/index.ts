@@ -110,7 +110,7 @@ export default async function (context: Context, req: HttpRequest) {
         jsonText: JSON.stringify({ supportedLocales: parsedPayload.supportedLocales }),
       })
       invalidateLocalesCache()
-      context.res = jsonResponse(204, {})
+      context.res = jsonResponse(200, {})
       return
     }
 
