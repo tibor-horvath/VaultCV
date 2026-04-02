@@ -6,7 +6,7 @@ export const defaultSupportedLocales = [fallbackLocale]
 const localePattern = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i
 const LOCALES_CACHE_TTL_MS = 60_000
 
-let localesCache: { value: string[]; expiresAt: number } | null = null
+const localesCache = new Map<string, { value: string[]; expiresAt: number }>()
 
 export function parseLocale(input: string | undefined) {
   const normalized = input?.trim().toLowerCase()
@@ -51,22 +51,27 @@ export async function readSupportedLocalesFromBlob(slug: string) {
   return parseSupportedLocales(supportedLocales)
 }
 
-export function invalidateLocalesCache() {
-  localesCache = null
+export function invalidateLocalesCache(slug?: string) {
+  if (slug !== undefined) {
+    localesCache.delete(slug)
+  } else {
+    localesCache.clear()
+  }
 }
 
 export async function readSupportedLocalesCached(slug: string) {
   const now = Date.now()
-  if (localesCache && localesCache.expiresAt > now) {
-    return [...localesCache.value]
+  const cached = localesCache.get(slug)
+  if (cached && cached.expiresAt > now) {
+    return [...cached.value]
   }
 
   const fromBlob = await readSupportedLocalesFromBlob(slug)
   const nextValue = fromBlob && fromBlob.length ? fromBlob : [...defaultSupportedLocales]
-  localesCache = {
+  localesCache.set(slug, {
     value: nextValue,
     expiresAt: now + LOCALES_CACHE_TTL_MS,
-  }
+  })
   return [...nextValue]
 }
 

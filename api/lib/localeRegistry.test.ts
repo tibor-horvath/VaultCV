@@ -66,11 +66,34 @@ describe('readSupportedLocalesCached', () => {
     expect(second).toEqual(['en', 'de'])
     expect(readSettingsJson).toHaveBeenCalledTimes(1)
 
-    invalidateLocalesCache()
+    invalidateLocalesCache('john-doe')
     ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('{"supportedLocales":["hu"]}')
     const third = await readSupportedLocalesCached('john-doe')
     expect(third).toEqual(['en', 'hu'])
     expect(readSettingsJson).toHaveBeenCalledTimes(2)
+  })
+
+  it('caches independently per slug', async () => {
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce('{"supportedLocales":["de"]}')
+      .mockResolvedValueOnce('{"supportedLocales":["hu"]}')
+
+    const forJohn = await readSupportedLocalesCached('john-doe')
+    const forJane = await readSupportedLocalesCached('jane-doe')
+
+    expect(forJohn).toEqual(['en', 'de'])
+    expect(forJane).toEqual(['en', 'hu'])
+    expect(readSettingsJson).toHaveBeenCalledTimes(2)
+
+    // Invalidating one slug should not affect the other
+    invalidateLocalesCache('john-doe')
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('{"supportedLocales":["fr"]}')
+    const forJohnUpdated = await readSupportedLocalesCached('john-doe')
+    const forJaneCached = await readSupportedLocalesCached('jane-doe')
+
+    expect(forJohnUpdated).toEqual(['en', 'fr'])
+    expect(forJaneCached).toEqual(['en', 'hu'])
+    expect(readSettingsJson).toHaveBeenCalledTimes(3)
   })
 })
 
