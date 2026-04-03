@@ -21,9 +21,9 @@ import {
   asStringArray,
   readJsonResponse,
   safeJsonParse,
-  stringArrayToTextAreaLines,
-  textAreaLinesToStringArray,
 } from './utils'
+import { normalizeSectionOrder } from '../../lib/sectionOrder'
+import type { SectionKey } from '../../lib/sectionOrder'
 import type { PrivateValidation, PublicValidation } from './editorRouteUtils'
 import {
   buildDraftSignature,
@@ -72,8 +72,9 @@ export function useAdminEditorProfile(params: {
   const [basicsLocation, setBasicsLocation] = useState('')
   const [basicsSummary, setBasicsSummary] = useState('')
   const [basicsPhotoAlt, setBasicsPhotoAlt] = useState('')
-  const [skillsText, setSkillsText] = useState('')
-  const [languagesText, setLanguagesText] = useState('')
+  const [skills, setSkills] = useState<string[]>([])
+  const [languages, setLanguages] = useState<string[]>([])
+  const [sectionOrder, setSectionOrder] = useState<SectionKey[]>(normalizeSectionOrder([]))
 
   const [links, setLinks] = useState<LinkRow[]>([])
   const [credentials, setCredentials] = useState<CredentialRow[]>([])
@@ -134,8 +135,9 @@ export function useAdminEditorProfile(params: {
         basicsSummary,
         basicsPhotoAlt,
         hasProfileImage,
-        skillsText,
-        languagesText,
+        skills,
+        languages,
+        sectionOrder,
         links,
         credentials,
         experience,
@@ -156,8 +158,9 @@ export function useAdminEditorProfile(params: {
       basicsSummary,
       basicsPhotoAlt,
       hasProfileImage,
-      skillsText,
-      languagesText,
+      skills,
+      languages,
+      sectionOrder,
       links,
       credentials,
       experience,
@@ -438,14 +441,15 @@ export function useAdminEditorProfile(params: {
       const nextBasicsSummary = asString(basics.summary)
       const nextBasicsPhotoAlt = asString(basics.photoAlt)
       const nextHasProfileImage = asString(basics.photoUrl).trim().length > 0
-      const nextSkillsText = stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.skills))
-      const nextLanguagesText = stringArrayToTextAreaLines(asStringArray(parsedPrivate.value.languages))
+      const nextSkills = asStringArray(parsedPrivate.value.skills)
+      const nextLanguages = asStringArray(parsedPrivate.value.languages)
+      const nextSectionOrder = normalizeSectionOrder(parsedPrivate.value.sectionOrder)
       const nextLinks = asArray(parsedPrivate.value.links).map((x) => {
         const o = asObject(x)
         const label = asString(o.label)
         const url = asString(o.url)
         const key = `${label.trim()}|${url.trim()}`
-        return { label, url, isPublic: key !== '|' && publicLinksByKey.has(key) }
+        return { label, url, isPublic: key !== '|' && publicLinksByKey.has(key), _id: crypto.randomUUID() }
       })
       const nextCredentials = asArray(parsedPrivate.value.credentials).map((x) => {
         const o = asObject(x)
@@ -461,6 +465,7 @@ export function useAdminEditorProfile(params: {
           isPublic: (exactKey !== '||' && publicCredByExactKey.has(exactKey)) || (issuerLabelKey !== '|' && publicCredByIssuerLabelKey.has(issuerLabelKey)),
           dateEarned: asString(o.dateEarned) || undefined,
           dateExpires: asString(o.dateExpires) || undefined,
+          _id: crypto.randomUUID(),
         }
       })
       const nextExperience = asArray(parsedPrivate.value.experience).map((x) => {
@@ -474,6 +479,7 @@ export function useAdminEditorProfile(params: {
           location: asString(o.location) || undefined,
           skills: asStringArray(o.skills),
           highlights: asStringArray(o.highlights),
+          _id: crypto.randomUUID(),
         }
       })
       const nextEducation = asArray(parsedPrivate.value.education).map((x) => {
@@ -489,6 +495,7 @@ export function useAdminEditorProfile(params: {
           location: asString(o.location) || undefined,
           gpa: asString(o.gpa) || undefined,
           highlights: asStringArray(o.highlights),
+          _id: crypto.randomUUID(),
         }
       })
       const nextProjects = asArray(parsedPrivate.value.projects).map((x) => {
@@ -501,6 +508,7 @@ export function useAdminEditorProfile(params: {
             const lo = asObject(l)
             return { label: asString(lo.label), url: asString(lo.url) }
           }),
+          _id: crypto.randomUUID(),
         }
       })
 
@@ -513,8 +521,9 @@ export function useAdminEditorProfile(params: {
         basicsSummary: nextBasicsSummary,
         basicsPhotoAlt: nextBasicsPhotoAlt,
         hasProfileImage: nextHasProfileImage,
-        skillsText: nextSkillsText,
-        languagesText: nextLanguagesText,
+        skills: nextSkills,
+        languages: nextLanguages,
+        sectionOrder: nextSectionOrder,
         links: nextLinks,
         credentials: nextCredentials,
         experience: nextExperience,
@@ -540,8 +549,9 @@ export function useAdminEditorProfile(params: {
       setBasicsSummary(nextBasicsSummary)
       setBasicsPhotoAlt(nextBasicsPhotoAlt)
       setHasProfileImage(nextHasProfileImage)
-      setSkillsText(nextSkillsText)
-      setLanguagesText(nextLanguagesText)
+      setSkills(nextSkills)
+      setLanguages(nextLanguages)
+      setSectionOrder(nextSectionOrder)
       setLinks(nextLinks)
       setCredentials(nextCredentials)
       setExperience(nextExperience)
@@ -852,8 +862,9 @@ export function useAdminEditorProfile(params: {
         photoAlt: basicsPhotoAlt.trim() || undefined,
         photoUrl: hasProfileImage ? '/api/private-profile/image' : undefined,
       }
-      next.skills = textAreaLinesToStringArray(skillsText)
-      next.languages = textAreaLinesToStringArray(languagesText)
+      next.skills = skills.filter(Boolean)
+      next.languages = languages.filter(Boolean)
+      next.sectionOrder = sectionOrder
       next.links = links
         .filter((l) => l.label.trim() && l.url.trim())
         .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
@@ -868,20 +879,20 @@ export function useAdminEditorProfile(params: {
         }))
       next.experience = experience
         .filter((e) => e.company.trim() && e.role.trim())
-        .map((e) => ({
+        .map(({ _id: _rowId, ...e }) => ({
           ...e,
           skills: (e.skills ?? []).filter(Boolean),
           highlights: (e.highlights ?? []).filter(Boolean),
         }))
       next.education = education
         .filter((e) => e.school.trim())
-        .map((e) => ({
+        .map(({ _id: _rowId, ...e }) => ({
           ...e,
           highlights: (e.highlights ?? []).filter(Boolean),
         }))
       next.projects = projects
         .filter((p) => p.name.trim())
-        .map((p) => ({
+        .map(({ _id: _rowId, ...p }) => ({
           ...p,
           tags: (p.tags ?? []).filter(Boolean),
           links: (p.links ?? []).filter((l) => l.label.trim() && l.url.trim()),
@@ -993,6 +1004,7 @@ export function useAdminEditorProfile(params: {
 
       if (publicSections.skills) publicNext.skills = nextSkills
       if (publicSections.languages) publicNext.languages = nextLanguages
+      publicNext.sectionOrder = sectionOrder
 
       const publicLinksOut = links
         .map((l) => {
@@ -1146,10 +1158,12 @@ export function useAdminEditorProfile(params: {
     setBasicsSummary,
     basicsPhotoAlt,
     setBasicsPhotoAlt,
-    skillsText,
-    setSkillsText,
-    languagesText,
-    setLanguagesText,
+    skills,
+    setSkills,
+    languages,
+    setLanguages,
+    sectionOrder,
+    setSectionOrder,
 
     links,
     setLinks,

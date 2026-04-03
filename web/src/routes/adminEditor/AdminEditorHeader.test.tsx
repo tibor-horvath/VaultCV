@@ -10,7 +10,7 @@ import { LocaleProvider } from '../../lib/i18n'
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
 
-function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn()) {
+function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn(), onOpenReorderSheet?: () => void) {
   mountedContainer = document.createElement('div')
   document.body.appendChild(mountedContainer)
   mountedRoot = createRoot(mountedContainer)
@@ -31,6 +31,7 @@ function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn()) {
             loading={false}
             saving={false}
             onSave={() => {}}
+            onOpenReorderSheet={onOpenReorderSheet}
           />
         </LocaleProvider>
       </MemoryRouter>,
@@ -67,5 +68,18 @@ describe('AdminEditorHeader', () => {
     expect(confirmSpy).toHaveBeenCalledTimes(1)
     expect(prevented).toBe(true)
     confirmSpy.mockRestore()
+  })
+
+  it('opens reorder sheet from the header action', () => {
+    const onOpenReorderSheet = vi.fn()
+    renderHeader(false, vi.fn(), onOpenReorderSheet)
+    const reorderButton = Array.from(document.querySelectorAll('button')).find((node) =>
+      node.textContent?.includes('Reorder sections'),
+    ) as HTMLButtonElement
+    expect(reorderButton).toBeTruthy()
+    act(() => {
+      reorderButton.click()
+    })
+    expect(onOpenReorderSheet).toHaveBeenCalledTimes(1)
   })
 })

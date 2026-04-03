@@ -15,6 +15,11 @@ Key fields:
 - `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | school | language | other`
 - `languages`: string array, shown as chips
 - `skills`: optional top-level string array (general skill chips; separate from per-job skills on `experience`)
+- `sectionOrder`: optional string array controlling section render order for both `/cv` and landing pages.
+  - Valid keys: `credentials`, `skillsLanguages`, `links`, `experience`, `projects`, `education`
+  - `skillsLanguages` controls both skills and languages as a pair.
+  - `links` is kept for compatibility but links still render in the Basics card.
+  - If missing or invalid, the app falls back to the default order.
 - `experience`: supports `links?` as an array of `{ label, url }` (same shape as other link collections) and `skills?` to show per-job skill chips
 - `education`: optional array of degrees — `{ school, program, ... }` with optional `schoolUrl`, `degree`, `field`, dates, `gpa`, `highlights`, etc.
 - `projects`: array of `{ name, description, links?, tags? }`. In each `links` entry, `label` + `url`:
@@ -40,6 +45,7 @@ Below is a single JSON object (the file content you upload to Blob as `{slug}-pr
     { "label": "GitHub", "url": "https://github.com/your-handle" },
     { "label": "LinkedIn", "url": "https://www.linkedin.com/in/your-handle/" }
   ],
+  "sectionOrder": ["credentials", "skillsLanguages", "experience", "projects", "education", "links"],
   "skills": ["TypeScript", "React", "Azure", "Node.js"],
   "languages": ["English", "German"],
   "credentials": [

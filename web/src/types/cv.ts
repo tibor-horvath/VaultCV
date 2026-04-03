@@ -87,5 +87,11 @@ export type CvData = {
   experience?: CvExperience[]
   projects?: CvProject[]
   education?: CvEducation[]
+  /**
+   * Ordered list of section keys controlling rendering order on the CV views.
+   * When absent the canonical default order is used (backwards compatible).
+   * Valid keys: 'credentials' | 'skillsLanguages' | 'links' | 'experience' | 'projects' | 'education'
+   */
+  sectionOrder?: string[]
 }
 

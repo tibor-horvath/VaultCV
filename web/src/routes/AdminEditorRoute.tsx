@@ -80,10 +80,12 @@ export function AdminEditorRoute() {
       publicBasics={editor.publicBasics}
       setPublicBasics={editor.setPublicBasics}
       publicBasicsErrors={editor.publicValidation.basics}
-      skillsText={editor.skillsText}
-      setSkillsText={editor.setSkillsText}
-      languagesText={editor.languagesText}
-      setLanguagesText={editor.setLanguagesText}
+      skills={editor.skills}
+      setSkills={editor.setSkills}
+      languages={editor.languages}
+      setLanguages={editor.setLanguages}
+      sectionOrder={editor.sectionOrder}
+      setSectionOrder={editor.setSectionOrder}
       publicSections={editor.publicSections}
       setPublicSections={editor.setPublicSections}
       sectionErrors={editor.publicValidation.sections}

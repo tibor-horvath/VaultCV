@@ -286,4 +286,9 @@ export const huMessages: Partial<MessageCatalog> = {
   adminValidationPublicExperienceCoreRequired: 'A nyilvános tapasztalathoz cég, szerepkör és kezdet szükséges, mindegyik nyilvánosra állítva és kitöltve.',
   adminValidationPublicEducationCoreRequired: 'A nyilvános tanulmányhoz bekapcsolt és kitöltött iskola szükséges.',
   adminValidationPublicProjectCoreRequired: 'A nyilvános projekthez bekapcsolt és kitöltött név szükséges.',
+  adminBasics: 'Alapadatok',
+  adminSectionOrder: 'Szekciósorrend',
+  adminReorderSections: 'Szekciók átrendezése',
+  adminBasicsPinned: 'Alapadatok (rögzítve a tetején)',
+  adminDragToReorder: 'Húzás az átrendezéshez',
 }

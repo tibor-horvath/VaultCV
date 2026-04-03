@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import { Languages, Link2, LoaderCircle, LogOut, Save, Shield, SquarePen } from 'lucide-react'
+import { GripVertical, Languages, Link2, LoaderCircle, LogOut, Save, Shield, SquarePen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import type { LocaleItem } from './types'
@@ -17,8 +17,9 @@ export function AdminEditorHeader(props: {
   saving: boolean
   signedInEmail?: string
   onSave: () => void
+  onOpenReorderSheet?: () => void
 }) {
-  const { locale, locales, addableLocales, setLocale, onAddLocale, hasUnsavedChanges, loading, saving, signedInEmail, onSave } = props
+  const { locale, locales, addableLocales, setLocale, onAddLocale, hasUnsavedChanges, loading, saving, signedInEmail, onSave, onOpenReorderSheet } = props
   const { t } = useI18n()
   const [newLocale, setNewLocale] = useState('')
   const localeSelectId = 'admin-editor-locale-select'
@@ -99,6 +100,15 @@ export function AdminEditorHeader(props: {
                 {t('adminAdd')}
               </button>
             </div>
+          ) : null}
+          {onOpenReorderSheet ? (
+            <button
+              type="button"
+              onClick={onOpenReorderSheet}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300/70 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 lg:hidden dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-900/90"
+            >
+              <GripVertical className="h-3.5 w-3.5 shrink-0" /> {t('adminReorderSections')}
+            </button>
           ) : null}
           <button
             type="button"

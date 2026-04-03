@@ -5,6 +5,11 @@ import type { CredentialRow } from './types'
 import { IconSelect } from './IconSelect'
 import { CredentialIssuerIcon } from '../../components/cv/CredentialIssuerIcon'
 import { useI18n } from '../../lib/i18n'
+import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableRow } from './SortableRow'
+import { DragHandle } from './DragHandle'
 
 const ISSUER_OPTIONS = ['microsoft', 'aws', 'google', 'school', 'language', 'other'] as const
 const CUSTOM_OPTION = '__custom__'
@@ -17,6 +22,20 @@ export function CredentialsSection(props: {
 }) {
   const { t } = useI18n()
   const { credentials, setCredentials, isMobile, rowErrors } = props
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  )
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = credentials.findIndex((c) => c._id === active.id)
+    const newIdx = credentials.findIndex((c) => c._id === over.id)
+    if (oldIdx === -1 || newIdx === -1) return
+    setCredentials(() => arrayMove(credentials, oldIdx, newIdx))
+  }
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
       <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
@@ -27,7 +46,7 @@ export function CredentialsSection(props: {
           <button
             type="button"
             onClick={() => {
-              setCredentials((cur) => [...cur, { issuer: '', label: '', url: '', isPublic: false }])
+              setCredentials((cur) => [...cur, { issuer: '', label: '', url: '', isPublic: false, _id: crypto.randomUUID() }])
             }}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
@@ -36,8 +55,13 @@ export function CredentialsSection(props: {
         </div>
       </div>
       <div className="space-y-2">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={credentials.map((c) => c._id)} strategy={verticalListSortingStrategy}>
         {credentials.map((c, idx) => (
-          <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+          <SortableRow key={c._id} id={c._id}>
+          <div className="group flex items-start gap-1">
+            <DragHandle className="mt-2.5" />
+            <details open={!isMobile} className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
             <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
               <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
               {t('adminCredentialItem')} {idx + 1}: {(c.label || c.issuer || t('adminUntitled')).slice(0, 60)}
@@ -166,8 +190,12 @@ export function CredentialsSection(props: {
                 </label>
               </div>
             </div>
-          </details>
+            </details>
+          </div>
+          </SortableRow>
         ))}
+          </SortableContext>
+        </DndContext>
       </div>
     </section>
   )

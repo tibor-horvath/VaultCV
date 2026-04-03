@@ -295,4 +295,9 @@ export const deMessages: Partial<MessageCatalog> = {
   adminValidationPublicExperienceCoreRequired: 'Öffentliche Berufserfahrung benötigt Unternehmen, Rolle und Beginn sowie aktivierte Sichtbarkeit.',
   adminValidationPublicEducationCoreRequired: 'Öffentliche Ausbildung benötigt eine aktivierte und ausgefüllte Schule.',
   adminValidationPublicProjectCoreRequired: 'Öffentliche Projekte benötigen einen aktivierten und ausgefüllten Namen.',
+  adminBasics: 'Grunddaten',
+  adminSectionOrder: 'Abschnittsreihenfolge',
+  adminReorderSections: 'Abschnitte anordnen',
+  adminBasicsPinned: 'Grunddaten (oben fixiert)',
+  adminDragToReorder: 'Zum Umsortieren ziehen',
 }

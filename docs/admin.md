@@ -53,6 +53,24 @@ If `CV_PROFILE_SLUG` is missing, the admin profile endpoints return an error.
   - When adding a locale, the editor switches to that locale immediately so content can be created, and the editor UI switches with it.
 - Locale availability is no longer configured from admin settings; profile editing is constrained to locales supported by app catalogs.
 
+## Reordering in editor
+
+The editor (`/admin/editor`) supports drag-and-drop reordering for both top-level sections and section items.
+
+- Top-level section order is persisted into `sectionOrder` in profile JSON and used by `/cv` and landing pages.
+- Basics is always pinned at the top and is not reorderable.
+- Desktop UX: a fixed left sidebar shows section labels and supports drag-to-reorder plus click-to-scroll.
+- Mobile UX: a bottom sheet can be opened from the header action (**Reorder sections**) and supports drag-to-reorder.
+
+Item-level drag-and-drop is available inside sections that use list rows/chips:
+
+- Credentials
+- Skills/Languages chips
+- Links
+- Experience rows and per-experience skills chips
+- Projects rows and project tags chips
+- Education
+
 ## Share links
 
 The share page (`/admin/share`) creates links like:

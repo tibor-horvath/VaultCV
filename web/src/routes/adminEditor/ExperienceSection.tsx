@@ -6,6 +6,12 @@ import { IconSelect } from './IconSelect'
 import { SiGithubIcon, SiGitlabIcon, SiLinkedinIcon } from '../../components/icons/SimpleBrandIcons'
 import { StringListEditor } from './StringListEditor'
 import { useI18n } from '../../lib/i18n'
+import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableRow } from './SortableRow'
+import { DragHandle } from './DragHandle'
+import { ChipListEditor } from './ChipListEditor'
 
 const EXPERIENCE_LINK_LABEL_OPTIONS = ['website', 'linkedin', 'github', 'gitlab'] as const
 const CUSTOM_OPTION = '__custom__'
@@ -20,6 +26,21 @@ export function ExperienceSection(props: {
 }) {
   const { t } = useI18n()
   const { experience, setExperience, publicExperience, setPublicExperience, isMobile, rowErrors } = props
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  )
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = experience.findIndex((e) => e._id === active.id)
+    const newIdx = experience.findIndex((e) => e._id === over.id)
+    if (oldIdx === -1 || newIdx === -1) return
+    setExperience(() => arrayMove(experience, oldIdx, newIdx))
+    setPublicExperience(() => arrayMove(publicExperience, oldIdx, newIdx))
+  }
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
       <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
@@ -30,7 +51,7 @@ export function ExperienceSection(props: {
           <button
             type="button"
             onClick={() => {
-              setExperience((cur) => [...cur, { company: '', role: '', start: '', end: '', links: [], skills: [], highlights: [] }])
+              setExperience((cur) => [...cur, { company: '', role: '', start: '', end: '', links: [], skills: [], highlights: [], _id: crypto.randomUUID() }])
               setPublicExperience((cur) => [
                 ...cur,
                 {
@@ -53,8 +74,13 @@ export function ExperienceSection(props: {
       </div>
 
       <div className="space-y-4">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={experience.map((e) => e._id)} strategy={verticalListSortingStrategy}>
         {experience.map((e, idx) => (
-          <details key={idx} open={!isMobile} className="group rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
+          <SortableRow key={e._id} id={e._id}>
+          <div className="group flex items-start gap-1">
+            <DragHandle className="mt-3" />
+            <details open={!isMobile} className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
             <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
               <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
               {t('adminExperienceItem')} {idx + 1}: {(e.company || e.role || t('adminUntitled')).slice(0, 60)}
@@ -305,14 +331,12 @@ export function ExperienceSection(props: {
 
               <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <div>
-                  <StringListEditor
-                    label={t('skills')}
+                  <ChipListEditor
                     items={e.skills ?? []}
-                    setItems={(items) =>
+                    onChange={(items) =>
                       setExperience((cur) => cur.map((x, i) => (i === idx ? { ...x, skills: items } : x)))
                     }
                     placeholder={t('adminAddSkill')}
-                    desktopColumns={3}
                   />
                 </div>
                 <div className="pt-5">
@@ -348,7 +372,11 @@ export function ExperienceSection(props: {
               </div>
             </div>
           </details>
+          </div>
+          </SortableRow>
         ))}
+          </SortableContext>
+        </DndContext>
       </div>
     </section>
   )
