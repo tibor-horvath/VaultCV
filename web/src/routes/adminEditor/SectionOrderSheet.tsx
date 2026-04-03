@@ -118,7 +118,7 @@ export function SectionOrderSheet({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('adminQrClose')}
             className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
           >
             <X className="h-5 w-5" />

@@ -46,6 +46,7 @@ export function LinksSection(props: {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
             onClick={() => {
               setLinks((cur) => [...cur, { label: '', url: '', isPublic: false, _id: crypto.randomUUID() }])
             }}
