@@ -46,6 +46,7 @@ export function useAdminEditorProfile(params: {
   meLoading: boolean
 }) {
   const { t, uiLocale, isAdmin, meLoading } = params
+  const initialUiLocaleRef = useRef(uiLocale)
   const initialSupportedLocales = useMemo(() => sanitizeSupportedLocales([uiLocale]), [uiLocale])
 
   const [loading, setLoading] = useState(false)
@@ -201,7 +202,7 @@ export function useAdminEditorProfile(params: {
             }
             return merged
           })
-          setLocale((current) => resolveSupportedLocale(current, nextSupported) ?? resolveSupportedLocale(uiLocale, nextSupported) ?? 'en')
+          setLocale((current) => resolveSupportedLocale(current, nextSupported) ?? resolveSupportedLocale(initialUiLocaleRef.current, nextSupported) ?? 'en')
         }
       } catch {
         // Ignore; fallback to 'en'.
@@ -210,7 +211,7 @@ export function useAdminEditorProfile(params: {
     return () => {
       cancelled = true
     }
-  }, [uiLocale])
+  }, [])
 
   const addableLocales = useMemo(
     () =>
