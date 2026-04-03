@@ -5,8 +5,25 @@ Access to the CV is granted exclusively through **share links** created from the
 ## Creating a new share link
 
 1. Go to `/admin/share` and sign in as an admin.
-2. Click **New share link** and set an expiry date.
-3. Copy the generated `?s=<SHARE_ID>` URL and share it (email, QR code, printed CV, etc.).
+2. Fill in the **Create share link** form:
+   - **Expiry** — quick-select chips: **7d / 14d / 30d / 90d**. Click **Custom…** to reveal a number field for any value between 1 and 365 days.
+   - **Share language** — when more than one locale is available, controls the `lang` parameter appended to the generated URL (e.g. `/?s=<ID>&lang=de`). Leave on **Auto** to let the viewer's browser language decide.
+   - **Notes (admin-only)** — freeform context (role, date, recipient) visible only in this panel; never returned by public endpoints.
+3. Click **Create**. An inline panel appears immediately below the form with:
+   - The full share URL (click to select all)
+   - A **Copy** button
+   - A **QR Code** button — opens a modal with a scannable QR code and a **Download PNG** option
+   - A **×** dismiss button
+4. Share the URL (email, QR code, printed CV, etc.).
+
+## Link list actions
+
+For each active link in the list:
+
+- **Copy** — copies the share URL to the clipboard.
+- **QR Code** — opens a modal with a scannable QR code and a **Download PNG** option. When more than one locale is available, a language selector inside the modal lets you switch the encoded language without closing the modal — the QR code and URL update immediately. The modal pre-selects the language already chosen in the **Share language** selector in the Create share link form. On devices that support the [Web Share API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API) file sharing (iOS 12.1+, Android Chrome 61+), a **Share image** button also appears, letting you send the QR code PNG via the OS share sheet. See [qr-code-url-format.md](qr-code-url-format.md) for the full URL format.
+- **Share** — on devices where `navigator.share` is available, opens the native OS share sheet with the link URL.
+- **Revoke** — see below.
 
 ## Revoking a share link
 
