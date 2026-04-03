@@ -11,11 +11,12 @@ The workflow is triggered manually by default. You can optionally enable a sched
 
 When new commits are found on the upstream `main` branch, the workflow:
 
-1. Checks out the long-lived `sync/template` branch (creating it if it doesn't exist yet).
-2. Merges upstream changes into it using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
-3. Restores this repository's `.github/workflows/` folder after merge. This preserves your local workflow files, but it also means upstream workflow changes and any newly added upstream workflow files under `.github/workflows/` are **not** synced automatically and must be reviewed and applied manually if you want them.
-4. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new commits.
+1. Recreates/reset the `sync/template` branch from upstream `origin/main` on each run. This branch is reused for the sync PR, but its previous unmerged state is **not** preserved; any manual commits on `sync/template` (for example, conflict fixes or local adjustments) will be overwritten unless they have been merged or saved elsewhere.
+2. Applies upstream changes as a squash-style sync using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
+3. Restores this repository's `.github/workflows/` folder after merge so upstream changes do not overwrite your local workflow customizations. This also means upstream workflow changes and any newly added upstream workflow files under `.github/workflows/` are **not** synced automatically and must be reviewed and applied manually if you want them.
+4. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new upstream commits.
 5. Opens a pull request from `sync/template` to `main` (or updates the existing one) so you can review and merge at your own pace.
+6. Includes the upstream commit subjects since `LAST_TEMPLATE_SYNC` in the PR body for easier review.
 
 If there are no new upstream commits the workflow exits early without touching anything.
 
@@ -92,9 +93,17 @@ The workflow reads two optional repository variables to apply labels and assigne
 
 Both variables are optional. If absent, the PR is created without labels or assignees.
 
+## Why the log commit count can differ from PR commits
+
+The **Check for new upstream commits** step reports how many commits were added upstream since `LAST_TEMPLATE_SYNC`.
+
+- Example: if upstream advanced by 1 commit, the workflow logs `1 new commit(s) found upstream`.
+- The sync branch is updated with squash-style commits, so PR commit history stays concise and does not mirror full upstream ancestry.
+- The PR body can still list the individual upstream commit messages since `LAST_TEMPLATE_SYNC`, even though the branch itself uses squash commits.
+
 ## Conflict resolution strategy
 
-The merge uses `-X theirs`, meaning **upstream changes win on conflicts**. This keeps the sync simple but means any local edits that touch the same lines as an upstream change will be overwritten in the sync branch.
+The sync apply step uses `-X theirs`, meaning **upstream changes win on conflicts**. This keeps the sync simple but means any local edits that touch the same lines as an upstream change will be overwritten in the sync branch.
 
 Exception: `.github/workflows/` is intentionally restored from your repository after merge, so your local workflow behavior stays in place even if the upstream template modifies workflow files.
 
