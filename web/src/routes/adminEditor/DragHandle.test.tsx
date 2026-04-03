@@ -1,9 +1,12 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { DraggableAttributes } from '@dnd-kit/core'
-import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
+import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
 import { DragHandle, DragHandleContext } from './DragHandle'
+
+vi.mock('../../lib/i18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}))
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -17,7 +20,7 @@ function renderHandle(onPointerDown = vi.fn()) {
 
   const contextValue = {
     attributes: { role: 'button' } as DraggableAttributes,
-    listeners: { onPointerDown } as SyntheticListenerMap,
+    listeners: { onPointerDown } as unknown as DraggableSyntheticListeners,
   }
 
   act(() => {

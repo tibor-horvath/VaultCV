@@ -1,21 +1,23 @@
 import { createContext, useContext } from 'react'
-import type { DraggableAttributes } from '@dnd-kit/core'
-import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
+import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
 import { GripVertical } from 'lucide-react'
+import { useI18n } from '../../lib/i18n'
 
 // Context that SortableRow populates so DragHandle can access listeners/attributes
 // without prop-drilling through arbitrary component trees.
 export const DragHandleContext = createContext<{
-  listeners: SyntheticListenerMap | undefined
+  listeners: DraggableSyntheticListeners | undefined
   attributes: DraggableAttributes
 } | null>(null)
 
-export function DragHandle({ label = 'Drag to reorder', className }: { label?: string; className?: string }) {
+export function DragHandle({ label, className }: { label?: string; className?: string }) {
+  const { t } = useI18n()
   const ctx = useContext(DragHandleContext)
+  const ariaLabel = label ?? t('adminDragToReorder')
   return (
     <button
       type="button"
-      aria-label={label}
+      aria-label={ariaLabel}
       // spread listeners/attributes for @dnd-kit drag activation
       {...ctx?.attributes}
       {...ctx?.listeners}
