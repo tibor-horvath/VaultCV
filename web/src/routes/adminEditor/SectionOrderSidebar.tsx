@@ -10,7 +10,6 @@ import type { MessageKey } from '../../i18n/messages/en'
 const SECTION_LABEL_KEYS: Record<SectionKey, MessageKey> = {
   credentials: 'credentials',
   skillsLanguages: 'adminSkillsAndLanguages',
-  links: 'adminLinksSection',
   experience: 'experience',
   projects: 'projects',
   education: 'education',

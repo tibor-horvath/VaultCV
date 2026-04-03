@@ -139,4 +139,99 @@ describe('AdminEditorRoute', () => {
     const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/manage/profile/private?locale=hu'))).toBe(true)
   })
+
+  it('keeps profile image visible across locale switches when image exists globally', async () => {
+    const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) {
+        return jsonResponse({
+          clientPrincipal: {
+            userDetails: 'admin@example.com',
+            userRoles: ['admin'],
+          },
+        })
+      }
+      if (url.includes('/api/locales')) {
+        return jsonResponse({ locales: ['en', 'de', 'hu'] })
+      }
+      if (url.includes('/api/manage/profile/private?locale=de')) {
+        return jsonResponse({ json: JSON.stringify({ basics: { name: 'Admin CV' } }) })
+      }
+      if (url.includes('/api/manage/profile/private?locale=hu')) {
+        // Intentionally omit basics.photoUrl; image existence is global.
+        return jsonResponse({ json: JSON.stringify({ basics: { name: 'Admin CV HU' } }) })
+      }
+      if (url.includes('/api/manage/profile/public')) {
+        return jsonResponse({ json: '{}' })
+      }
+      if (url.includes('/api/manage/profile/image')) {
+        return jsonResponse({}, 200)
+      }
+      return jsonResponse({}, 404)
+    })
+
+    renderRoute()
+    await flushEffects()
+
+    const initialPreview = document.querySelector('img[src*="/api/manage/profile/image"]')
+    expect(initialPreview).toBeTruthy()
+
+    const localeSelect = document.getElementById('admin-editor-locale-select') as HTMLSelectElement
+    await act(async () => {
+      localeSelect.value = 'hu'
+      localeSelect.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    await flushEffects()
+
+    const previewAfterSwitch = document.querySelector('img[src*="/api/manage/profile/image"]')
+    expect(previewAfterSwitch).toBeTruthy()
+  })
+
+  it('keeps profile image hidden across locale switches when global image does not exist', async () => {
+    const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/.auth/me')) {
+        return jsonResponse({
+          clientPrincipal: {
+            userDetails: 'admin@example.com',
+            userRoles: ['admin'],
+          },
+        })
+      }
+      if (url.includes('/api/locales')) {
+        return jsonResponse({ locales: ['en', 'de', 'hu'] })
+      }
+      if (url.includes('/api/manage/profile/private?locale=de')) {
+        return jsonResponse({ json: JSON.stringify({ basics: { name: 'Admin CV', photoUrl: '/api/private-profile/image' } }) })
+      }
+      if (url.includes('/api/manage/profile/private?locale=hu')) {
+        return jsonResponse({ json: JSON.stringify({ basics: { name: 'Admin CV HU', photoUrl: '/api/private-profile/image' } }) })
+      }
+      if (url.includes('/api/manage/profile/public')) {
+        return jsonResponse({ json: '{}' })
+      }
+      if (url.includes('/api/manage/profile/image')) {
+        return jsonResponse({}, 404)
+      }
+      return jsonResponse({}, 404)
+    })
+
+    renderRoute()
+    await flushEffects()
+
+    const initialPreview = document.querySelector('img[src*="/api/manage/profile/image"]')
+    expect(initialPreview).toBeNull()
+
+    const localeSelect = document.getElementById('admin-editor-locale-select') as HTMLSelectElement
+    await act(async () => {
+      localeSelect.value = 'hu'
+      localeSelect.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    await flushEffects()
+
+    const previewAfterSwitch = document.querySelector('img[src*="/api/manage/profile/image"]')
+    expect(previewAfterSwitch).toBeNull()
+  })
 })
