@@ -441,9 +441,9 @@ export function AdminShareRoute() {
                 autoFocus
                 onChange={(e) => {
                   const raw = e.target.value
-                  if (raw === '') return
+                  if (raw === '' || isNaN(Number(raw))) return
                   const n = Math.min(365, Math.max(1, Math.trunc(Number(raw))))
-                  if (Number.isFinite(n)) setExpiresInDays(n)
+                  setExpiresInDays(n)
                 }}
                 className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-slate-800"
               />
