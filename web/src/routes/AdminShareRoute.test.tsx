@@ -153,12 +153,12 @@ afterEach(() => {
   if (originalShareDescriptor !== undefined) {
     Object.defineProperty(navigator, 'share', originalShareDescriptor)
   } else {
-    delete (navigator as Partial<Navigator>).share
+    Reflect.deleteProperty(navigator as unknown as Record<string, unknown>, 'share')
   }
   if (originalClipboardDescriptor !== undefined) {
     Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor)
   } else {
-    delete (navigator as Partial<Navigator>).clipboard
+    Reflect.deleteProperty(navigator as unknown as Record<string, unknown>, 'clipboard')
   }
   if (mountedRoot && mountedContainer) {
     act(() => {
