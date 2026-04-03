@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Camera, Trash2, X, Check, ZoomIn, ZoomOut } from 'lucide-react'
+import { useI18n } from '../../lib/i18n'
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2 MB
 const OUTPUT_SIZE = 512
@@ -18,6 +19,7 @@ interface CropModalProps {
 }
 
 function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
+  const { t } = useI18n()
   const imgRef = useRef<HTMLImageElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
@@ -116,15 +118,15 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Crop profile photo">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={t('adminCropProfilePhoto')}>
       <div className="flex w-full max-w-xs flex-col gap-4 rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-900">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-slate-900 dark:text-white">Crop photo</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">{t('adminCropPhoto')}</span>
           <button
             type="button"
             onClick={onCancel}
             className="rounded p-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            aria-label="Cancel crop"
+            aria-label={t('adminCancelCrop')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -166,7 +168,7 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
             type="button"
             onClick={() => handleScaleChange(Math.max(1, scale - 0.1))}
             className="rounded p-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            aria-label="Zoom out"
+            aria-label={t('adminZoomOut')}
           >
             <ZoomOut className="h-4 w-4" />
           </button>
@@ -178,13 +180,13 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
             value={scale}
             onChange={(e) => handleScaleChange(Number(e.target.value))}
             className="flex-1 accent-emerald-500"
-            aria-label="Zoom level"
+            aria-label={t('adminZoomLevel')}
           />
           <button
             type="button"
             onClick={() => handleScaleChange(Math.min(3, scale + 0.1))}
             className="rounded p-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            aria-label="Zoom in"
+            aria-label={t('adminZoomIn')}
           >
             <ZoomIn className="h-4 w-4" />
           </button>
@@ -196,14 +198,14 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
             onClick={onCancel}
             className="flex-1 rounded-xl border border-slate-300/70 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            Cancel
+            {t('adminCancel')}
           </button>
           <button
             type="button"
             onClick={handleConfirm}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
-            <Check className="h-3.5 w-3.5" /> Apply
+            <Check className="h-3.5 w-3.5" /> {t('adminApply')}
           </button>
         </div>
       </div>
@@ -217,6 +219,7 @@ interface ProfileImageUploadProps {
 }
 
 export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUploadProps) {
+  const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [uploadState, setUploadState] = useState<UploadState>('idle')
@@ -237,11 +240,11 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
     // Reset input so same file can be re-selected
     e.target.value = ''
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('Only JPEG and PNG images are allowed.')
+      setUploadError(t('adminImageTypeError'))
       return
     }
     if (file.size > MAX_FILE_BYTES) {
-      setUploadError('Image must be smaller than 2 MB.')
+      setUploadError(t('adminImageSizeError'))
       return
     }
     setUploadError(null)
@@ -279,7 +282,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
       onChange(true)
       setUploadState('idle')
     } catch (e: unknown) {
-      setUploadError(e instanceof Error ? e.message : 'Upload failed.')
+      setUploadError(e instanceof Error ? e.message : t('adminUploadFailed'))
       setUploadState('error')
     }
   }
@@ -306,7 +309,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
       onChange(false)
       setUploadState('idle')
     } catch (e: unknown) {
-      setUploadError(e instanceof Error ? e.message : 'Delete failed.')
+      setUploadError(e instanceof Error ? e.message : t('adminDeleteFailed'))
       setUploadState('error')
     }
   }
@@ -323,7 +326,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
           {previewUrl ? (
             <img
               src={previewUrl}
-              alt="Profile photo preview"
+              alt={t('adminProfilePhotoPreview')}
               className="h-full w-full object-cover"
               onError={() => setPreviewUrl(null)}
             />
@@ -350,7 +353,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
               onClick={() => fileInputRef.current?.click()}
               className="rounded-lg border border-slate-300/70 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"
             >
-              {hasProfileImage ? 'Change photo' : 'Upload photo'}
+              {hasProfileImage ? t('adminChangePhoto') : t('adminUploadPhoto')}
             </button>
             {hasProfileImage ? (
               <button
@@ -358,13 +361,13 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
                 disabled={isLoading}
                 onClick={handleDelete}
                 className="rounded-lg border border-red-200 bg-white px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:bg-slate-950 dark:text-red-400 dark:hover:bg-red-950"
-                aria-label="Remove photo"
+                aria-label={t('adminRemovePhoto')}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             ) : null}
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">JPEG or PNG, max 2 MB. Cropped to 512×512.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('adminProfilePhotoRequirements')}</p>
           {uploadError ? <p className="text-[11px] text-red-700 dark:text-red-300">{uploadError}</p> : null}
         </div>
       </div>

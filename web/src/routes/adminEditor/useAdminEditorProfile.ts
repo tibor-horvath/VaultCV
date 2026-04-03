@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { redirectToLogin } from '../../lib/authRedirect'
-import { sanitizeSupportedLocales } from '../../i18n/localeRegistry'
+import { resolveSupportedLocale, sanitizeSupportedLocales, toLocaleOptions } from '../../i18n/localeRegistry'
 import type {
   CredentialRow,
   EducationRow,
@@ -41,10 +41,12 @@ import {
 
 export function useAdminEditorProfile(params: {
   t: (key: Parameters<ReturnType<typeof import('../../lib/i18n').useI18n>['t']>[0]) => string
+  uiLocale: string
   isAdmin: boolean
   meLoading: boolean
 }) {
-  const { t, isAdmin, meLoading } = params
+  const { t, uiLocale, isAdmin, meLoading } = params
+  const initialSupportedLocales = useMemo(() => sanitizeSupportedLocales([uiLocale]), [uiLocale])
 
   const [loading, setLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -55,9 +57,11 @@ export function useAdminEditorProfile(params: {
   const [isMobile, setIsMobile] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
 
-  const [locales, setLocales] = useState<LocaleItem[]>([{ locale: 'en', label: 'English' }])
-  const [supportedLocales, setSupportedLocales] = useState<string[]>(['en'])
-  const [locale, setLocale] = useState('en')
+  const [locales, setLocales] = useState<LocaleItem[]>(() =>
+    toLocaleOptions(initialSupportedLocales).map((option) => ({ locale: option.code, label: option.label })),
+  )
+  const [supportedLocales, setSupportedLocales] = useState<string[]>(() => [...initialSupportedLocales])
+  const [locale, setLocale] = useState(() => resolveSupportedLocale(uiLocale, initialSupportedLocales) ?? 'en')
 
   // Hand-crafted form state (covers the full schema by section).
   const [basicsName, setBasicsName] = useState('')
@@ -180,9 +184,9 @@ export function useAdminEditorProfile(params: {
             : []
         const normalized = sanitizeSupportedLocales(Array.isArray(fromResponse) ? fromResponse : [])
         const nextSupported = normalized.length ? normalized : ['en']
-        const nextLocales: LocaleItem[] = nextSupported.map((code) => ({
-          locale: code,
-          label: code.toUpperCase(),
+        const nextLocales: LocaleItem[] = toLocaleOptions(nextSupported).map((option) => ({
+          locale: option.code,
+          label: option.label,
         }))
         if (!cancelled) {
           setSupportedLocales(nextSupported)
@@ -197,6 +201,7 @@ export function useAdminEditorProfile(params: {
             }
             return merged
           })
+          setLocale((current) => resolveSupportedLocale(current, nextSupported) ?? resolveSupportedLocale(uiLocale, nextSupported) ?? 'en')
         }
       } catch {
         // Ignore; fallback to 'en'.
@@ -205,10 +210,16 @@ export function useAdminEditorProfile(params: {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [uiLocale])
 
   const addableLocales = useMemo(
-    () => supportedLocales.filter((code) => !locales.some((item) => item.locale === code)).map((code) => ({ locale: code, label: code.toUpperCase() })),
+    () =>
+      supportedLocales
+        .filter((code) => !locales.some((item) => item.locale === code))
+        .map((code) => {
+          const option = toLocaleOptions([code])[0]
+          return { locale: code, label: option?.label ?? code.toUpperCase() }
+        }),
     [locales, supportedLocales],
   )
 
@@ -564,7 +575,8 @@ export function useAdminEditorProfile(params: {
     }
     setLocales((current) => {
       if (current.some((x) => x.locale === nextLocale)) return current
-      return [...current, { locale: nextLocale, label: nextLocale.toUpperCase() }]
+      const option = toLocaleOptions([nextLocale])[0]
+      return [...current, { locale: nextLocale, label: option?.label ?? nextLocale.toUpperCase() }]
     })
     setLocale(nextLocale)
   }
@@ -758,7 +770,7 @@ export function useAdminEditorProfile(params: {
         const label = (l.label ?? '').trim()
         const url = (l.url ?? '').trim()
         if (!label && !url) return
-        if (!label || !url) nextPrivateValidation.links[idx] = 'Link requires both label and URL (or leave both empty).'
+        if (!label || !url) nextPrivateValidation.links[idx] = t('adminValidationLinkNeedsLabelAndUrl')
       })
 
       credentials.forEach((c, idx) => {
@@ -768,7 +780,7 @@ export function useAdminEditorProfile(params: {
         const dateEarned = (c.dateEarned ?? '').trim()
         const dateExpires = (c.dateExpires ?? '').trim()
         if (!issuer && !label && !url && !dateEarned && !dateExpires) return
-        if (!issuer || !label) nextPrivateValidation.credentials[idx] = 'Credential requires issuer and label (URL is optional).'
+        if (!issuer || !label) nextPrivateValidation.credentials[idx] = t('adminValidationCredentialNeedsIssuerAndLabel')
       })
 
       experience.forEach((e, idx) => {
@@ -786,7 +798,7 @@ export function useAdminEditorProfile(params: {
           (e.highlights ?? []).some(Boolean) ||
           (e.links ?? []).some((l) => (l.label ?? '').trim() || (l.url ?? '').trim())
         if (!hasAny) return
-        if (!company || !role) nextPrivateValidation.experience[idx] = 'Experience requires company and role (or clear the row).'
+        if (!company || !role) nextPrivateValidation.experience[idx] = t('adminValidationExperienceNeedsCompanyAndRole')
       })
 
       education.forEach((e, idx) => {
@@ -803,7 +815,7 @@ export function useAdminEditorProfile(params: {
           (e.gpa ?? '').trim() ||
           (e.highlights ?? []).some(Boolean)
         if (!hasAny) return
-        if (!school) nextPrivateValidation.education[idx] = 'Education requires school (or clear the row).'
+        if (!school) nextPrivateValidation.education[idx] = t('adminValidationEducationNeedsSchool')
       })
 
       projects.forEach((p, idx) => {
@@ -814,16 +826,16 @@ export function useAdminEditorProfile(params: {
         const hasAny = name || description || tags.length > 0 || links.some((l) => l.label || l.url)
         if (!hasAny) return
         if (!name) {
-          nextPrivateValidation.projects[idx] = 'Project requires name (or clear the project).'
+          nextPrivateValidation.projects[idx] = t('adminValidationProjectNeedsName')
           return
         }
         const hasIncompleteProjectLink = links.some((l) => (l.label && !l.url) || (!l.label && l.url))
-        if (hasIncompleteProjectLink) nextPrivateValidation.projects[idx] = 'Project links require both label and URL (or leave both empty).'
+        if (hasIncompleteProjectLink) nextPrivateValidation.projects[idx] = t('adminValidationProjectLinksNeedLabelAndUrl')
       })
 
       if (hasPrivateValidationErrors(nextPrivateValidation)) {
         setPrivateValidation(nextPrivateValidation)
-        setError('Some rows are incomplete. Fix the highlighted rows and try saving again.')
+        setError(t('adminValidationIncompleteRows'))
         return
       }
 
@@ -884,27 +896,28 @@ export function useAdminEditorProfile(params: {
       const nextSkills = asStringArray(next.skills)
       const nextLanguages = asStringArray(next.languages)
       const nextValidation = emptyPublicValidation()
+      const fieldToggledEmpty = (fieldLabel: string) => t('adminValidationFieldToggledEmpty').replace('{field}', fieldLabel)
 
-      if (publicBasics.name && !asString(nextBasics.name).trim()) nextValidation.basics.name = 'Name is toggled public but empty.'
-      if (publicBasics.headline && !asString(nextBasics.headline).trim()) nextValidation.basics.headline = 'Headline is toggled public but empty.'
-      if (publicBasics.location && !asString(nextBasics.location).trim()) nextValidation.basics.location = 'Location is toggled public but empty.'
-      if (publicBasics.summary && !asString(nextBasics.summary).trim()) nextValidation.basics.summary = 'Summary is toggled public but empty.'
-      if (publicBasics.photo && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photo = 'Photo alt is required when photo is toggled public.'
-      if (publicSections.skills && nextSkills.length === 0) nextValidation.sections.skills = 'Skills are toggled public but empty.'
-      if (publicSections.languages && nextLanguages.length === 0) nextValidation.sections.languages = 'Languages are toggled public but empty.'
+      if (publicBasics.name && !asString(nextBasics.name).trim()) nextValidation.basics.name = fieldToggledEmpty(t('adminName'))
+      if (publicBasics.headline && !asString(nextBasics.headline).trim()) nextValidation.basics.headline = fieldToggledEmpty(t('adminHeadline'))
+      if (publicBasics.location && !asString(nextBasics.location).trim()) nextValidation.basics.location = fieldToggledEmpty(t('location'))
+      if (publicBasics.summary && !asString(nextBasics.summary).trim()) nextValidation.basics.summary = fieldToggledEmpty(t('adminSummary'))
+      if (publicBasics.photo && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photo = t('adminValidationPhotoAltRequired')
+      if (publicSections.skills && nextSkills.length === 0) nextValidation.sections.skills = fieldToggledEmpty(t('skills'))
+      if (publicSections.languages && nextLanguages.length === 0) nextValidation.sections.languages = fieldToggledEmpty(t('languages'))
 
       links.forEach((l, idx) => {
         if (!l.isPublic) return
         const label = (l.label ?? '').trim()
         const url = (l.url ?? '').trim()
-        if (!label || !url) nextValidation.links[idx] = 'Public link requires both label and URL.'
+        if (!label || !url) nextValidation.links[idx] = t('adminValidationPublicLinkNeedsLabelAndUrl')
       })
 
       credentials.forEach((c, idx) => {
         if (!c.isPublic) return
         const issuer = (c.issuer ?? '').trim()
         const label = (c.label ?? '').trim()
-        if (!issuer || !label) nextValidation.credentials[idx] = 'Public credential requires both issuer and label.'
+        if (!issuer || !label) nextValidation.credentials[idx] = t('adminValidationPublicCredentialNeedsIssuerAndLabel')
       })
 
       experience.forEach((e, idx) => {
@@ -914,16 +927,16 @@ export function useAdminEditorProfile(params: {
         const role = (e.role ?? '').trim()
         const start = (e.start ?? '').trim()
         if (!flags?.company || !flags?.role || !flags?.start || !company || !role || !start) {
-          nextValidation.experience[idx] = 'Public experience requires company, role, and start, all toggled on and filled.'
+          nextValidation.experience[idx] = t('adminValidationPublicExperienceCoreRequired')
           return
         }
         const rowIssues: string[] = []
         const visibleLinks = (e.links ?? []).filter((link) => (link.label ?? '').trim() && (link.url ?? '').trim())
-        if (flags.links && visibleLinks.length === 0) rowIssues.push('Links are toggled public but empty.')
-        if (flags.end && !(e.end ?? '').trim()) rowIssues.push('End is toggled public but empty.')
-        if (flags.location && !(e.location ?? '').trim()) rowIssues.push('Location is toggled public but empty.')
-        if (flags.skills && !(e.skills ?? []).length) rowIssues.push('Skills are toggled public but empty.')
-        if (flags.highlights && !(e.highlights ?? []).length) rowIssues.push('Highlights are toggled public but empty.')
+        if (flags.links && visibleLinks.length === 0) rowIssues.push(fieldToggledEmpty(t('adminCompanyLinks')))
+        if (flags.end && !(e.end ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('adminEnd')))
+        if (flags.location && !(e.location ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('location')))
+        if (flags.skills && !(e.skills ?? []).length) rowIssues.push(fieldToggledEmpty(t('skills')))
+        if (flags.highlights && !(e.highlights ?? []).length) rowIssues.push(fieldToggledEmpty(t('adminHighlights')))
         if (rowIssues.length) nextValidation.experience[idx] = rowIssues.join(' ')
       })
 
@@ -932,18 +945,18 @@ export function useAdminEditorProfile(params: {
         if (!hasAnyEnabledFlag(flags)) return
         const school = (e.school ?? '').trim()
         if (!flags?.school || !school) {
-          nextValidation.education[idx] = 'Public education requires school toggled on and filled.'
+          nextValidation.education[idx] = t('adminValidationPublicEducationCoreRequired')
           return
         }
         const rowIssues: string[] = []
-        if (flags.schoolUrl && !(e.schoolUrl ?? '').trim()) rowIssues.push('School URL is toggled public but empty.')
-        if (flags.degree && !(e.degree ?? '').trim()) rowIssues.push('Degree is toggled public but empty.')
-        if (flags.field && !(e.field ?? '').trim()) rowIssues.push('Field is toggled public but empty.')
-        if (flags.program && !(e.program ?? '').trim()) rowIssues.push('Program is toggled public but empty.')
-        if (flags.start && !(e.start ?? '').trim()) rowIssues.push('Start is toggled public but empty.')
-        if (flags.end && !(e.end ?? '').trim()) rowIssues.push('End is toggled public but empty.')
-        if (flags.location && !(e.location ?? '').trim()) rowIssues.push('Location is toggled public but empty.')
-        if (flags.highlights && !(e.highlights ?? []).length) rowIssues.push('Highlights are toggled public but empty.')
+        if (flags.schoolUrl && !(e.schoolUrl ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('adminSchoolUrl')))
+        if (flags.degree && !(e.degree ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('adminDegree')))
+        if (flags.field && !(e.field ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('focus')))
+        if (flags.program && !(e.program ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('adminProgram')))
+        if (flags.start && !(e.start ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('adminStart')))
+        if (flags.end && !(e.end ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('adminEnd')))
+        if (flags.location && !(e.location ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('location')))
+        if (flags.highlights && !(e.highlights ?? []).length) rowIssues.push(fieldToggledEmpty(t('adminHighlights')))
         if (rowIssues.length) nextValidation.education[idx] = rowIssues.join(' ')
       })
 
@@ -952,12 +965,12 @@ export function useAdminEditorProfile(params: {
         if (!hasAnyEnabledFlag(flags)) return
         const name = (p.name ?? '').trim()
         if (!flags?.name || !name) {
-          nextValidation.projects[idx] = 'Public project requires name toggled on and filled.'
+          nextValidation.projects[idx] = t('adminValidationPublicProjectCoreRequired')
           return
         }
         const rowIssues: string[] = []
-        if (flags.description && !(p.description ?? '').trim()) rowIssues.push('Description is toggled public but empty.')
-        if (flags.tags && !(p.tags ?? []).length) rowIssues.push('Tags are toggled public but empty.')
+        if (flags.description && !(p.description ?? '').trim()) rowIssues.push(fieldToggledEmpty(t('adminDescription')))
+        if (flags.tags && !(p.tags ?? []).length) rowIssues.push(fieldToggledEmpty(t('adminTags')))
         if (rowIssues.length) nextValidation.projects[idx] = rowIssues.join(' ')
       })
 

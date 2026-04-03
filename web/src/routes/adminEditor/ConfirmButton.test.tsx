@@ -2,6 +2,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ConfirmButton } from './ConfirmButton'
+import { LocaleProvider } from '../../lib/i18n'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -14,15 +15,17 @@ function renderConfirmButton(onConfirm = vi.fn()) {
   mountedRoot = createRoot(mountedContainer)
   act(() => {
     mountedRoot!.render(
-      <ConfirmButton
-        label="Remove"
-        className="test-button"
-        confirmTitle="Confirm remove"
-        confirmDescription="This action cannot be undone."
-        confirmLabel="Remove"
-        cancelLabel="Cancel"
-        onConfirm={onConfirm}
-      />,
+      <LocaleProvider>
+        <ConfirmButton
+          label="Remove"
+          className="test-button"
+          confirmTitle="Confirm remove"
+          confirmDescription="This action cannot be undone."
+          confirmLabel="Remove"
+          cancelLabel="Cancel"
+          onConfirm={onConfirm}
+        />
+      </LocaleProvider>,
     )
   })
   return onConfirm
