@@ -2,7 +2,7 @@ import { ArrowRight, ExternalLink, KeyRound, Link2, Shield, SquarePen } from 'lu
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { LanguageSelector } from '../components/LanguageSelector'
-import { fetchAuthMe, type ClientPrincipal } from '../lib/adminAuth'
+import { fetchAuthMe, extractEmailFromPrincipal, type ClientPrincipal } from '../lib/adminAuth'
 import { useI18n } from '../lib/i18n'
 import { AdminPageHeader } from './AdminPageHeader'
 
@@ -101,7 +101,7 @@ export function AdminDashboardRoute() {
       <AdminPageHeader
         title={t('adminPortal')}
         icon={<Shield className="h-5 w-5" />}
-        signedInEmail={me.userDetails}
+        signedInEmail={extractEmailFromPrincipal(me)}
         actions={
           <button
             type="button"

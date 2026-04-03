@@ -73,15 +73,20 @@ export function AdminShareRoute() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => readStatusFilterFromUrl())
   const [qrLink, setQrLink] = useState<ShareLink | null>(null)
 
+  const [nowEpoch, setNowEpoch] = useState(() => Math.floor(Date.now() / 1000))
+
+  useEffect(() => {
+    const id = setInterval(() => setNowEpoch(Math.floor(Date.now() / 1000)), 60_000)
+    return () => clearInterval(id)
+  }, [])
+
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
   const signedInEmail = useMemo(() => extractEmailFromPrincipal(me), [me])
   const visibleLinks = useMemo(() => {
-    const nowEpoch = Math.floor(Date.now() / 1000)
     if (statusFilter === 'all') return links
     return links.filter((link) => classifyLinkStatus(link, nowEpoch) === statusFilter)
-  }, [links, statusFilter])
+  }, [links, statusFilter, nowEpoch])
   const linkStats = useMemo(() => {
-    const nowEpoch = Math.floor(Date.now() / 1000)
     let active = 0
     let revoked = 0
     let expired = 0
@@ -92,7 +97,7 @@ export function AdminShareRoute() {
       if (state === 'expired') expired += 1
     }
     return { active, revoked, expired, total: links.length }
-  }, [links])
+  }, [links, nowEpoch])
   const shareLanguageOptions = useMemo(
     () => [
       { value: '', label: t('adminAuto') },
