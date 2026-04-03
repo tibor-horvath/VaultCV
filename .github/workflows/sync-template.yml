@@ -118,11 +118,11 @@ jobs:
             run_git git commit -m "$MERGE_MSG"
           fi
 
-          # Keep this repository's workflow customization instead of upstream version.
-          git checkout HEAD^1 -- .github/workflows/sync-template.yml
-          if ! git diff --quiet HEAD -- .github/workflows/sync-template.yml; then
-            git add .github/workflows/sync-template.yml
-            git commit -m "chore: keep repo-specific sync workflow override"
+          # Keep this repository's workflow customizations instead of upstream versions.
+          git checkout HEAD^1 -- .github/workflows
+          if ! git diff --quiet HEAD -- .github/workflows; then
+            git add .github/workflows
+            git commit -m "chore: keep repo-specific workflow overrides"
           fi
 
           git remote set-url origin "https://x-access-token:${SYNC_PAT}@github.com/${GITHUB_REPOSITORY}.git"
