@@ -13,7 +13,7 @@ When new commits are found on the upstream `main` branch, the workflow:
 
 1. Checks out the long-lived `sync/template` branch (creating it if it doesn't exist yet).
 2. Merges upstream changes into it using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
-3. Restores this repository's `.github/workflows/sync-template.yml` after merge so upstream changes to this workflow file do not overwrite your local customization.
+3. Restores this repository's `.github/workflows/` folder after merge. This preserves your local workflow files, but it also means upstream workflow changes and any newly added upstream workflow files under `.github/workflows/` are **not** synced automatically and must be reviewed and applied manually if you want them.
 4. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new commits.
 5. Opens a pull request from `sync/template` to `main` (or updates the existing one) so you can review and merge at your own pace.
 
@@ -47,6 +47,18 @@ This same token is also used by `actions/checkout` and by an authenticated `git 
 ### 3. Workflow permissions
 
 In **Settings → Actions → General → Workflow permissions**, ensure **Read and write permissions** is selected. The workflow file declares `contents: write` and `pull-requests: write` itself.
+
+### 4. Seed LAST_TEMPLATE_SYNC for a new downstream repo
+
+When you create a new downstream repository from this template, set the `LAST_TEMPLATE_SYNC` Actions variable to the latest commit SHA of the template repository's `main` branch before the first sync run. This prevents the first run from traversing the entire upstream history.
+
+1. Get the latest template commit SHA from the upstream repo (for example, from the latest commit on [tibor-horvath/VaultCV main](https://github.com/tibor-horvath/VaultCV/commits/main)).
+2. In your downstream repository, go to **Settings → Secrets and variables → Actions → Variables**.
+3. Create a repository variable:
+    - **Name**: `LAST_TEMPLATE_SYNC`
+    - **Value**: `<latest-upstream-main-sha>`
+
+If this variable is missing, the workflow still works, but the first sync run may scan all historical upstream commits.
 
 ## Changing the upstream source
 
@@ -84,7 +96,7 @@ Both variables are optional. If absent, the PR is created without labels or assi
 
 The merge uses `-X theirs`, meaning **upstream changes win on conflicts**. This keeps the sync simple but means any local edits that touch the same lines as an upstream change will be overwritten in the sync branch.
 
-Exception: `.github/workflows/sync-template.yml` is intentionally restored from your repository after merge, so your local workflow behavior stays in place even if the upstream template modifies that file.
+Exception: `.github/workflows/` is intentionally restored from your repository after merge, so your local workflow behavior stays in place even if the upstream template modifies workflow files.
 
 Review the `sync/template` branch carefully before merging the PR. If you need to keep a local customization, resolve the conflict manually before merging.
 
