@@ -40,6 +40,32 @@ function jsonResponse(body: unknown, status = 200): MockResponse {
   }
 }
 
+function stubFetchWithCreate(newId: string) {
+  const now = Math.floor(Date.now() / 1000)
+  vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input)
+    const method = (init?.method ?? 'GET').toUpperCase()
+    if (url.endsWith('/.auth/me')) {
+      return jsonResponse({
+        clientPrincipal: {
+          userDetails: 'admin@example.com',
+          userRoles: ['admin'],
+          claims: [{ typ: 'email', val: 'admin@example.com' }],
+        },
+      })
+    }
+    if (url.endsWith('/api/manage/links') && method === 'POST') {
+      return jsonResponse({ id: newId })
+    }
+    if (url.endsWith('/api/manage/links')) {
+      return jsonResponse({
+        links: [{ rowKey: 'abc123', createdAtEpoch: 1, expiresAtEpoch: now + 3600, viewCount: 0 }],
+      })
+    }
+    return jsonResponse({}, 404)
+  }))
+}
+
 async function flushEffects() {
   await act(async () => {
     await Promise.resolve()
@@ -318,5 +344,155 @@ describe('AdminShareRoute', () => {
     expect(shareMock).toHaveBeenCalledTimes(1)
     const payload = shareMock.mock.calls[0][0] as { url?: string }
     expect(payload.url).toContain('abc123')
+  })
+
+  it('shows preset expiry chips and a Custom chip', async () => {
+    renderRoute()
+    await flushEffects()
+
+    for (const label of ['7d', '14d', '30d', '90d', 'Custom…']) {
+      const chip = Array.from(document.querySelectorAll('button')).find(
+        (btn) => btn.textContent?.trim() === label,
+      )
+      expect(chip, `chip "${label}" should be present`).toBeTruthy()
+    }
+  })
+
+  it('clicking Custom chip reveals the expiry number input', async () => {
+    renderRoute()
+    await flushEffects()
+
+    expect(document.querySelector('input[name="expiresInDays"]')).toBeNull()
+
+    const customChip = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.trim() === 'Custom…',
+    ) as HTMLButtonElement
+
+    await act(async () => {
+      customChip.click()
+      await Promise.resolve()
+    })
+
+    expect(document.querySelector('input[name="expiresInDays"]')).toBeTruthy()
+  })
+
+  it('clicking a preset chip hides the custom expiry input', async () => {
+    renderRoute()
+    await flushEffects()
+
+    const customChip = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.trim() === 'Custom…',
+    ) as HTMLButtonElement
+
+    await act(async () => {
+      customChip.click()
+      await Promise.resolve()
+    })
+
+    expect(document.querySelector('input[name="expiresInDays"]')).toBeTruthy()
+
+    const chip30 = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.trim() === '30d',
+    ) as HTMLButtonElement
+
+    await act(async () => {
+      chip30.click()
+      await Promise.resolve()
+    })
+
+    expect(document.querySelector('input[name="expiresInDays"]')).toBeNull()
+  })
+
+  it('shows inline panel with share URL after successful link creation', async () => {
+    stubFetchWithCreate('newlink123')
+    renderRoute()
+    await flushEffects()
+
+    const submitBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement
+    expect(submitBtn).toBeTruthy()
+
+    await act(async () => {
+      submitBtn.click()
+      for (let i = 0; i < 8; i++) await Promise.resolve()
+    })
+
+    expect(document.querySelector('button[aria-label="Dismiss"]')).toBeTruthy()
+    const urlInput = document.querySelector('input[readonly]') as HTMLInputElement
+    expect(urlInput?.value).toContain('newlink123')
+  })
+
+  it('Copy button in post-creation panel copies the share URL', async () => {
+    stubFetchWithCreate('newlink123')
+    renderRoute()
+    await flushEffects()
+
+    const submitBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement
+    await act(async () => {
+      submitBtn.click()
+      for (let i = 0; i < 8; i++) await Promise.resolve()
+    })
+
+    const dismissBtn = document.querySelector('button[aria-label="Dismiss"]')!
+    const panelDiv = dismissBtn.closest('div')!.parentElement!
+    const copyBtn = Array.from(panelDiv.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.trim() === 'Copy',
+    ) as HTMLButtonElement
+    expect(copyBtn).toBeTruthy()
+
+    await act(async () => {
+      copyBtn.click()
+      await Promise.resolve()
+    })
+
+    const writeMock = navigator.clipboard.writeText as ReturnType<typeof vi.fn>
+    expect(writeMock).toHaveBeenCalledWith(expect.stringContaining('newlink123'))
+  })
+
+  it('QR button in post-creation panel opens the QR modal', async () => {
+    stubFetchWithCreate('newlink123')
+    renderRoute()
+    await flushEffects()
+
+    const submitBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement
+    await act(async () => {
+      submitBtn.click()
+      for (let i = 0; i < 8; i++) await Promise.resolve()
+    })
+
+    const dismissBtn = document.querySelector('button[aria-label="Dismiss"]')!
+    const panelDiv = dismissBtn.closest('div')!.parentElement!
+    const qrBtn = Array.from(panelDiv.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('QR Code'),
+    ) as HTMLButtonElement
+    expect(qrBtn).toBeTruthy()
+
+    await act(async () => {
+      qrBtn.click()
+      await Promise.resolve()
+    })
+
+    expect(document.querySelector('[role="dialog"]')).toBeTruthy()
+  })
+
+  it('dismiss button closes the post-creation panel', async () => {
+    stubFetchWithCreate('newlink123')
+    renderRoute()
+    await flushEffects()
+
+    const submitBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement
+    await act(async () => {
+      submitBtn.click()
+      for (let i = 0; i < 8; i++) await Promise.resolve()
+    })
+
+    expect(document.querySelector('button[aria-label="Dismiss"]')).toBeTruthy()
+
+    const dismissBtn = document.querySelector('button[aria-label="Dismiss"]') as HTMLButtonElement
+    await act(async () => {
+      dismissBtn.click()
+      await Promise.resolve()
+    })
+
+    expect(document.querySelector('button[aria-label="Dismiss"]')).toBeNull()
   })
 })

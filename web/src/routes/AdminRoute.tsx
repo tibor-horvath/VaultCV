@@ -3,6 +3,7 @@ import {
   Ban,
   CheckCircle2,
   Clock3,
+  Copy,
   ExternalLink,
   Globe2,
   KeyRound,
@@ -16,6 +17,7 @@ import {
   Shield,
   SquarePen,
   Trash2,
+  X,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { redirectToLogin } from '../lib/authRedirect'
@@ -65,6 +67,9 @@ export function AdminShareRoute() {
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [shareLang, setShareLang] = useState<string>('')
+  const [expiresInDays, setExpiresInDays] = useState(30)
+  const [showCustomExpiry, setShowCustomExpiry] = useState(false)
+  const [newLinkId, setNewLinkId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => readStatusFilterFromUrl())
   const [qrLink, setQrLink] = useState<ShareLink | null>(null)
 
@@ -85,6 +90,12 @@ export function AdminShareRoute() {
     ],
     [localeOptions, t],
   )
+
+  const createdShareUrl = useMemo(() => {
+    if (!newLinkId) return ''
+    const base = `${window.location.origin}/?s=${encodeURIComponent(newLinkId)}`
+    return shareLang ? `${base}&lang=${encodeURIComponent(shareLang)}` : base
+  }, [newLinkId, shareLang])
 
   useEffect(() => {
     let cancelled = false
@@ -145,7 +156,7 @@ export function AdminShareRoute() {
   async function createLink(form: HTMLFormElement) {
     const fd = new FormData(form)
     const notes = String(fd.get('notes') ?? '')
-    const expiresInDays = Number.parseInt(String(fd.get('expiresInDays') ?? '30'), 10)
+    setNewLinkId(null)
     setLoading(true)
     setError(null)
     setStatus(null)
@@ -169,8 +180,11 @@ export function AdminShareRoute() {
       }
       const body = await readJsonOrNull<{ id?: string; error?: string }>(res)
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
+      setNewLinkId(body?.id ?? null)
       await refresh()
       form.reset()
+      setExpiresInDays(30)
+      setShowCustomExpiry(false)
       setStatus(t('adminShareLinkCreated'))
     } catch (e: unknown) {
       setError(toErrorMessage(e, t('adminCreateShareLinkFailed')))
@@ -332,20 +346,6 @@ export function AdminShareRoute() {
           >
             <Shield className="h-3.5 w-3.5 shrink-0" /> {t('adminDashboard')}
           </Link>
-          {localeOptions.length > 1 ? (
-            <label className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
-              <Globe2 className="h-3.5 w-3.5 shrink-0" /> {t('adminShareLanguage')}
-              <div className="min-w-[11rem] text-xs">
-                <IconSelect
-                  value={shareLang}
-                  onChange={setShareLang}
-                  options={shareLanguageOptions}
-                  placeholder={t('adminAuto')}
-                  ariaLabel={t('adminShareLanguage')}
-                />
-              </div>
-            </label>
-          ) : null}
           <Link
             to="/admin/editor"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
@@ -393,29 +393,74 @@ export function AdminShareRoute() {
           </span>
         </div>
         <form
-          className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"
+          className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault()
             void createLink(e.currentTarget)
           }}
         >
-          <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
             {t('adminExpiresInDays')}
-            <input
-              name="expiresInDays"
-              type="number"
-              min={1}
-              max={365}
-              defaultValue={30}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
+            <div className="flex flex-wrap gap-1.5">
+              {([7, 14, 30, 90] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => { setExpiresInDays(d); setShowCustomExpiry(false) }}
+                  className={`rounded-md border px-2.5 py-0.5 text-[11px] font-semibold transition ${
+                    !showCustomExpiry && expiresInDays === d
+                      ? 'border-slate-700 bg-slate-900 text-white dark:border-slate-300 dark:bg-white dark:text-slate-900'
+                      : 'border-slate-300/70 text-slate-500 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-900/60'
+                  }`}
+                >
+                  {d}d
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setShowCustomExpiry(true)}
+                className={`rounded-md border px-2.5 py-0.5 text-[11px] font-semibold transition ${
+                  showCustomExpiry
+                    ? 'border-slate-700 bg-slate-900 text-white dark:border-slate-300 dark:bg-white dark:text-slate-900'
+                    : 'border-slate-300/70 text-slate-500 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-900/60'
+                }`}
+              >
+                Custom…
+              </button>
+            </div>
+            {showCustomExpiry ? (
+              <input
+                name="expiresInDays"
+                type="number"
+                min={1}
+                max={365}
+                value={expiresInDays}
+                autoFocus
+                onChange={(e) => setExpiresInDays(Number(e.target.value))}
+                className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-slate-800"
+              />
+            ) : null}
           </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
+          {localeOptions.length > 1 ? (
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+              <span className="inline-flex items-center gap-1.5"><Globe2 className="h-3.5 w-3.5 shrink-0" /> {t('adminShareLanguage')}</span>
+              <div className="text-xs">
+                <IconSelect
+                  value={shareLang}
+                  onChange={setShareLang}
+                  options={shareLanguageOptions}
+                  placeholder={t('adminAuto')}
+                  ariaLabel={t('adminShareLanguage')}
+                />
+              </div>
+            </label>
+          ) : null}
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 md:col-span-2">
             {t('adminNotesAdminOnly')}
             <textarea
               name="notes"
-              rows={3}
-              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              rows={2}
+              className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-slate-800"
               placeholder={t('adminNotesPlaceholder')}
             />
           </label>
@@ -423,12 +468,52 @@ export function AdminShareRoute() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:translate-y-0 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
             >
-              <Link2 className="h-4 w-4" /> {t('adminCreate')}
+              {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              {t('adminCreate')}
             </button>
           </div>
         </form>
+        {newLinkId !== null ? (
+          <div className="mt-4 rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+            <div className="mb-2.5 flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> {t('adminShareLinkCreated')}
+              </span>
+              <button
+                type="button"
+                onClick={() => setNewLinkId(null)}
+                aria-label="Dismiss"
+                className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={createdShareUrl}
+                onFocus={(e) => e.currentTarget.select()}
+                className="min-w-0 flex-1 rounded-lg border border-emerald-200/80 bg-white px-3 py-1.5 font-mono text-xs text-slate-700 dark:border-emerald-900/50 dark:bg-slate-950 dark:text-slate-300"
+              />
+              <button
+                type="button"
+                onClick={() => void copyShareUrl(createdShareUrl)}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-300/70 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
+              >
+                <Copy className="h-3.5 w-3.5" /> {t('adminCopy')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setQrLink({ rowKey: newLinkId, createdAtEpoch: 0, expiresAtEpoch: 0 })}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-300/70 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/60"
+              >
+                <QrCode className="h-3.5 w-3.5" /> {t('adminQrCode')}
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
