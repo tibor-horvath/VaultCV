@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ExternalLink, KeyRound, LoaderCircle, Save, Shield } from 'lucide-react'
+import { useState } from 'react'
 import { AdminEditorHeader } from './AdminEditorHeader'
 import { BasicsSection } from './BasicsSection'
 import { CredentialsSection } from './CredentialsSection'
@@ -8,6 +9,9 @@ import { ExperienceSection } from './ExperienceSection'
 import { LinksSection } from './LinksSection'
 import { ProjectsSection } from './ProjectsSection'
 import { SkillsLanguagesSection } from './SkillsLanguagesSection'
+import { SectionOrderSidebar } from './SectionOrderSidebar'
+import { SectionOrderSheet } from './SectionOrderSheet'
+import type { SectionKey } from '../../lib/sectionOrder'
 import type {
   CredentialRow,
   EducationRow,
@@ -67,10 +71,12 @@ export function AdminEditorPage(props: {
   setPublicBasics: React.Dispatch<React.SetStateAction<PublicBasicsFlags>>
   publicBasicsErrors: Partial<Record<keyof PublicBasicsFlags, string>>
 
-  skillsText: string
-  setSkillsText: (v: string) => void
-  languagesText: string
-  setLanguagesText: (v: string) => void
+  skills: string[]
+  setSkills: (v: string[]) => void
+  languages: string[]
+  setLanguages: (v: string[]) => void
+  sectionOrder: SectionKey[]
+  setSectionOrder: (order: SectionKey[]) => void
   publicSections: PublicSectionsFlags
   setPublicSections: React.Dispatch<React.SetStateAction<PublicSectionsFlags>>
   sectionErrors: Partial<Record<keyof PublicSectionsFlags, string>>
@@ -104,6 +110,8 @@ export function AdminEditorPage(props: {
   isMobile: boolean
   onSave: () => void
 }) {
+  const [isReorderSheetOpen, setIsReorderSheetOpen] = useState(false)
+
   const {
     t,
     meLoading,
@@ -140,10 +148,12 @@ export function AdminEditorPage(props: {
     publicBasics,
     setPublicBasics,
     publicBasicsErrors,
-    skillsText,
-    setSkillsText,
-    languagesText,
-    setLanguagesText,
+    skills,
+    setSkills,
+    languages,
+    setLanguages,
+    sectionOrder,
+    setSectionOrder,
     publicSections,
     setPublicSections,
     sectionErrors,
@@ -171,6 +181,81 @@ export function AdminEditorPage(props: {
     isMobile,
     onSave,
   } = props
+
+  function renderOrderedSection(key: SectionKey) {
+    switch (key) {
+      case 'skillsLanguages':
+        return (
+          <div key="skillsLanguages" data-section="skillsLanguages">
+            <SkillsLanguagesSection
+              skills={skills}
+              setSkills={setSkills}
+              languages={languages}
+              setLanguages={setLanguages}
+              publicSections={publicSections}
+              setPublicSections={setPublicSections}
+              sectionErrors={sectionErrors}
+            />
+          </div>
+        )
+      case 'links':
+        return (
+          <div key="links" data-section="links">
+            <LinksSection links={links} setLinks={setLinks} isMobile={isMobile} rowErrors={linkRowErrors} />
+          </div>
+        )
+      case 'credentials':
+        return (
+          <div key="credentials" data-section="credentials">
+            <CredentialsSection
+              credentials={credentials}
+              setCredentials={setCredentials}
+              isMobile={isMobile}
+              rowErrors={credentialRowErrors}
+            />
+          </div>
+        )
+      case 'experience':
+        return (
+          <div key="experience" data-section="experience">
+            <ExperienceSection
+              experience={experience}
+              setExperience={setExperience}
+              publicExperience={publicExperience}
+              setPublicExperience={setPublicExperience}
+              isMobile={isMobile}
+              rowErrors={experienceRowErrors}
+            />
+          </div>
+        )
+      case 'education':
+        return (
+          <div key="education" data-section="education">
+            <EducationSection
+              education={education}
+              setEducation={setEducation}
+              publicEducation={publicEducation}
+              setPublicEducation={setPublicEducation}
+              isMobile={isMobile}
+              rowErrors={educationRowErrors}
+            />
+          </div>
+        )
+      case 'projects':
+        return (
+          <div key="projects" data-section="projects">
+            <ProjectsSection
+              projects={projects}
+              setProjects={setProjects}
+              publicProjects={publicProjects}
+              setPublicProjects={setPublicProjects}
+              isMobile={isMobile}
+              rowErrors={projectRowErrors}
+            />
+          </div>
+        )
+    }
+  }
 
   if (meLoading) {
     return (
@@ -246,7 +331,7 @@ export function AdminEditorPage(props: {
   }
 
   return (
-    <div className="w-full space-y-6 pb-28 pt-10 md:pb-10">
+    <div className="mx-auto w-full max-w-[1200px] space-y-6 pb-28 pt-8 lg:pl-52 md:pb-10">
       <AdminEditorHeader
         locale={locale}
         locales={locales}
@@ -258,6 +343,7 @@ export function AdminEditorPage(props: {
         saving={saving}
         signedInEmail={me.userDetails}
         onSave={onSave}
+        onOpenReorderSheet={() => setIsReorderSheetOpen(true)}
       />
 
       {error ? (
@@ -304,8 +390,8 @@ export function AdminEditorPage(props: {
       ) : null}
 
       {!hasLoadedOnce ? null : (
-        <>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          <div data-section="basics" className="scroll-mt-24">
             <BasicsSection
               basicsName={basicsName}
               setBasicsName={setBasicsName}
@@ -327,59 +413,10 @@ export function AdminEditorPage(props: {
               setPublicBasics={setPublicBasics}
               publicBasicsErrors={publicBasicsErrors}
             />
-
-            <SkillsLanguagesSection
-              skillsText={skillsText}
-              setSkillsText={setSkillsText}
-              languagesText={languagesText}
-              setLanguagesText={setLanguagesText}
-              publicSections={publicSections}
-              setPublicSections={setPublicSections}
-              sectionErrors={sectionErrors}
-            />
           </div>
 
-          <LinksSection
-            links={links}
-            setLinks={setLinks}
-            isMobile={isMobile}
-            rowErrors={linkRowErrors}
-          />
-
-          <CredentialsSection
-            credentials={credentials}
-            setCredentials={setCredentials}
-            isMobile={isMobile}
-            rowErrors={credentialRowErrors}
-          />
-
-          <ExperienceSection
-            experience={experience}
-            setExperience={setExperience}
-            publicExperience={publicExperience}
-            setPublicExperience={setPublicExperience}
-            isMobile={isMobile}
-            rowErrors={experienceRowErrors}
-          />
-
-          <EducationSection
-            education={education}
-            setEducation={setEducation}
-            publicEducation={publicEducation}
-            setPublicEducation={setPublicEducation}
-            isMobile={isMobile}
-            rowErrors={educationRowErrors}
-          />
-
-          <ProjectsSection
-            projects={projects}
-            setProjects={setProjects}
-            publicProjects={publicProjects}
-            setPublicProjects={setPublicProjects}
-            isMobile={isMobile}
-            rowErrors={projectRowErrors}
-          />
-        </>
+          {sectionOrder.map((key) => renderOrderedSection(key))}
+        </div>
       )}
 
       {hasLoadedOnce ? (
@@ -389,7 +426,7 @@ export function AdminEditorPage(props: {
               type="button"
               disabled={loading || saving}
               onClick={onSave}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(15,23,42,0.55)] ring-1 ring-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:ring-white/20"
             >
               {saving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
               {saving ? t('adminSaving') : t('adminSave')}
@@ -409,6 +446,14 @@ export function AdminEditorPage(props: {
           </div>
         </>
       ) : null}
+
+      <SectionOrderSidebar sectionOrder={sectionOrder} setSectionOrder={setSectionOrder} />
+      <SectionOrderSheet
+        isOpen={isReorderSheetOpen}
+        onClose={() => setIsReorderSheetOpen(false)}
+        sectionOrder={sectionOrder}
+        setSectionOrder={setSectionOrder}
+      />
     </div>
   )
 }

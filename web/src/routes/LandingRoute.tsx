@@ -17,6 +17,7 @@ import { setStoredAccessCode } from '../lib/accessSession'
 import { fetchCv } from '../lib/api'
 import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
 import type { CvData } from '../types/cv'
+import { normalizeSectionOrder } from '../lib/sectionOrder'
 
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -188,6 +189,7 @@ export function LandingRoute() {
     advisor: undefined,
   }))
   const showPublicPhoto = Boolean(basics.photoAlt?.trim() || basics.photoUrl?.trim())
+  const orderedSections = normalizeSectionOrder(publicCv.sectionOrder)
 
   return (
     <div className="mx-auto w-full">
@@ -209,82 +211,94 @@ export function LandingRoute() {
           <div className="mt-4 space-y-6">
             <BasicsCard basics={basics} links={links} showPhoto={showPublicPhoto} />
 
-            {publicCredentials.length ? (
-              <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
-                <div className="space-y-3">
-                  {publicCredentials.map((credential) => (
-                    <article
-                      key={`${credential.issuer}:${credential.label}:${credential.url}:${credential.dateEarned ?? ''}:${credential.dateExpires ?? ''}`}
-                      className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/30"
-                    >
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        {formatCredentialIssuerLabel(String(credential.issuer ?? ''), t('other'))}
-                      </div>
-                      {String(credential.url ?? '').trim() ? (
-                        <a
-                          className="mt-1 inline-block text-sm font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
-                          href={credential.url}
-                          target="_blank"
-                          rel="noreferrer"
+            {orderedSections.map((key) => {
+              if (key === 'credentials' && publicCredentials.length) {
+                return (
+                  <Section key="credentials" title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
+                    <div className="space-y-3">
+                      {publicCredentials.map((credential) => (
+                        <article
+                          key={`${credential.issuer}:${credential.label}:${credential.url}:${credential.dateEarned ?? ''}:${credential.dateExpires ?? ''}`}
+                          className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/30"
                         >
-                          {credential.label}
-                        </a>
-                      ) : (
-                        <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{credential.label}</div>
-                      )}
-                    </article>
-                  ))}
-                </div>
-              </Section>
-            ) : null}
-
-            {publicCv.skills?.length ? (
-              <Section title={t('skills')}>
-                <div className="flex flex-wrap gap-2">
-                  {publicCv.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </Section>
-            ) : null}
-
-            {publicCv.languages?.length ? (
-              <Section title={t('languages')}>
-                <div className="flex flex-wrap gap-2">
-                  {publicCv.languages.map((lang) => (
-                    <span
-                      key={lang}
-                      className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
-                    >
-                      {lang}
-                    </span>
-                  ))}
-                </div>
-              </Section>
-            ) : null}
-
-            {publicCv.experience?.length ? (
-              <Section title={t('experience')}>
-                <ExperienceList items={publicCv.experience} />
-              </Section>
-            ) : null}
-
-            {publicCv.projects?.length ? (
-              <Section title={t('projects')}>
-                <ProjectsGrid items={publicCv.projects} />
-              </Section>
-            ) : null}
-
-            {publicEducation.length ? (
-              <Section title={t('education')}>
-                <EducationList items={publicEducation} />
-              </Section>
-            ) : null}
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            {formatCredentialIssuerLabel(String(credential.issuer ?? ''), t('other'))}
+                          </div>
+                          {String(credential.url ?? '').trim() ? (
+                            <a
+                              className="mt-1 inline-block text-sm font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
+                              href={credential.url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {credential.label}
+                            </a>
+                          ) : (
+                            <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{credential.label}</div>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  </Section>
+                )
+              }
+              if (key === 'skillsLanguages') {
+                return (
+                  <div key="skillsLanguages">
+                    {publicCv.skills?.length ? (
+                      <Section title={t('skills')}>
+                        <div className="flex flex-wrap gap-2">
+                          {publicCv.skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </Section>
+                    ) : null}
+                    {publicCv.languages?.length ? (
+                      <Section title={t('languages')}>
+                        <div className="flex flex-wrap gap-2">
+                          {publicCv.languages.map((lang) => (
+                            <span
+                              key={lang}
+                              className="rounded-md border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
+                            >
+                              {lang}
+                            </span>
+                          ))}
+                        </div>
+                      </Section>
+                    ) : null}
+                  </div>
+                )
+              }
+              if (key === 'experience' && publicCv.experience?.length) {
+                return (
+                  <Section key="experience" title={t('experience')}>
+                    <ExperienceList items={publicCv.experience} />
+                  </Section>
+                )
+              }
+              if (key === 'projects' && publicCv.projects?.length) {
+                return (
+                  <Section key="projects" title={t('projects')}>
+                    <ProjectsGrid items={publicCv.projects} />
+                  </Section>
+                )
+              }
+              if (key === 'education' && publicEducation.length) {
+                return (
+                  <Section key="education" title={t('education')}>
+                    <EducationList items={publicEducation} />
+                  </Section>
+                )
+              }
+              return null
+            })}
           </div>
         ) : (
           <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">

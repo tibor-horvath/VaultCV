@@ -107,8 +107,9 @@ export function buildDraftSignature(input: {
   basicsSummary: string
   basicsPhotoAlt: string
   hasProfileImage: boolean
-  skillsText: string
-  languagesText: string
+  skills: string[]
+  languages: string[]
+  sectionOrder: string[]
   links: LinkRow[]
   credentials: CredentialRow[]
   experience: ExperienceRow[]
@@ -137,11 +138,11 @@ export function focusFirstValidationIssue(validation: PublicValidation) {
     return
   }
   if (validation.sections.skills) {
-    document.getElementById('skills-text')?.focus()
+    document.getElementById('skills-input')?.focus()
     return
   }
   if (validation.sections.languages) {
-    document.getElementById('languages-text')?.focus()
+    document.getElementById('languages-input')?.focus()
   }
 }
 

@@ -14,11 +14,12 @@ export type PublicSectionsFlags = {
 }
 
 export type LabeledUrl = { label: string; url: string }
-export type LinkRow = LabeledUrl & { isPublic: boolean }
+export type LinkRow = LabeledUrl & { isPublic: boolean; _id: string }
 
-export type CredentialRow = { issuer: string; label: string; url: string; isPublic: boolean; dateEarned?: string; dateExpires?: string }
+export type CredentialRow = { issuer: string; label: string; url: string; isPublic: boolean; dateEarned?: string; dateExpires?: string; _id: string }
 
 export type ExperienceRow = {
+  _id: string
   company: string
   links?: LabeledUrl[]
   role: string
@@ -40,6 +41,7 @@ export type PublicExperienceFlags = {
 }
 
 export type EducationRow = {
+  _id: string
   school: string
   schoolUrl?: string
   degree?: string
@@ -63,6 +65,6 @@ export type PublicEducationFlags = {
   highlights: boolean
 }
 
-export type ProjectRow = { name: string; description: string; tags?: string[]; links?: LabeledUrl[] }
+export type ProjectRow = { _id: string; name: string; description: string; tags?: string[]; links?: LabeledUrl[] }
 export type PublicProjectFlags = { name: boolean; tags: boolean; description: boolean }
 
