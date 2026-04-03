@@ -35,7 +35,7 @@ function SortableSheetItem({ sectionKey, label }: { sectionKey: string; label: s
         aria-label={t('adminDragToReorder')}
         {...attributes}
         {...listeners}
-        className="cursor-grab text-slate-300 active:cursor-grabbing dark:text-slate-600"
+        className="touch-none cursor-grab text-slate-300 active:cursor-grabbing dark:text-slate-600"
       >
         <GripVertical className="h-5 w-5" />
       </button>
