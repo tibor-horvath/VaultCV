@@ -43,6 +43,7 @@ jobs:
           echo "upstream_head=$UPSTREAM_HEAD" >> "$GITHUB_OUTPUT"
 
           LAST_SHA="${{ vars.LAST_TEMPLATE_SYNC }}"
+          echo "last_sha=$LAST_SHA" >> "$GITHUB_OUTPUT"
           if [ -n "$LAST_SHA" ]; then
             echo "Last synced upstream commit: $LAST_SHA"
             COUNT=$(git rev-list ${LAST_SHA}..upstream/main --count 2>/dev/null || echo "unknown")
@@ -68,37 +69,33 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           BRANCH="${{ steps.upstream.outputs.branch }}"
           MERGE_MSG="chore: sync with template (${{ steps.upstream.outputs.repo }})"
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-          else
-            git checkout -b "$BRANCH"
-          fi
+          git fetch origin main --no-tags
+          git checkout -B "$BRANCH" "origin/main"
+
+          run_git() {
+            local attempts=0
+            while true; do
+              if "$@"; then
+                return 0
+              fi
+
+              attempts=$((attempts + 1))
+              if [ -f .git/index.lock ] && [ "$attempts" -lt 5 ]; then
+                echo "Detected stale .git/index.lock, retrying ($attempts/4)..."
+                rm -f .git/index.lock
+                sleep 1
+                continue
+              fi
+
+              return 1
+            done
+          }
 
           if ! git merge upstream/main \
-            --no-edit \
+            --squash \
             --allow-unrelated-histories \
-            -X theirs \
-            -m "$MERGE_MSG"; then
+            -X theirs; then
             echo "Merge conflicts detected. Auto-resolving in favor of upstream/template..."
-
-            run_git() {
-              local attempts=0
-              while true; do
-                if "$@"; then
-                  return 0
-                fi
-
-                attempts=$((attempts + 1))
-                if [ -f .git/index.lock ] && [ "$attempts" -lt 5 ]; then
-                  echo "Detected stale .git/index.lock, retrying ($attempts/4)..."
-                  rm -f .git/index.lock
-                  sleep 1
-                  continue
-                fi
-
-                return 1
-              done
-            }
 
             # Resolve all unresolved entries: keep theirs when present, otherwise
             # remove files deleted upstream (modify/delete conflict).
@@ -114,12 +111,16 @@ jobs:
                 run_git git rm -f -- "$path"
               fi
             done < "$CONFLICT_FILE"
+          fi
 
+          if ! git diff --cached --quiet; then
             run_git git commit -m "$MERGE_MSG"
+          else
+            echo "No net file changes after applying upstream diff."
           fi
 
           # Keep this repository's workflow customizations instead of upstream versions.
-          git checkout HEAD^1 -- .github/workflows
+          git checkout origin/main -- .github/workflows
           if ! git diff --quiet HEAD -- .github/workflows; then
             git add .github/workflows
             git commit -m "chore: keep repo-specific workflow overrides"
@@ -150,6 +151,7 @@ jobs:
           BRANCH: ${{ steps.upstream.outputs.branch }}
           UPSTREAM_REPO: ${{ steps.upstream.outputs.repo }}
           UPSTREAM_HEAD: ${{ steps.diff.outputs.upstream_head }}
+          LAST_SHA: ${{ steps.diff.outputs.last_sha }}
         run: |
           TITLE="chore: sync with template (${UPSTREAM_REPO})"
 
@@ -174,6 +176,18 @@ jobs:
           PR_ASSIGNEES=$(get_repo_variable "SYNC_TEMPLATE_PR_ASSIGNEES")
           REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
 
+          COMMIT_LIST_FILE=$(mktemp)
+          if [ -n "${LAST_SHA:-}" ] && git rev-parse --verify "${LAST_SHA}^{commit}" >/dev/null 2>&1; then
+            git log \
+              --reverse \
+              --format='- %h %s' \
+              "${LAST_SHA}..upstream/main" > "$COMMIT_LIST_FILE"
+          else
+            cat > "$COMMIT_LIST_FILE" <<EOF
+          - No valid LAST_TEMPLATE_SYNC value was available for this run.
+          EOF
+          fi
+
           BODY_FILE=$(mktemp)
           cat > "$BODY_FILE" <<EOF
           Automated sync from template repository.
@@ -182,6 +196,9 @@ jobs:
           - Upstream commit: ${UPSTREAM_HEAD}
           - Workflow: ${GITHUB_WORKFLOW}
           - Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+          Commits since LAST_TEMPLATE_SYNC:
+          $(cat "$COMMIT_LIST_FILE")
           EOF
 
           PR_NUMBER=$(gh api \
