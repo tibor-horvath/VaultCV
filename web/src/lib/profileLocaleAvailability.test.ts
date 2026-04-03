@@ -3,6 +3,7 @@ import { fetchProfileScopedLocales } from './profileLocaleAvailability'
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 describe('fetchProfileScopedLocales', () => {
@@ -16,7 +17,6 @@ describe('fetchProfileScopedLocales', () => {
     )
     const result = await fetchProfileScopedLocales('public')
     expect(result).toEqual(['en', 'hu'])
-    vi.unstubAllGlobals()
   })
 
   it('calls the correct URL for "public" scope', async () => {
@@ -30,7 +30,6 @@ describe('fetchProfileScopedLocales', () => {
       '/api/locales?scope=public',
       expect.objectContaining({ method: 'GET' }),
     )
-    vi.unstubAllGlobals()
   })
 
   it('calls the correct URL for "private" scope', async () => {
@@ -44,7 +43,6 @@ describe('fetchProfileScopedLocales', () => {
       '/api/locales?scope=private',
       expect.objectContaining({ method: 'GET' }),
     )
-    vi.unstubAllGlobals()
   })
 
   it('returns null when the response is not ok', async () => {
@@ -54,7 +52,6 @@ describe('fetchProfileScopedLocales', () => {
     )
     const result = await fetchProfileScopedLocales('public')
     expect(result).toBeNull()
-    vi.unstubAllGlobals()
   })
 
   it('returns null when fetch throws', async () => {
@@ -66,7 +63,6 @@ describe('fetchProfileScopedLocales', () => {
     )
     const result = await fetchProfileScopedLocales('public')
     expect(result).toBeNull()
-    vi.unstubAllGlobals()
   })
 
   it('filters out locales not registered in the UI locale list', async () => {
@@ -78,9 +74,8 @@ describe('fetchProfileScopedLocales', () => {
       })),
     )
     const result = await fetchProfileScopedLocales('public')
-    // 'xx-UNKNOWN' is not a registered UI locale and should be excluded
-    expect(result).not.toContain('xx-UNKNOWN')
-    vi.unstubAllGlobals()
+    // Unknown locale is normalized then rejected; only registered locales survive
+    expect(result).toEqual(['en', 'hu'])
   })
 
   it('deduplicates locales', async () => {
@@ -96,10 +91,9 @@ describe('fetchProfileScopedLocales', () => {
       const enCount = result.filter((l) => l === 'en').length
       expect(enCount).toBe(1)
     }
-    vi.unstubAllGlobals()
   })
 
-  it('returns null when locales field is missing from response', async () => {
+  it('returns an empty array when locales field is missing from response', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({
@@ -109,7 +103,6 @@ describe('fetchProfileScopedLocales', () => {
     )
     const result = await fetchProfileScopedLocales('public')
     expect(result).toEqual([])
-    vi.unstubAllGlobals()
   })
 
   it('ignores non-string items in the locales array', async () => {
@@ -124,6 +117,5 @@ describe('fetchProfileScopedLocales', () => {
     if (result) {
       expect(result.every((l) => typeof l === 'string')).toBe(true)
     }
-    vi.unstubAllGlobals()
   })
 })
