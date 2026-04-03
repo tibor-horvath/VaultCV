@@ -5,7 +5,7 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get", "put", "delete"],
+      "methods": ["head", "get", "put", "delete"],
       "route": "manage/profile/image"
     },
     {

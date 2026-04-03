@@ -56,10 +56,21 @@ export default async function (context: Context, req: HttpRequest) {
 
     const method = (req.method ?? '').toUpperCase()
 
-    if (method === 'GET') {
+    if (method === 'HEAD' || method === 'GET') {
       const image = await readProfileImage(slug)
       if (!image) {
-        context.res = jsonResponse(404, { error: 'No profile image found.' })
+        context.res = { status: 404, headers: { 'cache-control': 'no-store' } }
+        return
+      }
+      if (method === 'HEAD') {
+        context.res = {
+          status: 200,
+          headers: {
+            'content-type': image.contentType,
+            'cache-control': 'no-store',
+            'content-length': String(image.buffer.byteLength),
+          },
+        }
         return
       }
       context.res = {

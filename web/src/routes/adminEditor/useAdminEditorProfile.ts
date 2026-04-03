@@ -281,7 +281,7 @@ export function useAdminEditorProfile(params: {
       const publicRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, { credentials: 'same-origin' })
       let imageRes = new Response(null, { status: 204 })
       try {
-        imageRes = await fetch('/api/manage/profile/image', { credentials: 'same-origin' })
+        imageRes = await fetch('/api/manage/profile/image', { method: 'HEAD', credentials: 'same-origin' })
       } catch {
         // Best-effort probe: if the image check fails due to a network error/timeout,
         // keep loading the editor and let existing hasProfileImage/photoUrl heuristics apply.

@@ -58,6 +58,33 @@ describe('/api/profile-image', () => {
     })
   })
 
+  describe('HEAD', () => {
+    it('returns 404 when no image is stored', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      ;(readProfileImage as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null)
+      const context: { res?: unknown } = {}
+      await handler(context, { method: 'HEAD', headers: makeAdminHeaders() })
+      expect(context.res).toMatchObject({ status: 404 })
+      expect((context.res as { body?: unknown })?.body).toBeUndefined()
+    })
+
+    it('returns 200 with headers but no body when image exists', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const fakeBuffer = Buffer.from('fake-jpeg-data')
+      ;(readProfileImage as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        buffer: fakeBuffer,
+        contentType: 'image/jpeg',
+      })
+      const context: { res?: unknown } = {}
+      await handler(context, { method: 'HEAD', headers: makeAdminHeaders() })
+      expect(context.res).toMatchObject({
+        status: 200,
+        headers: expect.objectContaining({ 'content-type': 'image/jpeg' }),
+      })
+      expect((context.res as { body?: unknown })?.body).toBeUndefined()
+    })
+  })
+
   describe('GET', () => {
     it('returns 404 when no image is stored', async () => {
       process.env.CV_PROFILE_SLUG = 'john-doe'
