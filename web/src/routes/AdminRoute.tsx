@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Ban,
   CheckCircle2,
@@ -73,13 +73,31 @@ export function AdminShareRoute() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => readStatusFilterFromUrl())
   const [qrLink, setQrLink] = useState<ShareLink | null>(null)
 
+  const [nowEpoch, setNowEpoch] = useState(() => Math.floor(Date.now() / 1000))
+
+  useEffect(() => {
+    const id = setInterval(() => setNowEpoch(Math.floor(Date.now() / 1000)), 60_000)
+    return () => clearInterval(id)
+  }, [])
+
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
   const signedInEmail = useMemo(() => extractEmailFromPrincipal(me), [me])
   const visibleLinks = useMemo(() => {
-    const nowEpoch = Math.floor(Date.now() / 1000)
     if (statusFilter === 'all') return links
     return links.filter((link) => classifyLinkStatus(link, nowEpoch) === statusFilter)
-  }, [links, statusFilter])
+  }, [links, statusFilter, nowEpoch])
+  const linkStats = useMemo(() => {
+    let active = 0
+    let revoked = 0
+    let expired = 0
+    for (const link of links) {
+      const state = classifyLinkStatus(link, nowEpoch)
+      if (state === 'active') active += 1
+      if (state === 'revoked') revoked += 1
+      if (state === 'expired') expired += 1
+    }
+    return { active, revoked, expired, total: links.length }
+  }, [links, nowEpoch])
   const shareLanguageOptions = useMemo(
     () => [
       { value: '', label: t('adminAuto') },
@@ -110,7 +128,7 @@ export function AdminShareRoute() {
     }
   }, [])
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -133,13 +151,13 @@ export function AdminShareRoute() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [signedInEmail, t])
 
   useEffect(() => {
     if (!meLoading && isAdmin) {
       refresh()
     }
-  }, [meLoading, isAdmin])
+  }, [meLoading, isAdmin, refresh])
 
   useEffect(() => {
     if (!status) return
@@ -324,7 +342,7 @@ export function AdminShareRoute() {
   }
 
   return (
-    <div className="w-full space-y-6 py-10">
+    <div className="w-full space-y-6 py-8 lg:space-y-8 lg:py-10">
       {qrLink ? (
         <QrCodeModal
           shareUrlBase={`${window.location.origin}/?s=${encodeURIComponent(qrLink.rowKey)}`}
@@ -342,13 +360,13 @@ export function AdminShareRoute() {
           <>
           <Link
             to="/admin"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/75 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950/35 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <Shield className="h-3.5 w-3.5 shrink-0" /> {t('adminDashboard')}
           </Link>
           <Link
             to="/admin/editor"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/75 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950/35 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <SquarePen className="h-3.5 w-3.5 shrink-0" /> {t('adminEditCv')}
           </Link>
@@ -356,16 +374,35 @@ export function AdminShareRoute() {
             type="button"
             disabled={loading}
             onClick={() => refresh()}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="inline-flex items-center gap-1 rounded-full border border-slate-300/70 bg-white/75 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 disabled:translate-y-0 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950/35 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <RefreshCw className="h-3.5 w-3.5 shrink-0" /> {t('adminRefresh')}
           </button>
-          <a className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 underline dark:text-slate-300" href="/.auth/logout">
+          <a className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 underline underline-offset-4 dark:text-slate-300" href="/.auth/logout">
             <LogOut className="h-3.5 w-3.5 shrink-0" /> {t('adminSignOut')}
           </a>
           </>
         }
       />
+
+      <section className="grid grid-cols-2 gap-3 rounded-3xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_24px_50px_-40px_rgba(15,23,42,0.7)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-950/30 sm:grid-cols-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/80 px-3 py-3 dark:border-slate-800/80 dark:bg-slate-900/40">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('adminStatusActive')}</div>
+          <div className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">{linkStats.active}</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200/80 bg-white/80 px-3 py-3 dark:border-slate-800/80 dark:bg-slate-900/40">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('adminStatusRevoked')}</div>
+          <div className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">{linkStats.revoked}</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200/80 bg-white/80 px-3 py-3 dark:border-slate-800/80 dark:bg-slate-900/40">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('adminStatusExpired')}</div>
+          <div className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">{linkStats.expired}</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200/80 bg-white/80 px-3 py-3 dark:border-slate-800/80 dark:bg-slate-900/40">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('adminStatusAll')}</div>
+          <div className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">{linkStats.total}</div>
+        </div>
+      </section>
 
       {error ? (
         <div
@@ -386,7 +423,7 @@ export function AdminShareRoute() {
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
+      <div className="rounded-3xl border border-slate-200/80 bg-white/70 p-5 shadow-[0_24px_50px_-40px_rgba(15,23,42,0.7)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-950/30">
         <div className="sticky top-0 z-10 -mx-5 border-b border-slate-200/70 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-white md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <span className="inline-flex items-center gap-2">
             <PlusCircle className="h-4 w-4 shrink-0" /> {t('adminCreateShareLink')}
@@ -524,7 +561,7 @@ export function AdminShareRoute() {
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
+      <div className="rounded-3xl border border-slate-200/80 bg-white/70 p-5 shadow-[0_24px_50px_-40px_rgba(15,23,42,0.7)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-950/30">
         <div className="sticky top-0 z-10 -mx-5 flex flex-col items-start gap-2 border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:flex-row md:items-center md:justify-between md:gap-3 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
           <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <Link2 className="h-4 w-4 shrink-0" /> {t('adminShareLinks')}
@@ -733,7 +770,6 @@ export function AdminShareRoute() {
                                 .catch((e: unknown) => {
                                   if (e instanceof Error && e.name === 'AbortError') return
                                   // Log unexpected share errors instead of rethrowing to avoid unhandled promise rejections
-                                  // eslint-disable-next-line no-console
                                   console.error('navigator.share failed', e)
                                 })
                             }
