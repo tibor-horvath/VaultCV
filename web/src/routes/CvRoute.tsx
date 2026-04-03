@@ -246,7 +246,7 @@ export function CvRoute() {
   const sessionExpiresAt = state.kind === 'ready' ? state.sessionExpiresAt : undefined
   const publicName = usePublicName(locale)
   const { basicsSentinelRef, isBasicsInView } = useBasicsVisibility(state.kind)
-    const orderedSections: SectionKey[] = state.kind === 'ready' ? normalizeSectionOrder(state.cv.sectionOrder) : []
+  const orderedSections: SectionKey[] = state.kind === 'ready' ? normalizeSectionOrder(state.cv.sectionOrder) : []
   const pdfCaptureRef = useRef<HTMLDivElement>(null)
   const [pdfBusy, setPdfBusy] = useState(false)
   const [availablePrivateLocales, setAvailablePrivateLocales] = useState<string[] | null>(null)
@@ -418,100 +418,6 @@ export function CvRoute() {
             visible={!isBasicsInView}
           />
 
-          {state.cv.credentials?.length ? (
-            <Section title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
-              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                {[
-                  ...preferredCredentialIssuerOrder,
-                  ...Array.from(
-                    new Set((state.cv.credentials ?? []).map((c) => String(c.issuer ?? '').trim().toLowerCase()).filter(Boolean)),
-                  ).filter((issuer) => !preferredCredentialIssuerOrder.includes(issuer as (typeof preferredCredentialIssuerOrder)[number])),
-                ]
-                  .map((issuer) => {
-                    const items = state.cv.credentials?.filter((c) => String(c.issuer ?? '').trim().toLowerCase() === issuer) ?? []
-                    if (!items.length) return null
-                    return (
-                      <div key={issuer}>
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                          <CredentialIssuerIcon issuer={issuer} />
-                          {formatCredentialIssuerLabel(issuer, t)}
-                        </div>
-                        <div className="mt-2 divide-y divide-slate-200/60 dark:divide-slate-800/60">
-                          {items.map((c) => (
-                            <article
-                              key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`}
-                              className="py-3.5"
-                            >
-                              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-                                <div className="min-w-0">
-                                  <a
-                                    className="font-semibold text-slate-900 underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500 dark:text-slate-100 dark:decoration-slate-700 dark:hover:decoration-slate-500"
-                                    href={c.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    {c.label}
-                                  </a>
-
-                                  {c.dateEarned || c.dateExpires ? (
-                                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-                                      {c.dateEarned ? (
-                                        <span className="inline-flex items-center gap-1.5">
-                                          <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                          {t('earned')} {c.dateEarned}
-                                        </span>
-                                      ) : null}
-                                      {c.dateExpires ? (
-                                        <span className="inline-flex items-center gap-1.5">
-                                          <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                          {t('expires')} {c.dateExpires}
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </article>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })
-                  .filter(Boolean)}
-              </div>
-            </Section>
-          ) : null}
-
-          {state.cv.skills?.length ? (
-            <Section title={t('skills')} icon={<LibraryBig className="h-4 w-4" />}>
-              <SkillsChips items={state.cv.skills} />
-            </Section>
-          ) : null}
-
-          {state.cv.languages?.length ? (
-            <Section title={t('languages')} icon={<Languages className="h-4 w-4" />}>
-              <SkillsChips items={state.cv.languages} />
-            </Section>
-          ) : null}
-
-          {state.cv.experience?.length ? (
-            <Section title={t('experience')} icon={<BriefcaseBusiness className="h-4 w-4" />}>
-              <ExperienceList items={state.cv.experience} />
-            </Section>
-          ) : null}
-
-          {state.cv.projects?.length ? (
-            <Section title={t('projects')} icon={<LayoutGrid className="h-4 w-4" />}>
-              <ProjectsGrid items={state.cv.projects} />
-            </Section>
-          ) : null}
-
-          {state.cv.education?.length ? (
-            <Section title={t('education')} icon={<GraduationCap className="h-4 w-4" />}>
-              <EducationList items={state.cv.education} />
-            </Section>
-          ) : null}
-
           {orderedSections.map((key) => {
             if (key === 'credentials' && state.cv.credentials?.length) {
               return (
@@ -616,3 +522,15 @@ export function CvRoute() {
             }
             return null
           })}
+          <div
+            className="pointer-events-none fixed left-[-10000px] top-0 z-0 shrink-0"
+            style={{ width: PDF_CAPTURE_ROOT_WIDTH_PX }}
+            aria-hidden="true"
+          >
+            <CvPdfLayout ref={pdfCaptureRef} cv={state.cv} profilePhotoSrc={profilePhotoSrc} />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}

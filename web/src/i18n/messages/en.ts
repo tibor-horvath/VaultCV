@@ -161,6 +161,10 @@ export const enMessages = {
   adminRemove: 'Remove',
   adminOptional: 'optional',
   adminBasics: 'Basics',
+  adminSectionOrder: 'Section order',
+  adminReorderSections: 'Reorder sections',
+  adminBasicsPinned: 'Basics (pinned at top)',
+  adminDragToReorder: 'Drag to reorder',
   adminPerFieldPublicToggle: 'Per-field public toggle',
   adminName: 'Name',
   adminHeadline: 'Headline',
@@ -284,11 +288,6 @@ export const enMessages = {
   adminValidationPublicExperienceCoreRequired: 'Public experience requires company, role, and start, all toggled on and filled.',
   adminValidationPublicEducationCoreRequired: 'Public education requires school toggled on and filled.',
   adminValidationPublicProjectCoreRequired: 'Public project requires name toggled on and filled.',
-  adminBasics: 'Basics',
-  adminSectionOrder: 'Section order',
-  adminReorderSections: 'Reorder sections',
-  adminBasicsPinned: 'Basics (pinned at top)',
-  adminDragToReorder: 'Drag to reorder',
 }
 
 export type MessageCatalog = typeof enMessages
