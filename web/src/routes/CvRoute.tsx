@@ -42,6 +42,8 @@ import { downloadCvPdf } from '../lib/downloadCvPdf'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../lib/pdfCaptureLayout'
 import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
 import { normalizeSectionOrder } from '../lib/sectionOrder'
+
+const EMPTY_LOCALES: readonly string[] = []
 import type { SectionKey } from '../lib/sectionOrder'
 
 type CvRouteState =
@@ -393,7 +395,7 @@ export function CvRoute() {
                     <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
                     {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
                   </button>
-                  <LanguageSelector allowedLocales={availablePrivateLocales ?? undefined} />
+                  <LanguageSelector allowedLocales={availablePrivateLocales ?? EMPTY_LOCALES} />
                   {themeToggle}
                 </div>
               }
