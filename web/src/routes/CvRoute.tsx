@@ -393,7 +393,7 @@ export function CvRoute() {
                     <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
                     {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
                   </button>
-                  <LanguageSelector allowedLocales={availablePrivateLocales ?? undefined} />
+                  <LanguageSelector allowedLocales={availablePrivateLocales ?? []} />
                   {themeToggle}
                 </div>
               }

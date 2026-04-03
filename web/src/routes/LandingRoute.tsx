@@ -195,7 +195,7 @@ export function LandingRoute() {
     <div className="mx-auto w-full">
       <div className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-[0_30px_70px_-35px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/45 sm:p-8">
         <div className="flex items-center justify-end gap-2">
-          <LanguageSelector allowedLocales={availablePublicLocales ?? undefined} />
+          <LanguageSelector allowedLocales={availablePublicLocales ?? []} />
           <button
             type="button"
             onClick={toggleTheme}
