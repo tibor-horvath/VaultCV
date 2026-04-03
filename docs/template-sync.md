@@ -11,7 +11,7 @@ The workflow is triggered manually by default. You can optionally enable a sched
 
 When new commits are found on the upstream `main` branch, the workflow:
 
-1. Checks out the long-lived `sync/template` branch (creating it if it doesn't exist yet).
+1. Recreates/reset the `sync/template` branch from upstream `origin/main` on each run. This branch is reused for the sync PR, but its previous unmerged state is **not** preserved; any manual commits on `sync/template` (for example, conflict fixes or local adjustments) will be overwritten unless they have been merged or saved elsewhere.
 2. Applies upstream changes as a squash-style sync using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
 3. Restores this repository's `.github/workflows/` folder after merge so upstream changes do not overwrite your local workflow customizations. This also means upstream workflow changes and any newly added upstream workflow files under `.github/workflows/` are **not** synced automatically and must be reviewed and applied manually if you want them.
 4. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new upstream commits.
