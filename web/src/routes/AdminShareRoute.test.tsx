@@ -30,6 +30,7 @@ type MockResponse = {
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
 let originalShareDescriptor: PropertyDescriptor | undefined
+let originalClipboardDescriptor: PropertyDescriptor | undefined
 
 function jsonResponse(body: unknown, status = 200): MockResponse {
   const text = JSON.stringify(body)
@@ -133,6 +134,7 @@ beforeEach(() => {
     }
     return jsonResponse({}, 404)
   }))
+  originalClipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
   Object.defineProperty(navigator, 'clipboard', {
     value: { writeText: vi.fn(async () => {}) },
     configurable: true,
@@ -147,10 +149,16 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   if (originalShareDescriptor !== undefined) {
     Object.defineProperty(navigator, 'share', originalShareDescriptor)
   } else {
     delete (navigator as Partial<Navigator>).share
+  }
+  if (originalClipboardDescriptor !== undefined) {
+    Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor)
+  } else {
+    delete (navigator as Partial<Navigator>).clipboard
   }
   if (mountedRoot && mountedContainer) {
     act(() => {

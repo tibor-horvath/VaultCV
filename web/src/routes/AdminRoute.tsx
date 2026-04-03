@@ -180,7 +180,7 @@ export function AdminShareRoute() {
       }
       const body = await readJsonOrNull<{ id?: string; error?: string }>(res)
       if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`)
-      setNewLinkId(body?.id ?? null)
+      setNewLinkId(body?.id?.trim() || null)
       await refresh()
       form.reset()
       setExpiresInDays(30)
@@ -401,11 +401,12 @@ export function AdminShareRoute() {
         >
           <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
             {t('adminExpiresInDays')}
-            <div className="flex flex-wrap gap-1.5">
+            <div role="group" aria-label={t('adminExpiresInDays')} className="flex flex-wrap gap-1.5">
               {([7, 14, 30, 90] as const).map((d) => (
                 <button
                   key={d}
                   type="button"
+                  aria-pressed={!showCustomExpiry && expiresInDays === d}
                   onClick={() => { setExpiresInDays(d); setShowCustomExpiry(false) }}
                   className={`rounded-md border px-2.5 py-0.5 text-[11px] font-semibold transition ${
                     !showCustomExpiry && expiresInDays === d
@@ -418,6 +419,7 @@ export function AdminShareRoute() {
               ))}
               <button
                 type="button"
+                aria-pressed={showCustomExpiry}
                 onClick={() => setShowCustomExpiry(true)}
                 className={`rounded-md border px-2.5 py-0.5 text-[11px] font-semibold transition ${
                   showCustomExpiry
@@ -434,9 +436,15 @@ export function AdminShareRoute() {
                 type="number"
                 min={1}
                 max={365}
+                step={1}
                 value={expiresInDays}
                 autoFocus
-                onChange={(e) => setExpiresInDays(Number(e.target.value))}
+                onChange={(e) => {
+                  const raw = e.target.value
+                  if (raw === '') return
+                  const n = Math.min(365, Math.max(1, Math.trunc(Number(raw))))
+                  if (Number.isFinite(n)) setExpiresInDays(n)
+                }}
                 className="rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-slate-800"
               />
             ) : null}
@@ -475,7 +483,7 @@ export function AdminShareRoute() {
             </button>
           </div>
         </form>
-        {newLinkId !== null ? (
+        {newLinkId ? (
           <div className="mt-4 rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/20">
             <div className="mb-2.5 flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-200">
