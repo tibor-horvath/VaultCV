@@ -13,7 +13,7 @@ When new commits are found on the upstream `main` branch, the workflow:
 
 1. Checks out the long-lived `sync/template` branch (creating it if it doesn't exist yet).
 2. Merges upstream changes into it using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
-3. Restores this repository's `.github/workflows/` folder after merge so upstream changes do not overwrite your local workflow customizations.
+3. Restores this repository's `.github/workflows/` folder after merge. This preserves your local workflow files, but it also means upstream workflow changes and any newly added upstream workflow files under `.github/workflows/` are **not** synced automatically and must be reviewed and applied manually if you want them.
 4. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new commits.
 5. Opens a pull request from `sync/template` to `main` (or updates the existing one) so you can review and merge at your own pace.
 
