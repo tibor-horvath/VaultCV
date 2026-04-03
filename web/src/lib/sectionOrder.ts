@@ -1,7 +1,6 @@
 export const SECTION_KEYS = [
   'credentials',
   'skillsLanguages',
-  'links',
   'experience',
   'projects',
   'education',

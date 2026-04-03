@@ -90,7 +90,7 @@ export type CvData = {
   /**
    * Ordered list of section keys controlling rendering order on the CV views.
    * When absent the canonical default order is used (backwards compatible).
-   * Valid keys: 'credentials' | 'skillsLanguages' | 'links' | 'experience' | 'projects' | 'education'
+   * Valid keys: 'credentials' | 'skillsLanguages' | 'experience' | 'projects' | 'education'
    */
   sectionOrder?: string[]
 }

@@ -6,7 +6,6 @@ import { BasicsSection } from './BasicsSection'
 import { CredentialsSection } from './CredentialsSection'
 import { EducationSection } from './EducationSection'
 import { ExperienceSection } from './ExperienceSection'
-import { LinksSection } from './LinksSection'
 import { ProjectsSection } from './ProjectsSection'
 import { SkillsLanguagesSection } from './SkillsLanguagesSection'
 import { SectionOrderSidebar } from './SectionOrderSidebar'
@@ -196,12 +195,6 @@ export function AdminEditorPage(props: {
               setPublicSections={setPublicSections}
               sectionErrors={sectionErrors}
             />
-          </div>
-        )
-      case 'links':
-        return (
-          <div key="links" data-section="links">
-            <LinksSection links={links} setLinks={setLinks} isMobile={isMobile} rowErrors={linkRowErrors} />
           </div>
         )
       case 'credentials':
@@ -412,6 +405,10 @@ export function AdminEditorPage(props: {
               publicBasics={publicBasics}
               setPublicBasics={setPublicBasics}
               publicBasicsErrors={publicBasicsErrors}
+              links={links}
+              setLinks={setLinks}
+              isMobile={isMobile}
+              linkRowErrors={linkRowErrors}
             />
           </div>
 

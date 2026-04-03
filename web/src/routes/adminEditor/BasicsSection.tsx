@@ -1,8 +1,9 @@
 import { ToggleButton } from './ToggleButton'
 import { IdCard } from 'lucide-react'
-import type { PublicBasicsFlags } from './types'
+import type { LinkRow, PublicBasicsFlags } from './types'
 import { ProfileImageUpload } from './ProfileImageUpload'
 import { useI18n } from '../../lib/i18n'
+import { LinksSection } from './LinksSection'
 
 export function BasicsSection(props: {
   basicsName: string
@@ -24,6 +25,10 @@ export function BasicsSection(props: {
   publicBasics: PublicBasicsFlags
   setPublicBasics: (updater: (cur: PublicBasicsFlags) => PublicBasicsFlags) => void
   publicBasicsErrors?: Partial<Record<keyof PublicBasicsFlags, string>>
+  links: LinkRow[]
+  setLinks: (updater: (cur: LinkRow[]) => LinkRow[]) => void
+  isMobile: boolean
+  linkRowErrors?: string[]
 }) {
   const { t } = useI18n()
   const {
@@ -46,6 +51,10 @@ export function BasicsSection(props: {
     publicBasics,
     setPublicBasics,
     publicBasicsErrors,
+    links,
+    setLinks,
+    isMobile,
+    linkRowErrors,
   } = props
 
   return (
@@ -193,6 +202,10 @@ export function BasicsSection(props: {
               title={t('adminShowPhotoOnPublicProfile')}
             />
           </div>
+        </div>
+
+        <div className="pt-2">
+          <LinksSection links={links} setLinks={setLinks} isMobile={isMobile} rowErrors={linkRowErrors} embedded />
         </div>
       </div>
     </section>
