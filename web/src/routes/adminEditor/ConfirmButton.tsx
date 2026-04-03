@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { TriangleAlert } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { useI18n } from '../../lib/i18n'
 
 export function ConfirmButton(props: {
   label: string
@@ -13,17 +14,20 @@ export function ConfirmButton(props: {
   confirmClassName?: string
   onConfirm: () => void
 }) {
+  const { t } = useI18n()
   const {
     label,
     className,
     icon,
     confirmTitle,
     confirmDescription,
-    confirmLabel = 'Confirm',
-    cancelLabel = 'Cancel',
+    confirmLabel,
+    cancelLabel,
     confirmClassName,
     onConfirm,
   } = props
+  const resolvedConfirmLabel = confirmLabel ?? t('adminConfirm')
+  const resolvedCancelLabel = cancelLabel ?? t('adminCancel')
   const [open, setOpen] = useState(false)
   const titleId = useId()
   const descriptionId = useId()
@@ -108,7 +112,7 @@ export function ConfirmButton(props: {
                 ref={cancelButtonRef}
                 className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/60"
               >
-                {cancelLabel}
+                {resolvedCancelLabel}
               </button>
               <button
                 type="button"
@@ -123,7 +127,7 @@ export function ConfirmButton(props: {
                   'rounded-lg border border-red-300/70 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-200 dark:hover:bg-red-950/40'
                 }
               >
-                {confirmLabel}
+                {resolvedConfirmLabel}
               </button>
             </div>
           </div>

@@ -46,10 +46,11 @@ If `CV_PROFILE_SLUG` is missing, the admin profile endpoints return an error.
 ## Localization in admin
 
 - Admin surfaces (`/admin`, `/admin/editor`, `/admin/share`) use shared i18n catalogs (`en`, `de`, `hu`) for UI labels, actions, confirmations, and status/error messages.
-- The editor locale selector controls which localized CV payload is being edited (`private/public` per locale), independent from current UI language.
+- On `/admin/editor`, the selected editor locale is also the current admin UI language. Switching locale changes both the localized CV payload being edited (`private/public` per locale) and the editor UI copy.
+- When the editor opens, it starts in the current UI language if that locale is supported by the app catalogs.
 - The editor includes an explicit **Add language** action.
   - Available locales are loaded from `/api/locales` and reflect app UI locale catalogs.
-  - When adding a locale, the editor switches to that locale immediately so content can be created.
+  - When adding a locale, the editor switches to that locale immediately so content can be created, and the editor UI switches with it.
 - Locale availability is no longer configured from admin settings; profile editing is constrained to locales supported by app catalogs.
 
 ## Share links

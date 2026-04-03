@@ -2,6 +2,7 @@ import { ToggleButton } from './ToggleButton'
 import { IdCard } from 'lucide-react'
 import type { PublicBasicsFlags } from './types'
 import { ProfileImageUpload } from './ProfileImageUpload'
+import { useI18n } from '../../lib/i18n'
 
 export function BasicsSection(props: {
   basicsName: string
@@ -24,6 +25,7 @@ export function BasicsSection(props: {
   setPublicBasics: (updater: (cur: PublicBasicsFlags) => PublicBasicsFlags) => void
   publicBasicsErrors?: Partial<Record<keyof PublicBasicsFlags, string>>
 }) {
+  const { t } = useI18n()
   const {
     basicsName,
     setBasicsName,
@@ -50,14 +52,14 @@ export function BasicsSection(props: {
     <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
       <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
         <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
-          <IdCard className="h-4 w-4 shrink-0" /> Basics
+          <IdCard className="h-4 w-4 shrink-0" /> {t('adminBasics')}
         </div>
-        <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-300">Per-field public toggle</div>
+        <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-300">{t('adminPerFieldPublicToggle')}</div>
       </div>
       <div className="grid grid-cols-1 gap-3">
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Name
+            {t('adminName')}
             <input
               id="basics-name"
               value={basicsName}
@@ -76,7 +78,7 @@ export function BasicsSection(props: {
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Headline
+            {t('adminHeadline')}
             <input
               id="basics-headline"
               value={basicsHeadline}
@@ -98,7 +100,7 @@ export function BasicsSection(props: {
 
         <div className="grid grid-cols-1 items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Email
+            {t('adminEmail')}
             <input
               id="basics-email"
               value={basicsEmail}
@@ -110,7 +112,7 @@ export function BasicsSection(props: {
 
         <div className="grid grid-cols-1 items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Mobile
+            {t('adminMobile')}
             <input
               id="basics-mobile"
               value={basicsMobile}
@@ -122,7 +124,7 @@ export function BasicsSection(props: {
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Location
+            {t('location')}
             <input
               id="basics-location"
               value={basicsLocation}
@@ -144,7 +146,7 @@ export function BasicsSection(props: {
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Summary
+            {t('adminSummary')}
             <textarea
               id="basics-summary"
               rows={5}
@@ -167,16 +169,16 @@ export function BasicsSection(props: {
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
           <div className="flex flex-col gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-            Profile photo
+            {t('adminProfilePhoto')}
             <ProfileImageUpload hasProfileImage={hasProfileImage} onChange={onProfileImageChange} />
             <label className="flex flex-col gap-1">
-              Photo alt text
+              {t('adminPhotoAltText')}
               <input
                 id="basics-photo-alt"
                 value={basicsPhotoAlt}
                 onChange={(e) => setBasicsPhotoAlt(e.target.value)}
                 aria-invalid={Boolean(publicBasicsErrors?.photo)}
-                placeholder="e.g. John Doe headshot"
+                placeholder={t('adminPhotoAltPlaceholder')}
                 className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
               />
               {publicBasicsErrors?.photo ? (
@@ -188,7 +190,7 @@ export function BasicsSection(props: {
             <ToggleButton
               pressed={publicBasics.photo}
               onClick={() => setPublicBasics((cur) => ({ ...cur, photo: !cur.photo }))}
-              title="Show photo on public profile"
+              title={t('adminShowPhotoOnPublicProfile')}
             />
           </div>
         </div>
