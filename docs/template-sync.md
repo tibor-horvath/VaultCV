@@ -55,8 +55,8 @@ When you create a new downstream repository from this template, set the `LAST_TE
 1. Get the latest template commit SHA from the upstream repo (for example, from the latest commit on [tibor-horvath/VaultCV main](https://github.com/tibor-horvath/VaultCV/commits/main)).
 2. In your downstream repository, go to **Settings → Secrets and variables → Actions → Variables**.
 3. Create a repository variable:
-  - **Name**: `LAST_TEMPLATE_SYNC`
-  - **Value**: `<latest-upstream-main-sha>`
+    - **Name**: `LAST_TEMPLATE_SYNC`
+    - **Value**: `<latest-upstream-main-sha>`
 
 If this variable is missing, the workflow still works, but the first sync run may scan all historical upstream commits.
 
