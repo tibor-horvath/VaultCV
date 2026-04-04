@@ -7,6 +7,7 @@ import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
 import { ProjectsGrid } from '../components/cv/ProjectsGrid'
 import { SkillsChips } from '../components/cv/SkillsChips'
+import { GroupedCredentials } from '../components/cv/GroupedCredentials'
 import { Section } from '../components/cv/Section'
 import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { fetchPublicCvProfile } from '../lib/publicProfile'
@@ -26,18 +27,6 @@ const EMPTY_LOCALES: readonly string[] = []
 function getPublicText(value: string | undefined, fallback: string) {
   const normalized = value?.trim()
   return normalized ? normalized : fallback
-}
-
-function formatCredentialIssuerLabel(issuer: string, fallbackOther: string) {
-  const normalized = issuer.trim().toLowerCase()
-  if (!normalized) return fallbackOther
-  if (normalized === 'aws') return 'AWS'
-  if (normalized === 'cncf') return 'CNCF'
-  return normalized
-    .split(/[-_ ]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
 }
 
 function sanitizePublicBasicsForLanding(input: CvData['basics'] | undefined): CvData['basics'] {
@@ -261,30 +250,7 @@ export function LandingRoute() {
               if (key === 'credentials' && publicCredentials.length) {
                 return (
                   <Section key="credentials" title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
-                    <div className="space-y-3">
-                      {publicCredentials.map((credential) => (
-                        <article
-                          key={`${credential.issuer}:${credential.label}:${credential.url}:${credential.dateEarned ?? ''}:${credential.dateExpires ?? ''}`}
-                          className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/30"
-                        >
-                          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                            {formatCredentialIssuerLabel(String(credential.issuer ?? ''), t('other'))}
-                          </div>
-                          {String(credential.url ?? '').trim() ? (
-                            <a
-                              className="mt-1 inline-block text-sm font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
-                              href={credential.url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {credential.label}
-                            </a>
-                          ) : (
-                            <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{credential.label}</div>
-                          )}
-                        </article>
-                      ))}
-                    </div>
+                    <GroupedCredentials credentials={publicCredentials} t={t} showDates={false} />
                   </Section>
                 )
               }

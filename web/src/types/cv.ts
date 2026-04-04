@@ -15,7 +15,7 @@ export type CvLink = {
   url: string
 }
 
-export type CvCredentialIssuer = 'microsoft' | 'aws' | 'google' | 'school' | 'language' | 'other'
+export type CvCredentialIssuer = 'microsoft' | 'aws' | 'google' | 'cncf' | 'school' | 'language' | 'other'
 
 export type CvCredential = {
   issuer: CvCredentialIssuer

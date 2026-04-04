@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Award,
   BriefcaseBusiness,
-  Calendar,
   CircleAlert,
   FileDown,
   GraduationCap,
@@ -26,7 +25,7 @@ import { ProjectsGrid } from '../components/cv/ProjectsGrid'
 import { Section } from '../components/cv/Section'
 import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { SkillsChips } from '../components/cv/SkillsChips'
-import { SiGoogleIcon } from '../components/icons/SimpleBrandIcons'
+import { GroupedCredentials } from '../components/cv/GroupedCredentials'
 import { exchangeAccessCode, fetchCv, type ApiErrorCode } from '../lib/api'
 import { fetchPublicCvProfile } from '../lib/publicProfile'
 import type { CvData } from '../types/cv'
@@ -55,8 +54,6 @@ type CvRouteState =
   | { kind: 'loading' }
   | { kind: 'error'; messageKey: MessageKey; details?: string; status?: number }
   | { kind: 'ready'; cv: CvData; sessionExpiresAt?: string }
-
-const preferredCredentialIssuerOrder = ['microsoft', 'aws', 'google', 'school', 'language', 'other'] as const
 
 function mapApiErrorToMessage(code: ApiErrorCode): MessageKey {
   if (code === 'network_error') return 'networkError'
@@ -189,57 +186,6 @@ function useBasicsVisibility(stateKind: CvRouteState['kind']) {
   }, [stateKind])
 
   return { basicsSentinelRef, isBasicsInView }
-}
-
-function MicrosoftMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className={className}>
-      <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
-      <rect x="13" y="3" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.9" />
-      <rect x="3" y="13" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.85" />
-      <rect x="13" y="13" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.8" />
-    </svg>
-  )
-}
-
-function AwsMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className={className}>
-      <path
-        fill="currentColor"
-        d="M4.25 16.6c2.4 1.76 5.2 2.65 8.05 2.65 3.2 0 6.2-1.1 8.45-2.98.26-.2.03-.62-.29-.45-2.44 1.27-5.3 1.95-8.15 1.95-2.6 0-5.2-.64-7.57-1.87-.34-.18-.66.24-.49.7ZM19.16 15.64c-.33-.44-2.17-.2-3 .07-.25.08-.29-.19-.06-.35 1.47-1.03 3.89-.73 4.17-.38.27.35-.07 2.77-1.44 3.91-.21.17-.41.08-.32-.15.29-.76.92-2.44.65-3.1Z"
-      />
-      <path
-        fill="currentColor"
-        d="M7.34 9.58c.14-.19.38-.31.63-.31h2.03c.24 0 .44.12.53.33l3.16 7.53c.07.18.02.38-.12.51l-1.03.96c-.15.14-.38.14-.53.02l-.83-.73a.383.383 0 0 1-.12-.18l-.65-1.58H7.74l-.6 1.45c-.06.16-.22.26-.39.26H5.3c-.31 0-.51-.33-.38-.62L7.34 9.58Zm1.02 2.17-.9 2.17h1.84l-.94-2.17Z"
-        opacity="0.9"
-      />
-    </svg>
-  )
-}
-
-function CredentialIssuerIcon({ issuer }: { issuer: string }) {
-  const cls = 'h-4 w-4 opacity-80'
-  if (issuer === 'microsoft') return <MicrosoftMark className={cls} />
-  if (issuer === 'aws') return <AwsMark className={cls} />
-  if (issuer === 'google') return <SiGoogleIcon className={cls} aria-hidden="true" focusable="false" />
-  if (issuer === 'school') return <GraduationCap className={cls} />
-  if (issuer === 'language') return <Languages className={cls} />
-  return <ShieldCheck className={cls} />
-}
-
-function formatCredentialIssuerLabel(issuer: string, t: (key: MessageKey) => string) {
-  if (issuer === 'language') return t('languageExams')
-  if (issuer === 'school') return t('education')
-  if (issuer === 'other') return t('other')
-  if (issuer === 'aws') return 'AWS'
-  if (issuer === 'cncf') return 'CNCF'
-  const normalized = issuer.replace(/[-_]+/g, ' ').trim()
-  if (!normalized) return t('other')
-  return normalized
-    .split(' ')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
 }
 
 export function CvRoute() {
@@ -427,64 +373,7 @@ export function CvRoute() {
             if (key === 'credentials' && state.cv.credentials?.length) {
               return (
                 <Section key="credentials" title={t('credentials')} icon={<ShieldCheck className="h-4 w-4" />}>
-                  <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                    {[
-                      ...preferredCredentialIssuerOrder,
-                      ...Array.from(
-                        new Set((state.cv.credentials ?? []).map((c) => String(c.issuer ?? '').trim().toLowerCase()).filter(Boolean)),
-                      ).filter((issuer) => !preferredCredentialIssuerOrder.includes(issuer as (typeof preferredCredentialIssuerOrder)[number])),
-                    ]
-                      .map((issuer) => {
-                        const items = state.cv.credentials?.filter((c) => String(c.issuer ?? '').trim().toLowerCase() === issuer) ?? []
-                        if (!items.length) return null
-                        return (
-                          <div key={issuer}>
-                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                              <CredentialIssuerIcon issuer={issuer} />
-                              {formatCredentialIssuerLabel(issuer, t)}
-                            </div>
-                            <div className="mt-2 divide-y divide-slate-200/60 dark:divide-slate-800/60">
-                              {items.map((c) => (
-                                <article
-                                  key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`}
-                                  className="py-3.5"
-                                >
-                                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-                                    <div className="min-w-0">
-                                      <a
-                                        className="font-semibold text-slate-900 underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500 dark:text-slate-100 dark:decoration-slate-700 dark:hover:decoration-slate-500"
-                                        href={c.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                      >
-                                        {c.label}
-                                      </a>
-                                      {c.dateEarned || c.dateExpires ? (
-                                        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-                                          {c.dateEarned ? (
-                                            <span className="inline-flex items-center gap-1.5">
-                                              <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                              {t('earned')} {c.dateEarned}
-                                            </span>
-                                          ) : null}
-                                          {c.dateExpires ? (
-                                            <span className="inline-flex items-center gap-1.5">
-                                              <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                              {t('expires')} {c.dateExpires}
-                                            </span>
-                                          ) : null}
-                                        </div>
-                                      ) : null}
-                                    </div>
-                                  </div>
-                                </article>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      })
-                      .filter(Boolean)}
-                  </div>
+                  <GroupedCredentials credentials={state.cv.credentials} t={t} />
                 </Section>
               )
             }
