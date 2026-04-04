@@ -11,9 +11,10 @@ export function HonorsAwardsSection(props: {
   setPublicSections: React.Dispatch<React.SetStateAction<PublicSectionsFlags>>
   isMobile: boolean
   rowErrors?: string[]
+  sectionErrors?: Partial<Record<keyof PublicSectionsFlags, string>>
 }) {
   const { t } = useI18n()
-  const { awards, setAwards, publicSections, setPublicSections, isMobile, rowErrors } = props
+  const { awards, setAwards, publicSections, setPublicSections, isMobile, rowErrors, sectionErrors } = props
 
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
@@ -39,6 +40,11 @@ export function HonorsAwardsSection(props: {
         </div>
       </div>
       <div className="space-y-2">
+        {sectionErrors?.honorsAwards ? (
+          <p className="text-xs text-red-600 dark:text-red-400" role="alert">
+            {sectionErrors.honorsAwards}
+          </p>
+        ) : null}
         {awards.map((a, idx) => (
           <div key={a._id} className="group flex items-start gap-1">
             <details open={!isMobile} className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
