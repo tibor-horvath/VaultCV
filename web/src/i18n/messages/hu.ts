@@ -142,6 +142,7 @@ export const huMessages: Partial<MessageCatalog> = {
   adminSaveSettingsFailed: 'A beállítások mentése sikertelen.',
   adminSave: 'Mentés',
   adminLocale: 'Nyelv',
+  adminCvLocale: 'Önéletrajz nyelve',
   adminAddLanguage: 'Nyelv hozzáadása',
   adminAdd: 'Hozzáadás',
   adminPublic: 'Nyilvános',

@@ -18,7 +18,7 @@ async function fetchAuthMe(): Promise<ClientPrincipal | null> {
 }
 
 export function AdminEditorRoute() {
-  const { locale: uiLocale, setLocale: setUiLocale, t } = useI18n()
+  const { locale: uiLocale, t } = useI18n()
   const [me, setMe] = useState<ClientPrincipal | null>(null)
   const [meLoading, setMeLoading] = useState(true)
   const isAdmin = useMemo(() => (me?.userRoles ?? []).includes('admin'), [me])
@@ -37,11 +37,6 @@ export function AdminEditorRoute() {
       cancelled = true
     }
   }, [])
-
-  useEffect(() => {
-    if (editor.locale === uiLocale) return
-    setUiLocale(editor.locale)
-  }, [editor.locale, setUiLocale, uiLocale])
 
   return (
     <AdminEditorPage
