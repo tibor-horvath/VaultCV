@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { redirectToLogin } from '../../lib/authRedirect'
 import { resolveSupportedLocale, sanitizeSupportedLocales, toLocaleOptions } from '../../i18n/localeRegistry'
 import type {
+  AwardRow,
   CredentialRow,
   EducationRow,
   ExperienceRow,
@@ -74,6 +75,8 @@ export function useAdminEditorProfile(params: {
   const [basicsPhotoAlt, setBasicsPhotoAlt] = useState('')
   const [skills, setSkills] = useState<string[]>([])
   const [languages, setLanguages] = useState<string[]>([])
+  const [hobbiesInterests, setHobbiesInterests] = useState<string[]>([])
+  const [awards, setAwards] = useState<AwardRow[]>([])
   const [sectionOrder, setSectionOrder] = useState<SectionKey[]>(normalizeSectionOrder([]))
 
   const [links, setLinks] = useState<LinkRow[]>([])
@@ -95,6 +98,8 @@ export function useAdminEditorProfile(params: {
   const [publicSections, setPublicSections] = useState<PublicSectionsFlags>({
     skills: false,
     languages: false,
+    hobbiesInterests: false,
+    honorsAwards: false,
   })
 
   const [publicExperience, setPublicExperience] = useState<PublicExperienceFlags[]>([])
@@ -120,6 +125,7 @@ export function useAdminEditorProfile(params: {
   const previousPublicEducationRef = useRef(publicEducation)
   const previousProjectsRef = useRef(projects)
   const previousPublicProjectsRef = useRef(publicProjects)
+  const previousAwardsRef = useRef(awards)
   const lastLoadedDraftSignatureRef = useRef('')
   const suppressDirtyTrackingRef = useRef(false)
   const errorBannerRef = useRef<HTMLDivElement | null>(null)
@@ -137,6 +143,8 @@ export function useAdminEditorProfile(params: {
         hasProfileImage,
         skills,
         languages,
+        hobbiesInterests,
+        awards,
         sectionOrder,
         links,
         credentials,
@@ -160,6 +168,8 @@ export function useAdminEditorProfile(params: {
       hasProfileImage,
       skills,
       languages,
+      hobbiesInterests,
+      awards,
       sectionOrder,
       links,
       credentials,
@@ -327,6 +337,9 @@ export function useAdminEditorProfile(params: {
       const nextPublicSections = {
         skills: Array.isArray(parsedPublic.value.skills) && parsedPublic.value.skills.length > 0,
         languages: Array.isArray(parsedPublic.value.languages) && parsedPublic.value.languages.length > 0,
+        hobbiesInterests:
+          Array.isArray(parsedPublic.value.hobbiesInterests) && parsedPublic.value.hobbiesInterests.length > 0,
+        honorsAwards: Array.isArray(parsedPublic.value.awards) && parsedPublic.value.awards.length > 0,
       }
 
       const publicLinksArr = asArray(parsedPublic.value.links)
@@ -518,6 +531,16 @@ export function useAdminEditorProfile(params: {
           _id: crypto.randomUUID(),
         }
       })
+      const nextHobbiesInterests = asStringArray(parsedPrivate.value.hobbiesInterests)
+      const nextAwards = asArray(parsedPrivate.value.awards).map((x) => {
+        const o = asObject(x)
+        return {
+          _id: crypto.randomUUID(),
+          title: asString(o.title),
+          issuer: asString(o.issuer) || undefined,
+          year: asString(o.year) || undefined,
+        }
+      })
 
       lastLoadedDraftSignatureRef.current = buildDraftSignature({
         basicsName: nextBasicsName,
@@ -530,6 +553,8 @@ export function useAdminEditorProfile(params: {
         hasProfileImage: nextHasProfileImage,
         skills: nextSkills,
         languages: nextLanguages,
+        hobbiesInterests: nextHobbiesInterests,
+        awards: nextAwards,
         sectionOrder: nextSectionOrder,
         links: nextLinks,
         credentials: nextCredentials,
@@ -558,6 +583,8 @@ export function useAdminEditorProfile(params: {
       setHasProfileImage(nextHasProfileImage)
       setSkills(nextSkills)
       setLanguages(nextLanguages)
+      setHobbiesInterests(nextHobbiesInterests)
+      setAwards(nextAwards)
       setSectionOrder(nextSectionOrder)
       setLinks(nextLinks)
       setCredentials(nextCredentials)
@@ -774,6 +801,18 @@ export function useAdminEditorProfile(params: {
     })
   }, [projects])
 
+  useEffect(() => {
+    setPrivateValidation((cur) => {
+      const nextErrors = clearChangedRowErrorsWithoutFlags({
+        previousRows: previousAwardsRef.current,
+        nextRows: awards,
+        currentErrors: cur.awards,
+      })
+      return nextErrors ? { ...cur, awards: nextErrors } : cur
+    })
+    previousAwardsRef.current = awards
+  }, [awards])
+
   async function save() {
     setIsSaving(true)
     setLoading(true)
@@ -851,6 +890,14 @@ export function useAdminEditorProfile(params: {
         if (hasIncompleteProjectLink) nextPrivateValidation.projects[idx] = t('adminValidationProjectLinksNeedLabelAndUrl')
       })
 
+      awards.forEach((a, idx) => {
+        const title = (a.title ?? '').trim()
+        const issuer = (a.issuer ?? '').trim()
+        const year = (a.year ?? '').trim()
+        if (!title && !issuer && !year) return
+        if (!title) nextPrivateValidation.awards[idx] = t('adminValidationAwardNeedsTitle')
+      })
+
       if (hasPrivateValidationErrors(nextPrivateValidation)) {
         setPrivateValidation(nextPrivateValidation)
         setError(t('adminValidationIncompleteRows'))
@@ -886,23 +933,43 @@ export function useAdminEditorProfile(params: {
         }))
       next.experience = experience
         .filter((e) => e.company.trim() && e.role.trim())
-        .map(({ _id: _rowId, ...e }) => ({
-          ...e,
-          skills: (e.skills ?? []).filter(Boolean),
-          highlights: (e.highlights ?? []).filter(Boolean),
-        }))
+        .map((e) => {
+          const { _id, ...rest } = e
+          void _id
+          return {
+            ...rest,
+            skills: (e.skills ?? []).filter(Boolean),
+            highlights: (e.highlights ?? []).filter(Boolean),
+          }
+        })
       next.education = education
         .filter((e) => e.school.trim())
-        .map(({ _id: _rowId, ...e }) => ({
-          ...e,
-          highlights: (e.highlights ?? []).filter(Boolean),
-        }))
+        .map((e) => {
+          const { _id, ...rest } = e
+          void _id
+          return {
+            ...rest,
+            highlights: (e.highlights ?? []).filter(Boolean),
+          }
+        })
       next.projects = projects
         .filter((p) => p.name.trim())
-        .map(({ _id: _rowId, ...p }) => ({
-          ...p,
-          tags: (p.tags ?? []).filter(Boolean),
-          links: (p.links ?? []).filter((l) => l.label.trim() && l.url.trim()),
+        .map((p) => {
+          const { _id, ...rest } = p
+          void _id
+          return {
+            ...rest,
+            tags: (p.tags ?? []).filter(Boolean),
+            links: (p.links ?? []).filter((l) => l.label.trim() && l.url.trim()),
+          }
+        })
+      next.hobbiesInterests = hobbiesInterests.filter(Boolean)
+      next.awards = awards
+        .filter((a) => (a.title ?? '').trim())
+        .map((a) => ({
+          title: (a.title ?? '').trim(),
+          ...(a.issuer?.trim() ? { issuer: a.issuer.trim() } : {}),
+          ...(a.year?.trim() ? { year: a.year.trim() } : {}),
         }))
 
       const qs = new URLSearchParams()
@@ -924,6 +991,14 @@ export function useAdminEditorProfile(params: {
       if (publicBasics.photo && !asString(nextBasics.photoAlt).trim()) nextValidation.basics.photo = t('adminValidationPhotoAltRequired')
       if (publicSections.skills && nextSkills.length === 0) nextValidation.sections.skills = fieldToggledEmpty(t('skills'))
       if (publicSections.languages && nextLanguages.length === 0) nextValidation.sections.languages = fieldToggledEmpty(t('languages'))
+      const nextHobbies = asStringArray(next.hobbiesInterests)
+      const nextAwardsOut = asArray(next.awards)
+      if (publicSections.hobbiesInterests && nextHobbies.length === 0) {
+        nextValidation.sections.hobbiesInterests = fieldToggledEmpty(t('hobbiesInterests'))
+      }
+      if (publicSections.honorsAwards && nextAwardsOut.length === 0) {
+        nextValidation.sections.honorsAwards = fieldToggledEmpty(t('honorsAwards'))
+      }
 
       links.forEach((l, idx) => {
         if (!l.isPublic) return
@@ -1011,6 +1086,8 @@ export function useAdminEditorProfile(params: {
 
       if (publicSections.skills) publicNext.skills = nextSkills
       if (publicSections.languages) publicNext.languages = nextLanguages
+      if (publicSections.hobbiesInterests) publicNext.hobbiesInterests = nextHobbies
+      if (publicSections.honorsAwards && nextAwardsOut.length) publicNext.awards = nextAwardsOut
       publicNext.sectionOrder = sectionOrder
 
       const publicLinksOut = links
@@ -1182,6 +1259,10 @@ export function useAdminEditorProfile(params: {
     setEducation,
     projects,
     setProjects,
+    hobbiesInterests,
+    setHobbiesInterests,
+    awards,
+    setAwards,
 
     publicValidation,
     privateValidation,

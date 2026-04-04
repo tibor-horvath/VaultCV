@@ -11,6 +11,8 @@ export type PublicBasicsFlags = {
 export type PublicSectionsFlags = {
   skills: boolean
   languages: boolean
+  hobbiesInterests: boolean
+  honorsAwards: boolean
 }
 
 export type LabeledUrl = { label: string; url: string }
@@ -67,4 +69,11 @@ export type PublicEducationFlags = {
 
 export type ProjectRow = { _id: string; name: string; description: string; tags?: string[]; links?: LabeledUrl[] }
 export type PublicProjectFlags = { name: boolean; tags: boolean; description: boolean }
+
+export type AwardRow = {
+  _id: string
+  title: string
+  issuer?: string
+  year?: string
+}
 

@@ -105,6 +105,11 @@ export function AdminEditorRoute() {
       publicProjects={editor.publicProjects}
       setPublicProjects={editor.setPublicProjects}
       projectRowErrors={mergeRowErrors(editor.publicValidation.projects, editor.privateValidation.projects)}
+      hobbiesInterests={editor.hobbiesInterests}
+      setHobbiesInterests={editor.setHobbiesInterests}
+      awards={editor.awards}
+      setAwards={editor.setAwards}
+      awardRowErrors={mergeRowErrors(undefined, editor.privateValidation.awards)}
       isMobile={editor.isMobile}
       onSave={() => void editor.save()}
     />

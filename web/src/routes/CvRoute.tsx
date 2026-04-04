@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  Award,
   BriefcaseBusiness,
   Calendar,
   CircleAlert,
@@ -13,10 +14,12 @@ import {
   Moon,
   ShieldCheck,
   Sun,
+  TentTree,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { CvPdfLayout } from '../components/cv/pdf/CvPdfLayout'
 import { FloatingBasicsMenu } from '../components/cv/FloatingBasicsMenu'
+import { AwardsList } from '../components/cv/AwardsList'
 import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
 import { ProjectsGrid } from '../components/cv/ProjectsGrid'
@@ -519,6 +522,20 @@ export function CvRoute() {
               return (
                 <Section key="education" title={t('education')} icon={<GraduationCap className="h-4 w-4" />}>
                   <EducationList items={state.cv.education} />
+                </Section>
+              )
+            }
+            if (key === 'hobbiesInterests' && state.cv.hobbiesInterests?.length) {
+              return (
+                <Section key="hobbiesInterests" title={t('hobbiesInterests')} icon={<TentTree className="h-4 w-4" />}>
+                  <SkillsChips items={state.cv.hobbiesInterests} />
+                </Section>
+              )
+            }
+            if (key === 'honorsAwards' && state.cv.awards?.length) {
+              return (
+                <Section key="honorsAwards" title={t('honorsAwards')} icon={<Award className="h-4 w-4" />}>
+                  <AwardsList items={state.cv.awards} />
                 </Section>
               )
             }

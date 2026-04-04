@@ -4,6 +4,8 @@ export const SECTION_KEYS = [
   'experience',
   'projects',
   'education',
+  'hobbiesInterests',
+  'honorsAwards',
 ] as const
 
 export type SectionKey = (typeof SECTION_KEYS)[number]

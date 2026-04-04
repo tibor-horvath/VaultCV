@@ -10,7 +10,15 @@ import { SectionOrderSidebar } from './SectionOrderSidebar'
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
 
-const ORDER: SectionKey[] = ['credentials', 'skillsLanguages', 'experience', 'projects', 'education']
+const ORDER: SectionKey[] = [
+  'credentials',
+  'skillsLanguages',
+  'experience',
+  'projects',
+  'education',
+  'hobbiesInterests',
+  'honorsAwards',
+]
 
 function renderSidebar(setSectionOrder = vi.fn()) {
   mountedContainer = document.createElement('div')

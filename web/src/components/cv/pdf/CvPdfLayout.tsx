@@ -1,4 +1,4 @@
-import { forwardRef, Fragment } from 'react'
+import { Fragment, forwardRef } from 'react'
 import { AtSign, BookOpenText, Calendar, FlaskConical, Globe, Mail, MapPin, ScanSearch, Sparkles } from 'lucide-react'
 import type { CvCredentialIssuer, CvData, CvEducation } from '../../../types/cv'
 import {
@@ -10,6 +10,7 @@ import {
 } from '../../../lib/cvPresentation'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../../../lib/pdfCaptureLayout'
 import { normalizeSectionOrder } from '../../../lib/sectionOrder'
+import type { SectionKey } from '../../../lib/sectionOrder'
 import { highlightChildKey, stableEducationKey, stableExperienceKey } from '../../../lib/cvKeys'
 import { useI18n } from '../../../lib/i18n'
 import {
@@ -190,93 +191,93 @@ export const CvPdfLayout = forwardRef<
           </section>
         ) : null}
 
-        {orderedSections.map((key) => {
+        {orderedSections.map((key: SectionKey) => {
           if (key === 'credentials' && cv.credentials?.length) {
             return (
-              <section key="credentials" className="break-inside-avoid">
-                <h2
-                  className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
-                  data-pdf-page-break=""
-                >
-                  {t('credentials')}
-                </h2>
-                <div className="mt-4 space-y-4">
-                  {credentialIssuerOrder.map((issuer) => {
-                    const items = cv.credentials?.filter((c) => c.issuer === issuer) ?? []
-                    if (!items.length) return null
-                    return (
-                      <div key={issuer}>
-                        <div
-                          className="flex items-center gap-2 text-[10px] font-semibold uppercase leading-none tracking-wider text-slate-500"
+          <section key={key} className="break-inside-avoid">
+            <h2
+              className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
+              data-pdf-page-break=""
+            >
+              {t('credentials')}
+            </h2>
+            <div className="mt-4 space-y-4">
+              {credentialIssuerOrder.map((issuer) => {
+                const items = cv.credentials?.filter((c) => c.issuer === issuer) ?? []
+                if (!items.length) return null
+                return (
+                  <div key={issuer}>
+                    <div
+                      className="flex items-center gap-2 text-[10px] font-semibold uppercase leading-none tracking-wider text-slate-500"
+                      data-pdf-page-break=""
+                    >
+                      <CredentialIssuerIcon issuer={issuer} className="h-4 w-4 shrink-0 translate-y-px text-slate-600" />
+                      {issuer === 'language'
+                        ? t('languageExams')
+                        : issuer === 'school'
+                          ? t('education')
+                        : issuer === 'other'
+                          ? t('other')
+                          : issuer === 'aws'
+                            ? 'AWS'
+                            : issuer.charAt(0).toUpperCase() + issuer.slice(1)}
+                    </div>
+                    <div className="mt-2 divide-y divide-slate-100">
+                      {items.map((c) => (
+                        <article
+                          key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`}
+                          className="py-2.5"
                           data-pdf-page-break=""
+                          data-pdf-no-split=""
                         >
-                          <CredentialIssuerIcon issuer={issuer} className="h-4 w-4 shrink-0 translate-y-px text-slate-600" />
-                          {issuer === 'language'
-                            ? t('languageExams')
-                            : issuer === 'school'
-                              ? t('education')
-                            : issuer === 'other'
-                              ? t('other')
-                              : issuer === 'aws'
-                                ? 'AWS'
-                                : issuer.charAt(0).toUpperCase() + issuer.slice(1)}
-                        </div>
-                        <div className="mt-2 divide-y divide-slate-100">
-                          {items.map((c) => (
-                            <article
-                              key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`}
-                              className="py-2.5"
+                          <div className="font-semibold text-slate-900" data-pdf-page-break="">
+                            {c.label}
+                          </div>
+                          {hasPdfUrl(c.url) ? (
+                            <div className={`mt-1.5 ${pdfIconRowClass}`} data-pdf-page-break="">
+                              <Globe className={pdfLinkIconClass} aria-hidden="true" />
+                              <PdfPrintUrlLine href={c.url} className="min-w-0 flex-1" />
+                            </div>
+                          ) : null}
+                          {c.dateEarned || c.dateExpires ? (
+                            <div
+                              className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs leading-none text-slate-600"
                               data-pdf-page-break=""
-                              data-pdf-no-split=""
                             >
-                              <div className="font-semibold text-slate-900" data-pdf-page-break="">
-                                {c.label}
-                              </div>
-                              {hasPdfUrl(c.url) ? (
-                                <div className={`mt-1.5 ${pdfIconRowClass}`} data-pdf-page-break="">
-                                  <Globe className={pdfLinkIconClass} aria-hidden="true" />
-                                  <PdfPrintUrlLine href={c.url} className="min-w-0 flex-1" />
-                                </div>
+                              {c.dateEarned ? (
+                                <span className={pdfIconRowSmClass}>
+                                  <Calendar className="h-3 w-3 shrink-0 opacity-70" />
+                                  <span>
+                                    {t('earned')} {c.dateEarned}
+                                  </span>
+                                </span>
                               ) : null}
-                              {c.dateEarned || c.dateExpires ? (
-                                <div
-                                  className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs leading-none text-slate-600"
-                                  data-pdf-page-break=""
-                                >
-                                  {c.dateEarned ? (
-                                    <span className={pdfIconRowSmClass}>
-                                      <Calendar className="h-3 w-3 shrink-0 opacity-70" />
-                                      <span>
-                                        {t('earned')} {c.dateEarned}
-                                      </span>
-                                    </span>
-                                  ) : null}
-                                  {c.dateExpires ? (
-                                    <span className={pdfIconRowSmClass}>
-                                      <Calendar className="h-3 w-3 shrink-0 opacity-70" />
-                                      <span>
-                                        {t('expires')} {c.dateExpires}
-                                      </span>
-                                    </span>
-                                  ) : null}
-                                </div>
+                              {c.dateExpires ? (
+                                <span className={pdfIconRowSmClass}>
+                                  <Calendar className="h-3 w-3 shrink-0 opacity-70" />
+                                  <span>
+                                    {t('expires')} {c.dateExpires}
+                                  </span>
+                                </span>
                               ) : null}
-                            </article>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </section>
+                            </div>
+                          ) : null}
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
             )
           }
           if (key === 'skillsLanguages') {
             const hasSkills = Boolean(cv.skills?.length)
-            const hasLangs = Boolean(cv.languages?.length)
-            if (!hasSkills && !hasLangs) return null
+            const hasLang = Boolean(cv.languages?.length)
+            if (!hasSkills && !hasLang) return null
             return (
-              <Fragment key="skillsLanguages">
+              <Fragment key={key}>
                 {hasSkills ? (
                   <section className="break-inside-avoid" data-pdf-page-break="">
                     <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
@@ -291,7 +292,7 @@ export const CvPdfLayout = forwardRef<
                     </div>
                   </section>
                 ) : null}
-                {hasLangs ? (
+                {hasLang ? (
                   <section className="break-inside-avoid" data-pdf-page-break="">
                     <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
                       {t('languages')}
@@ -310,224 +311,269 @@ export const CvPdfLayout = forwardRef<
           }
           if (key === 'experience' && cv.experience?.length) {
             return (
-              <section key="experience" className="break-inside-avoid">
-                <h2
-                  className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
-                  data-pdf-page-break=""
-                >
-                  {t('experience')}
-                </h2>
-                <div className="mt-3 divide-y divide-slate-100">
-                  {cv.experience.map((x) => {
-                    const rowKey = stableExperienceKey(x)
-                    return (
-                      <article key={rowKey} className="py-4" data-pdf-page-break="" data-pdf-no-split="">
-                        {/* Stacked rows + per-row breaks so raster page slices do not cut through a single headline line */}
-                        <div className="space-y-1 font-semibold leading-none text-slate-900">
-                          <div data-pdf-page-break="">{x.role}</div>
-                          <div className={pdfIconRowTightClass} data-pdf-page-break="">
-                            <AtSign className="h-3.5 w-3.5 shrink-0 translate-y-px text-slate-400" aria-hidden="true" />
-                            <span className="leading-none">{x.company}</span>
-                          </div>
+          <section key={key} className="break-inside-avoid">
+            <h2
+              className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
+              data-pdf-page-break=""
+            >
+              {t('experience')}
+            </h2>
+            <div className="mt-3 divide-y divide-slate-100">
+              {cv.experience.map((x) => {
+                const rowKey = stableExperienceKey(x)
+                return (
+                  <article key={rowKey} className="py-4" data-pdf-page-break="" data-pdf-no-split="">
+                    {/* Stacked rows + per-row breaks so raster page slices do not cut through a single headline line */}
+                    <div className="space-y-1 font-semibold leading-none text-slate-900">
+                      <div data-pdf-page-break="">{x.role}</div>
+                      <div className={pdfIconRowTightClass} data-pdf-page-break="">
+                        <AtSign className="h-3.5 w-3.5 shrink-0 translate-y-px text-slate-400" aria-hidden="true" />
+                        <span className="leading-none">{x.company}</span>
+                      </div>
+                    </div>
+                    <div
+                      className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-none text-slate-600"
+                      data-pdf-page-break=""
+                    >
+                      <span className={pdfIconRowSmClass}>
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        <span>
+                          {x.start} – {x.end ?? t('present')}
+                        </span>
+                      </span>
+                      {x.location ? (
+                        <span className={pdfIconRowSmClass}>
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span>{x.location}</span>
+                        </span>
+                      ) : null}
+                    </div>
+                    {(x.links ?? []).some((link) => hasPdfUrl(link.url) && String(link.label ?? '').trim()) ? (
+                      <div className="mt-2 space-y-2">
+                        {(x.links ?? [])
+                          .filter((link) => hasPdfUrl(link.url) && String(link.label ?? '').trim())
+                          .map((link) => {
+                            const kind = inferLinkKind(link)
+                            const Icon = kind === 'linkedin' ? SiLinkedinIcon : Globe
+                            return (
+                              <div key={`${x.company}:${x.role}:${link.label}:${link.url}`} className={pdfIconRowClass} data-pdf-page-break="">
+                                <Icon className={pdfLinkIconClass} aria-hidden="true" />
+                                <PdfPrintUrlLine href={link.url} className="min-w-0 flex-1" />
+                              </div>
+                            )
+                          })}
+                      </div>
+                    ) : null}
+                    {x.highlights?.length ? (
+                      <ul className="mt-3 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
+                        {x.highlights.map((h, i) => (
+                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="" data-pdf-no-split="">
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {x.skills?.length ? (
+                      <div className="mt-3" data-pdf-page-break="">
+                        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                          {t('skills')}
                         </div>
-                        <div
-                          className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-none text-slate-600"
-                          data-pdf-page-break=""
-                        >
-                          <span className={pdfIconRowSmClass}>
-                            <Calendar className="h-3.5 w-3.5 shrink-0" />
-                            <span>
-                              {x.start} – {x.end ?? t('present')}
+                        <div className="flex flex-wrap gap-2">
+                          {x.skills.map((skill) => (
+                            <span key={`${rowKey}:skill:${skill}`} className={pdfChipSmClass}>
+                              {skill}
                             </span>
-                          </span>
-                          {x.location ? (
-                            <span className={pdfIconRowSmClass}>
-                              <MapPin className="h-3.5 w-3.5 shrink-0" />
-                              <span>{x.location}</span>
-                            </span>
-                          ) : null}
+                          ))}
                         </div>
-                        {(x.links ?? []).some((link) => hasPdfUrl(link.url) && String(link.label ?? '').trim()) ? (
-                          <div className="mt-2 space-y-2">
-                            {(x.links ?? [])
-                              .filter((link) => hasPdfUrl(link.url) && String(link.label ?? '').trim())
-                              .map((link) => {
-                                const kind = inferLinkKind(link)
-                                const Icon = kind === 'linkedin' ? SiLinkedinIcon : Globe
-                                return (
-                                  <div key={`${x.company}:${x.role}:${link.label}:${link.url}`} className={pdfIconRowClass} data-pdf-page-break="">
-                                    <Icon className={pdfLinkIconClass} aria-hidden="true" />
-                                    <PdfPrintUrlLine href={link.url} className="min-w-0 flex-1" />
-                                  </div>
-                                )
-                              })}
-                          </div>
-                        ) : null}
-                        {x.highlights?.length ? (
-                          <ul className="mt-3 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
-                            {x.highlights.map((h, i) => (
-                              <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="" data-pdf-no-split="">
-                                {h}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
-                        {x.skills?.length ? (
-                          <div className="mt-3" data-pdf-page-break="">
-                            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-                              {t('skills')}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {x.skills.map((skill) => (
-                                <span key={`${rowKey}:skill:${skill}`} className={pdfChipSmClass}>
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-                      </article>
-                    )
-                  })}
-                </div>
-              </section>
+                      </div>
+                    ) : null}
+                  </article>
+                )
+              })}
+            </div>
+          </section>
             )
           }
           if (key === 'projects' && cv.projects?.length) {
             return (
-              <section key="projects" className="break-inside-avoid">
-                <h2
-                  className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
-                  data-pdf-page-break=""
-                >
-                  {t('projects')}
-                </h2>
-                <div className="mt-3 divide-y divide-slate-100">
-                  {cv.projects.map((p, projectIndex) => {
-                    const projectLinks = (p.links ?? []).filter((l) => hasPdfUrl(l.url))
-                    return (
-                      <article
-                        key={p.name}
-                        className="py-4"
-                        {...(projectIndex > 0 ? { 'data-pdf-page-break': '' } : {})}
-                        data-pdf-no-split=""
-                      >
-                        <div className="font-semibold text-slate-900">{p.name}</div>
-                        {projectLinks.length ? (
-                          <div className="mt-2 space-y-2">
-                            {projectLinks.map((l) => {
-                              const kind = inferProjectLinkLabelKind(l)
-                              const Icon =
-                                kind === 'github'
-                                  ? SiGithubIcon
-                                  : kind === 'gitlab'
-                                    ? SiGitlabIcon
-                                  : kind === 'docs'
-                                    ? BookOpenText
-                                    : kind === 'video'
-                                      ? SiYoutubeIcon
-                                      : kind === 'demo'
-                                        ? FlaskConical
-                                        : kind === 'case-study'
-                                          ? ScanSearch
-                                          : kind === 'npm'
-                                            ? SiNpmIcon
-                                            : kind === 'pypi'
-                                              ? SiPypiIcon
-                                          : kind === 'app-store' || kind === 'play-store'
-                                            ? kind === 'app-store'
-                                              ? SiAppstoreIcon
-                                              : SiGoogleplayIcon
-                                            : Globe
-                              return (
-                                <div key={`${p.name}:${l.url}`} className={pdfIconRowClass}>
-                                  <Icon className={pdfLinkIconClass} aria-hidden="true" />
-                                  <PdfPrintUrlLine href={l.url} className="min-w-0 flex-1" />
-                                </div>
-                              )
-                            })}
-                          </div>
-                        ) : null}
-                        <p className="mt-2 text-[13px] text-slate-700">{p.description}</p>
-                        {p.tags?.length ? (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {p.tags.map((tag) => (
-                              <span key={tag} className={pdfChipSmClass}>
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </article>
-                    )
-                  })}
-                </div>
-              </section>
+          <section key={key} className="break-inside-avoid">
+            <h2
+              className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
+              data-pdf-page-break=""
+            >
+              {t('projects')}
+            </h2>
+            <div className="mt-3 divide-y divide-slate-100">
+              {cv.projects.map((p, projectIndex) => {
+                const projectLinks = (p.links ?? []).filter((l) => hasPdfUrl(l.url))
+                return (
+                  <article
+                    key={p.name}
+                    className="py-4"
+                    {...(projectIndex > 0 ? { 'data-pdf-page-break': '' } : {})}
+                    data-pdf-no-split=""
+                  >
+                    <div className="font-semibold text-slate-900">{p.name}</div>
+                    {projectLinks.length ? (
+                      <div className="mt-2 space-y-2">
+                        {projectLinks.map((l) => {
+                          const kind = inferProjectLinkLabelKind(l)
+                          const Icon =
+                            kind === 'github'
+                              ? SiGithubIcon
+                              : kind === 'gitlab'
+                                ? SiGitlabIcon
+                              : kind === 'docs'
+                                ? BookOpenText
+                                : kind === 'video'
+                                  ? SiYoutubeIcon
+                                  : kind === 'demo'
+                                    ? FlaskConical
+                                    : kind === 'case-study'
+                                      ? ScanSearch
+                                      : kind === 'npm'
+                                        ? SiNpmIcon
+                                        : kind === 'pypi'
+                                          ? SiPypiIcon
+                                      : kind === 'app-store' || kind === 'play-store'
+                                        ? kind === 'app-store'
+                                          ? SiAppstoreIcon
+                                          : SiGoogleplayIcon
+                                        : Globe
+                          return (
+                            <div key={`${p.name}:${l.url}`} className={pdfIconRowClass}>
+                              <Icon className={pdfLinkIconClass} aria-hidden="true" />
+                              <PdfPrintUrlLine href={l.url} className="min-w-0 flex-1" />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+                    <p className="mt-2 text-[13px] text-slate-700">{p.description}</p>
+                    {p.tags?.length ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {p.tags.map((tag) => (
+                          <span key={tag} className={pdfChipSmClass}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </article>
+                )
+              })}
+            </div>
+          </section>
             )
           }
           if (key === 'education' && cv.education?.length) {
             return (
-              <section key="education" className="break-inside-avoid">
+          <section key={key} className="break-inside-avoid">
+            <h2
+              className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
+              data-pdf-page-break=""
+            >
+              {t('education')}
+            </h2>
+            <div className="mt-3 divide-y divide-slate-100">
+              {cv.education.map((e) => {
+                const rowKey = stableEducationKey(e)
+                const credential = educationCredentialLine(e)
+                return (
+                  <article key={rowKey} className="py-4" data-pdf-page-break="" data-pdf-no-split="">
+                    {credential ? (
+                      <div className="font-semibold text-slate-900" data-pdf-page-break="">
+                        {credential}
+                      </div>
+                    ) : null}
+                    <div
+                      className={`font-semibold text-slate-900 ${credential ? 'mt-1' : ''}`}
+                      data-pdf-page-break=""
+                    >
+                      {e.school}
+                    </div>
+                    {hasPdfUrl(e.schoolUrl) ? (
+                      <div className={`mt-1.5 ${pdfIconRowClass}`} data-pdf-page-break="">
+                        <Globe className={pdfLinkIconClass} aria-hidden="true" />
+                        <PdfPrintUrlLine href={e.schoolUrl} className="min-w-0 flex-1" />
+                      </div>
+                    ) : null}
+                    <div
+                      className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs leading-none text-slate-600"
+                      data-pdf-page-break=""
+                    >
+                      {e.location ? (
+                        <span className={pdfIconRowSmClass}>
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span>{e.location}</span>
+                        </span>
+                      ) : null}
+                      {e.start || e.end ? (
+                        <span className={pdfIconRowSmClass}>
+                          <Calendar className="h-3.5 w-3.5 shrink-0" />
+                          <span>
+                            {e.start ?? ''} {e.start && e.end ? '–' : ''} {e.end ?? t('present')}
+                          </span>
+                        </span>
+                      ) : null}
+                    </div>
+                    {e.highlights?.length ? (
+                      <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
+                        {e.highlights.map((h, i) => (
+                          <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="" data-pdf-no-split="">
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </article>
+                )
+              })}
+            </div>
+          </section>
+            )
+          }
+          if (key === 'hobbiesInterests' && cv.hobbiesInterests?.length) {
+            return (
+              <section key={key} className="break-inside-avoid" data-pdf-page-break="">
+                <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+                  {t('hobbiesInterests')}
+                </h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {cv.hobbiesInterests.map((s) => (
+                    <span key={s} className={pdfChipSmClass}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )
+          }
+          if (key === 'honorsAwards' && cv.awards?.length) {
+            return (
+              <section key={key} className="break-inside-avoid">
                 <h2
                   className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
                   data-pdf-page-break=""
                 >
-                  {t('education')}
+                  {t('honorsAwards')}
                 </h2>
                 <div className="mt-3 divide-y divide-slate-100">
-                  {cv.education.map((e) => {
-                    const rowKey = stableEducationKey(e)
-                    const credential = educationCredentialLine(e)
-                    return (
-                      <article key={rowKey} className="py-4" data-pdf-page-break="" data-pdf-no-split="">
-                        {credential ? (
-                          <div className="font-semibold text-slate-900" data-pdf-page-break="">
-                            {credential}
-                          </div>
-                        ) : null}
-                        <div
-                          className={`font-semibold text-slate-900 ${credential ? 'mt-1' : ''}`}
-                          data-pdf-page-break=""
-                        >
-                          {e.school}
+                  {cv.awards.map((a, i) => (
+                    <article
+                      key={a.id ?? `${a.title}:${a.issuer ?? ''}:${a.year ?? ''}:${i}`}
+                      className="py-3 first:pt-0"
+                      data-pdf-page-break=""
+                      data-pdf-no-split=""
+                    >
+                      <div className="font-semibold text-slate-900">{a.title}</div>
+                      {a.issuer || a.year ? (
+                        <div className="mt-1 text-xs text-slate-600">
+                          {[a.issuer, a.year].filter(Boolean).join(' · ')}
                         </div>
-                        {hasPdfUrl(e.schoolUrl) ? (
-                          <div className={`mt-1.5 ${pdfIconRowClass}`} data-pdf-page-break="">
-                            <Globe className={pdfLinkIconClass} aria-hidden="true" />
-                            <PdfPrintUrlLine href={e.schoolUrl} className="min-w-0 flex-1" />
-                          </div>
-                        ) : null}
-                        <div
-                          className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs leading-none text-slate-600"
-                          data-pdf-page-break=""
-                        >
-                          {e.location ? (
-                            <span className={pdfIconRowSmClass}>
-                              <MapPin className="h-3.5 w-3.5 shrink-0" />
-                              <span>{e.location}</span>
-                            </span>
-                          ) : null}
-                          {e.start || e.end ? (
-                            <span className={pdfIconRowSmClass}>
-                              <Calendar className="h-3.5 w-3.5 shrink-0" />
-                              <span>
-                                {e.start ?? ''} {e.start && e.end ? '–' : ''} {e.end ?? t('present')}
-                              </span>
-                            </span>
-                          ) : null}
-                        </div>
-                        {e.highlights?.length ? (
-                          <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-700">
-                            {e.highlights.map((h, i) => (
-                              <li key={highlightChildKey(rowKey, i)} data-pdf-page-break="" data-pdf-no-split="">
-                                {h}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </article>
-                    )
-                  })}
+                      ) : null}
+                    </article>
+                  ))}
                 </div>
               </section>
             )

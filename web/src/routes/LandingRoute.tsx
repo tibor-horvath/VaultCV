@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowRight, Eye, EyeOff, KeyRound, Moon, ShieldCheck, Sun } from 'lucide-react'
+import { ArrowRight, Award, Eye, EyeOff, KeyRound, Moon, ShieldCheck, Sun, TentTree } from 'lucide-react'
+import { AwardsList } from '../components/cv/AwardsList'
 import { BasicsCard } from '../components/cv/BasicsCard'
 import { EducationList } from '../components/cv/EducationList'
 import { ExperienceList } from '../components/cv/ExperienceList'
 import { ProjectsGrid } from '../components/cv/ProjectsGrid'
+import { SkillsChips } from '../components/cv/SkillsChips'
 import { Section } from '../components/cv/Section'
 import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { fetchPublicCvProfile } from '../lib/publicProfile'
@@ -338,6 +340,20 @@ export function LandingRoute() {
                 return (
                   <Section key="education" title={t('education')}>
                     <EducationList items={publicEducation} />
+                  </Section>
+                )
+              }
+              if (key === 'hobbiesInterests' && publicCv.hobbiesInterests?.length) {
+                return (
+                  <Section key="hobbiesInterests" title={t('hobbiesInterests')} icon={<TentTree className="h-4 w-4" />}>
+                    <SkillsChips items={publicCv.hobbiesInterests} />
+                  </Section>
+                )
+              }
+              if (key === 'honorsAwards' && publicCv.awards?.length) {
+                return (
+                  <Section key="honorsAwards" title={t('honorsAwards')} icon={<Award className="h-4 w-4" />}>
+                    <AwardsList items={publicCv.awards} />
                   </Section>
                 )
               }

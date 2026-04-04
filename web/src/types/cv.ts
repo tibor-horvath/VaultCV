@@ -77,6 +77,14 @@ export type CvEducation = {
   highlights?: string[]
 }
 
+export type CvAward = {
+  /** Stable key for list rendering. */
+  id?: string
+  title: string
+  issuer?: string
+  year?: string
+}
+
 export type CvData = {
   locale?: string
   basics: CvBasics
@@ -87,10 +95,14 @@ export type CvData = {
   experience?: CvExperience[]
   projects?: CvProject[]
   education?: CvEducation[]
+  /** Optional chip list for a Hobbies & interests section. */
+  hobbiesInterests?: string[]
+  /** Standalone honors and awards (distinct from per-degree `education.honors`). */
+  awards?: CvAward[]
   /**
    * Ordered list of section keys controlling rendering order on the CV views.
    * When absent the canonical default order is used (backwards compatible).
-   * Valid keys: 'credentials' | 'skillsLanguages' | 'experience' | 'projects' | 'education'
+   * Valid keys: 'credentials' | 'skillsLanguages' | 'experience' | 'projects' | 'education' | 'hobbiesInterests' | 'honorsAwards'
    */
   sectionOrder?: string[]
 }

@@ -1,4 +1,5 @@
 import type {
+  AwardRow,
   CredentialRow,
   EducationRow,
   ExperienceRow,
@@ -52,6 +53,7 @@ export type PrivateValidation = {
   experience: string[]
   education: string[]
   projects: string[]
+  awards: string[]
 }
 
 export function emptyPublicValidation(): PublicValidation {
@@ -73,6 +75,7 @@ export function emptyPrivateValidation(): PrivateValidation {
     experience: [],
     education: [],
     projects: [],
+    awards: [],
   }
 }
 
@@ -94,7 +97,8 @@ export function hasPrivateValidationErrors(validation: PrivateValidation) {
     validation.credentials.some(Boolean) ||
     validation.experience.some(Boolean) ||
     validation.education.some(Boolean) ||
-    validation.projects.some(Boolean)
+    validation.projects.some(Boolean) ||
+    validation.awards.some(Boolean)
   )
 }
 
@@ -115,6 +119,8 @@ export function buildDraftSignature(input: {
   experience: ExperienceRow[]
   education: EducationRow[]
   projects: ProjectRow[]
+  hobbiesInterests: string[]
+  awards: AwardRow[]
   publicBasics: PublicBasicsFlags
   publicSections: PublicSectionsFlags
   publicExperience: PublicExperienceFlags[]
@@ -143,6 +149,14 @@ export function focusFirstValidationIssue(validation: PublicValidation) {
   }
   if (validation.sections.languages) {
     document.getElementById('languages-input')?.focus()
+    return
+  }
+  if (validation.sections.hobbiesInterests) {
+    document.getElementById('hobbies-interests-input')?.focus()
+    return
+  }
+  if (validation.sections.honorsAwards) {
+    document.getElementById('award-title-0')?.focus()
   }
 }
 

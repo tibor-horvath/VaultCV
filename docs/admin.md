@@ -57,7 +57,7 @@ If `CV_PROFILE_SLUG` is missing, the admin profile endpoints return an error.
 
 The editor (`/admin/editor`) supports drag-and-drop reordering for both top-level sections and section items.
 
-- Top-level section order is persisted into `sectionOrder` in profile JSON and used by `/cv` and landing pages.
+- Top-level section order is persisted into `sectionOrder` in profile JSON and used by the landing page, `/cv`, and PDF export (same order). Reorderable sections include credentials, skills & languages, experience, projects, education, hobbies & interests, and honors & awards (Basics stays pinned).
 - Basics is always pinned at the top and is not reorderable.
 - Desktop UX: a fixed left sidebar shows section labels and supports drag-to-reorder plus click-to-scroll.
 - Mobile UX: a bottom sheet can be opened from the header action (**Reorder sections**) and supports drag-to-reorder.
@@ -66,6 +66,7 @@ Item-level drag-and-drop is available inside sections that use list rows/chips:
 
 - Credentials
 - Skills/Languages chips
+- Hobbies & interests chips
 - Links
 - Experience rows and per-experience skills chips
 - Projects rows and project tags chips
@@ -87,7 +88,7 @@ See [share-links.md](share-links.md) for full details on creating, revoking, rot
 
 ## Public visibility model
 
-The editor (`/admin/editor`) supports per-field visibility controls for fields that can be shown on the public landing page.
+The editor (`/admin/editor`) supports per-field visibility controls for fields that can be shown on the public landing page. Some blocks use a **section-level** public toggle (entire section on or off), including skills, languages, hobbies & interests, and honors & awards—mirroring how you can expose or hide those arrays in the public profile JSON.
 
 Always-private fields are never exposed publicly:
 
