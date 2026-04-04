@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Camera, Trash2, X, Check, ZoomIn, ZoomOut } from 'lucide-react'
 import { useI18n } from '../../lib/i18n'
+import { sanitizeTrustedImageUrl } from '../../lib/sanitizeTrustedImageUrl'
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2 MB
 const OUTPUT_SIZE = 512
@@ -21,6 +22,7 @@ interface CropModalProps {
 function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
   const { t } = useI18n()
   const imgRef = useRef<HTMLImageElement>(null)
+  const safeImageSrc = sanitizeTrustedImageUrl(imageSrc)
   const containerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -85,7 +87,7 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handleConfirm() {
-    if (!imgRef.current || !displaySize) return
+    if (!imgRef.current || !displaySize || !safeImageSrc) return
     const img = imgRef.current
     const frameSize = getFrameSize()
     // effectiveScale maps display pixels → natural pixels inverse
@@ -141,25 +143,27 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
-          <img
-            ref={imgRef}
-            src={imageSrc}
-            alt=""
-            draggable={false}
-            onLoad={handleImgLoad}
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              width: displaySize?.w,
-              height: displaySize?.h,
-              opacity: displaySize ? 1 : 0,
-              transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,
-              transformOrigin: 'center',
-              maxWidth: 'none',
-              userSelect: 'none',
-            }}
-          />
+          {safeImageSrc ? (
+            <img
+              ref={imgRef}
+              src={safeImageSrc}
+              alt=""
+              draggable={false}
+              onLoad={handleImgLoad}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: displaySize?.w,
+                height: displaySize?.h,
+                opacity: displaySize ? 1 : 0,
+                transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,
+                transformOrigin: 'center',
+                maxWidth: 'none',
+                userSelect: 'none',
+              }}
+            />
+          ) : null}
         </div>
 
         {/* Zoom slider */}
@@ -315,6 +319,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
   }
 
   const isLoading = uploadState === 'uploading'
+  const safePreviewUrl = sanitizeTrustedImageUrl(previewUrl)
 
   return (
     <>
@@ -323,9 +328,9 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
       <div className="flex items-center gap-3">
         {/* Circular preview */}
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-          {previewUrl ? (
+          {safePreviewUrl ? (
             <img
-              src={previewUrl}
+              src={safePreviewUrl}
               alt={t('adminProfilePhotoPreview')}
               className="h-full w-full object-cover"
               onError={() => setPreviewUrl(null)}
