@@ -71,7 +71,6 @@ Item-level drag-and-drop is available inside sections that use list rows/chips:
 - Experience rows and per-experience skills chips
 - Projects rows and project tags chips
 - Education
-- Honors & awards rows
 
 ## Share links
 
