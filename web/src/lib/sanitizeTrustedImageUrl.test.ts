@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { sanitizeTrustedImageUrl } from '../../lib/sanitizeTrustedImageUrl'
+import { sanitizeTrustedImageUrl } from './sanitizeTrustedImageUrl'
 
 describe('sanitizeTrustedImageUrl', () => {
   beforeEach(() => {

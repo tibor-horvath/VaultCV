@@ -14,6 +14,8 @@ type MockResponse = {
   status: number
   text: () => Promise<string>
   json: () => Promise<unknown>
+  headers: { get: (name: string) => string | null }
+  blob: () => Promise<Blob>
 }
 
 let mountedRoot: Root | null = null
@@ -43,6 +45,20 @@ function jsonResponse(body: unknown, status = 200): MockResponse {
     status,
     text: async () => text,
     json: async () => body,
+    headers: { get: () => null },
+    blob: async () => new Blob(),
+  }
+}
+
+function imageResponse(mimeType = 'image/jpeg'): MockResponse {
+  const blob = new Blob([], { type: mimeType })
+  return {
+    ok: true,
+    status: 200,
+    text: async () => '',
+    json: async () => ({}),
+    headers: { get: (name: string) => (name === 'content-type' ? mimeType : null) },
+    blob: async () => blob,
   }
 }
 
@@ -75,6 +91,10 @@ beforeEach(() => {
   window.localStorage.clear()
   window.localStorage.setItem('cv-locale', 'de')
   vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+  // jsdom does not implement URL.createObjectURL / revokeObjectURL
+  URL.createObjectURL = vi.fn(() => 'blob:http://localhost/mock-image')
+  URL.revokeObjectURL = vi.fn()
 
   vi.stubGlobal(
     'fetch',
@@ -202,7 +222,7 @@ describe('AdminEditorRoute', () => {
         return jsonResponse({ json: '{}' })
       }
       if (url.includes('/api/manage/profile/image')) {
-        return jsonResponse({}, 200)
+        return imageResponse()
       }
       return jsonResponse({}, 404)
     })
@@ -210,7 +230,7 @@ describe('AdminEditorRoute', () => {
     renderRoute()
     await flushEffects()
 
-    const initialPreview = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const initialPreview = document.querySelector('img[src^="blob:"]')
     expect(initialPreview).toBeTruthy()
 
     const localeSelect = document.getElementById('admin-editor-locale-select') as HTMLSelectElement
@@ -220,7 +240,7 @@ describe('AdminEditorRoute', () => {
     })
     await flushEffects()
 
-    const previewAfterSwitch = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const previewAfterSwitch = document.querySelector('img[src^="blob:"]')
     expect(previewAfterSwitch).toBeTruthy()
   })
 
@@ -257,7 +277,7 @@ describe('AdminEditorRoute', () => {
     renderRoute()
     await flushEffects()
 
-    const initialPreview = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const initialPreview = document.querySelector('img[src^="blob:"]')
     expect(initialPreview).toBeNull()
 
     const localeSelect = document.getElementById('admin-editor-locale-select') as HTMLSelectElement
@@ -267,7 +287,7 @@ describe('AdminEditorRoute', () => {
     })
     await flushEffects()
 
-    const previewAfterSwitch = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const previewAfterSwitch = document.querySelector('img[src^="blob:"]')
     expect(previewAfterSwitch).toBeNull()
   })
 })
