@@ -55,8 +55,7 @@ Below is a single JSON object (the file content you upload to Blob as `{slug}-pr
     "projects",
     "education",
     "hobbiesInterests",
-    "honorsAwards",
-    "links"
+    "honorsAwards"
   ],
   "skills": ["TypeScript", "React", "Azure", "Node.js"],
   "languages": ["English", "German"],
