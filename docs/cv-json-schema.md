@@ -18,10 +18,10 @@ Key fields:
 - `hobbiesInterests`: optional string array (chips) for a **Hobbies & interests** section. Omit or use an empty array to hide the section.
 - `awards`: optional array of `{ title, issuer?, year? }` for **Honors & awards** (standalone entries; separate from the per-degree `honors` string on `education` rows). Omit or empty array hides the section.
 - `sectionOrder`: optional string array controlling section render order on the **landing page**, **`/cv`**, and in **PDF export** (same order everywhere).
-  - Valid keys: `credentials`, `skillsLanguages`, `links`, `experience`, `projects`, `education`, `hobbiesInterests`, `honorsAwards`
+  - Valid keys: `credentials`, `skillsLanguages`, `experience`, `projects`, `education`, `hobbiesInterests`, `honorsAwards`
   - Section keys `hobbiesInterests` and `honorsAwards` refer to the `hobbiesInterests` and `awards` arrays respectively.
   - `skillsLanguages` controls both skills and languages as a pair.
-  - `links` is kept for compatibility but links still render in the Basics card.
+  - `links` is not a supported `sectionOrder` key; if present, it is ignored. Links still render in the Basics card.
   - If missing or invalid, the app uses a canonical default: `credentials`, `skillsLanguages`, `experience`, `projects`, `education`, `hobbiesInterests`, `honorsAwards`. Unknown keys are dropped; any keys not listed are appended at the end in that default order.
 - `experience`: supports `links?` as an array of `{ label, url }` (same shape as other link collections) and `skills?` to show per-job skill chips
 - `education`: optional array of degrees — `{ school, program, ... }` with optional `schoolUrl`, `degree`, `field`, dates, `gpa`, `highlights`, etc.
