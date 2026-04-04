@@ -1,0 +1,17 @@
+# Default owner for the repository.
+* @tibor-horvath
+
+# Frontend application.
+/web/ @tibor-horvath
+
+# Azure Functions API and shared backend logic.
+/api/ @tibor-horvath
+
+# Repository automation and scripts.
+/.github/ @tibor-horvath
+/scripts/ @tibor-horvath
+
+# Project documentation and contributor guidance.
+/docs/ @tibor-horvath
+/README.md @tibor-horvath
+/CONTRIBUTING.md @tibor-horvath
