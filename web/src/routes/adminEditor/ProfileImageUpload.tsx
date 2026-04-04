@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Camera, Trash2, X, Check, ZoomIn, ZoomOut } from 'lucide-react'
 import { useI18n } from '../../lib/i18n'
 
@@ -20,20 +20,14 @@ interface CropModalProps {
 
 function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
   const { t } = useI18n()
-  const imgRef = useRef<HTMLImageElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const objectUrl = useMemo(() => URL.createObjectURL(imageFile), [imageFile])
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [sourceImage, setSourceImage] = useState<ImageBitmap | null>(null)
   // displaySize: pixel dimensions of the image at scale=1 (cover-fits the frame)
   const [displaySize, setDisplaySize] = useState<{ w: number; h: number } | null>(null)
   const dragRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null)
-
-  useEffect(() => {
-    return () => {
-      URL.revokeObjectURL(objectUrl)
-    }
-  }, [objectUrl])
 
   // Constrain offset so the image always fills the crop frame.
   // baseW/baseH are the display pixel dimensions of the image at scale=1.
@@ -45,18 +39,78 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
     return { x: clamp(ox, -maxX, maxX), y: clamp(oy, -maxY, maxY) }
   }
 
-  function handleImgLoad() {
-    if (!imgRef.current || !containerRef.current) return
-    const frameSize = containerRef.current.clientWidth || 320
-    const { naturalWidth: nw, naturalHeight: nh } = imgRef.current
-    // Cover: scale up so the shorter side equals frameSize
-    const bs = Math.max(frameSize / nw, frameSize / nh)
-    setDisplaySize({ w: nw * bs, h: nh * bs })
-  }
-
   function getFrameSize() {
     return containerRef.current?.clientWidth ?? 320
   }
+
+  useEffect(() => {
+    let isActive = true
+
+    void createImageBitmap(imageFile)
+      .then((bitmap) => {
+        if (!isActive) {
+          bitmap.close()
+          return
+        }
+
+        const frameSize = getFrameSize()
+        const bs = Math.max(frameSize / bitmap.width, frameSize / bitmap.height)
+        setSourceImage((current) => {
+          current?.close()
+          return bitmap
+        })
+        setDisplaySize({ w: bitmap.width * bs, h: bitmap.height * bs })
+        setScale(1)
+        setOffset({ x: 0, y: 0 })
+      })
+      .catch(() => {
+        if (!isActive) return
+        setSourceImage((current) => {
+          current?.close()
+          return null
+        })
+        setDisplaySize(null)
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [imageFile])
+
+  useEffect(() => {
+    return () => {
+      sourceImage?.close()
+    }
+  }, [sourceImage])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const frameSize = getFrameSize()
+    if (!canvas) return
+
+    const pixelRatio = window.devicePixelRatio || 1
+    const pixelSize = Math.max(1, Math.round(frameSize * pixelRatio))
+    if (canvas.width !== pixelSize || canvas.height !== pixelSize) {
+      canvas.width = pixelSize
+      canvas.height = pixelSize
+    }
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.clearRect(0, 0, pixelSize, pixelSize)
+    if (!sourceImage || !displaySize) return
+
+    const scaleRatio = pixelSize / frameSize
+    const scaledW = displaySize.w * scale * scaleRatio
+    const scaledH = displaySize.h * scale * scaleRatio
+    const imgLeft = ((frameSize - displaySize.w * scale) / 2 + offset.x) * scaleRatio
+    const imgTop = ((frameSize - displaySize.h * scale) / 2 + offset.y) * scaleRatio
+
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(sourceImage, imgLeft, imgTop, scaledW, scaledH)
+  }, [displaySize, offset.x, offset.y, scale, sourceImage])
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -64,7 +118,7 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragRef.current || !imgRef.current || !displaySize) return
+    if (!dragRef.current || !sourceImage || !displaySize) return
     const dx = e.clientX - dragRef.current.startX
     const dy = e.clientY - dragRef.current.startY
     const frameSize = getFrameSize()
@@ -84,7 +138,7 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handleScaleChange(newScale: number) {
-    if (!imgRef.current || !displaySize) return
+    if (!displaySize) return
     const frameSize = getFrameSize()
     const constrained = constrainOffset(offset.x, offset.y, newScale, displaySize.w, displaySize.h, frameSize)
     setScale(newScale)
@@ -92,12 +146,11 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handleConfirm() {
-    if (!imgRef.current || !displaySize || !objectUrl) return
-    const img = imgRef.current
+    if (!sourceImage || !displaySize) return
     const frameSize = getFrameSize()
     // effectiveScale maps display pixels → natural pixels inverse
     // At scale=1, image renders at displaySize.w × displaySize.h pixels
-    const baseRatio = img.naturalWidth / displaySize.w // natural pixels per display pixel at scale=1
+    const baseRatio = sourceImage.width / displaySize.w // natural pixels per display pixel at scale=1
     const effectiveDisplayScale = scale // CSS scale multiplier on top of baseRatio
     const scaledW = displaySize.w * effectiveDisplayScale
     const scaledH = displaySize.h * effectiveDisplayScale
@@ -107,14 +160,14 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
     // Crop rect in natural image coords
     const sx = Math.max(0, (-imgLeft * baseRatio) / effectiveDisplayScale)
     const sy = Math.max(0, (-imgTop * baseRatio) / effectiveDisplayScale)
-    const sw = Math.min(img.naturalWidth - sx, (frameSize * baseRatio) / effectiveDisplayScale)
-    const sh = Math.min(img.naturalHeight - sy, (frameSize * baseRatio) / effectiveDisplayScale)
+    const sw = Math.min(sourceImage.width - sx, (frameSize * baseRatio) / effectiveDisplayScale)
+    const sh = Math.min(sourceImage.height - sy, (frameSize * baseRatio) / effectiveDisplayScale)
 
     const canvas = document.createElement('canvas')
     canvas.width = OUTPUT_SIZE
     canvas.height = OUTPUT_SIZE
     const ctx = canvas.getContext('2d')!
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
+    ctx.drawImage(sourceImage, sx, sy, sw, sh, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
     canvas.toBlob(
       (blob) => {
         if (blob) onConfirm(blob)
@@ -148,27 +201,7 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
-          {objectUrl ? (
-            <img
-              ref={imgRef}
-              src={objectUrl}
-              alt=""
-              draggable={false}
-              onLoad={handleImgLoad}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                width: displaySize?.w,
-                height: displaySize?.h,
-                opacity: displaySize ? 1 : 0,
-                transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,
-                transformOrigin: 'center',
-                maxWidth: 'none',
-                userSelect: 'none',
-              }}
-            />
-          ) : null}
+          {sourceImage ? <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" /> : null}
         </div>
 
         {/* Zoom slider */}
@@ -230,23 +263,25 @@ interface ProfileImageUploadProps {
 export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUploadProps) {
   const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null)
   const [cropFile, setCropFile] = useState<File | null>(null)
   const [uploadState, setUploadState] = useState<UploadState>('idle')
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<ImageBitmap | null>(null)
   const [previewVersion, setPreviewVersion] = useState(0)
 
   useEffect(() => {
-    if (!previewSrc?.startsWith('blob:')) return
-
     return () => {
-      URL.revokeObjectURL(previewSrc)
+      previewImage?.close()
     }
-  }, [previewSrc])
+  }, [previewImage])
 
   useEffect(() => {
     if (!hasProfileImage) {
-      setPreviewSrc(null)
+      setPreviewImage((current) => {
+        current?.close()
+        return null
+      })
       return
     }
 
@@ -268,24 +303,20 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
         }
 
         const blob = await res.blob()
-        const nextObjectUrl = URL.createObjectURL(blob)
+        const bitmap = await createImageBitmap(blob)
         if (!isActive) {
-          URL.revokeObjectURL(nextObjectUrl)
+          bitmap.close()
           return
         }
 
-        setPreviewSrc((current) => {
-          if (current?.startsWith('blob:')) {
-            URL.revokeObjectURL(current)
-          }
-          return nextObjectUrl
+        setPreviewImage((current) => {
+          current?.close()
+          return bitmap
         })
       } catch {
         if (!isActive) return
-        setPreviewSrc((current) => {
-          if (current?.startsWith('blob:')) {
-            URL.revokeObjectURL(current)
-          }
+        setPreviewImage((current) => {
+          current?.close()
           return null
         })
       }
@@ -295,6 +326,33 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
       isActive = false
     }
   }, [hasProfileImage, previewVersion])
+
+  useEffect(() => {
+    const canvas = previewCanvasRef.current
+    if (!canvas) return
+
+    const frameSize = canvas.parentElement?.clientWidth ?? 56
+    const pixelRatio = window.devicePixelRatio || 1
+    const pixelSize = Math.max(1, Math.round(frameSize * pixelRatio))
+    if (canvas.width !== pixelSize || canvas.height !== pixelSize) {
+      canvas.width = pixelSize
+      canvas.height = pixelSize
+    }
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.clearRect(0, 0, pixelSize, pixelSize)
+    if (!previewImage) return
+
+    const bs = Math.max(frameSize / previewImage.width, frameSize / previewImage.height)
+    const drawW = previewImage.width * bs * pixelRatio
+    const drawH = previewImage.height * bs * pixelRatio
+
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(previewImage, (pixelSize - drawW) / 2, (pixelSize - drawH) / 2, drawW, drawH)
+  }, [previewImage])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -364,7 +422,10 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
         const body = (await res.json().catch(() => ({}))) as { error?: string }
         throw new Error(body.error ?? `Delete failed (${res.status})`)
       }
-      setPreviewSrc(null)
+      setPreviewImage((current) => {
+        current?.close()
+        return null
+      })
       onChange(false)
       setUploadState('idle')
     } catch (e: unknown) {
@@ -382,12 +443,11 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
       <div className="flex items-center gap-3">
         {/* Circular preview */}
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-          {previewSrc ? (
-            <img
-              src={previewSrc}
-              alt={t('adminProfilePhotoPreview')}
-              className="h-full w-full object-cover"
-              onError={() => setPreviewSrc(null)}
+          {previewImage ? (
+            <canvas
+              ref={previewCanvasRef}
+              aria-label={t('adminProfilePhotoPreview')}
+              className="h-full w-full"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-slate-400 dark:text-slate-500">
