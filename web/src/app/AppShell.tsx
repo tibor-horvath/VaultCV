@@ -46,7 +46,7 @@ export function AppShell() {
               rel="noreferrer"
             >
               <SiGithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{brand.name}</span>
+              <span>{brand.displayName}</span>
             </a>
             <a
               className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"

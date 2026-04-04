@@ -73,11 +73,11 @@ describe('_sanitizePdfFileBaseName', () => {
 })
 
 describe('_buildPdfGeneratedAtFooter', () => {
-  it('formats generated-at footer with timestamp and project reference', () => {
+  it('formats generated-at footer with timestamp and versioned project reference', () => {
     const date = new Date(2026, 2, 30, 14, 5, 9)
     const brand = getBrand()
     expect(_buildPdfGeneratedAtFooter(date)).toBe(
-      `Generated on 2026-03-30 14:05:09 by ${brand.name} (${brand.repoUrl})`,
+      `Generated on 2026-03-30 14:05:09 by ${brand.displayName} (${brand.repoUrl})`,
     )
   })
 })
