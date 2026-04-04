@@ -283,6 +283,7 @@ export function AdminEditorPage(props: {
               setPublicSections={setPublicSections}
               isMobile={isMobile}
               rowErrors={awardRowErrors}
+              sectionErrors={sectionErrors}
             />
           </div>
         )
