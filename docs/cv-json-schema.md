@@ -15,11 +15,14 @@ Key fields:
 - `credentials`: array of `{ issuer, label, url, dateEarned?, dateExpires? }` where `issuer` is one of `microsoft | aws | google | school | language | other`
 - `languages`: string array, shown as chips
 - `skills`: optional top-level string array (general skill chips; separate from per-job skills on `experience`)
-- `sectionOrder`: optional string array controlling section render order for both `/cv` and landing pages.
-  - Valid keys: `credentials`, `skillsLanguages`, `links`, `experience`, `projects`, `education`
+- `hobbiesInterests`: optional string array (chips) for a **Hobbies & interests** section. Omit or use an empty array to hide the section.
+- `awards`: optional array of `{ title, issuer?, year? }` for **Honors & awards** (standalone entries; separate from the per-degree `honors` string on `education` rows). Omit or empty array hides the section.
+- `sectionOrder`: optional string array controlling section render order on the **landing page**, **`/cv`**, and in **PDF export** (same order everywhere).
+  - Valid keys: `credentials`, `skillsLanguages`, `links`, `experience`, `projects`, `education`, `hobbiesInterests`, `honorsAwards`
+  - Section keys `hobbiesInterests` and `honorsAwards` refer to the `hobbiesInterests` and `awards` arrays respectively.
   - `skillsLanguages` controls both skills and languages as a pair.
   - `links` is kept for compatibility but links still render in the Basics card.
-  - If missing or invalid, the app falls back to the default order.
+  - If missing or invalid, the app uses a canonical default: `credentials`, `skillsLanguages`, `experience`, `projects`, `education`, `hobbiesInterests`, `honorsAwards`. Unknown keys are dropped; any keys not listed are appended at the end in that default order.
 - `experience`: supports `links?` as an array of `{ label, url }` (same shape as other link collections) and `skills?` to show per-job skill chips
 - `education`: optional array of degrees — `{ school, program, ... }` with optional `schoolUrl`, `degree`, `field`, dates, `gpa`, `highlights`, etc.
 - `projects`: array of `{ name, description, links?, tags? }`. In each `links` entry, `label` + `url`:
@@ -45,9 +48,23 @@ Below is a single JSON object (the file content you upload to Blob as `{slug}-pr
     { "label": "GitHub", "url": "https://github.com/your-handle" },
     { "label": "LinkedIn", "url": "https://www.linkedin.com/in/your-handle/" }
   ],
-  "sectionOrder": ["credentials", "skillsLanguages", "experience", "projects", "education", "links"],
+  "sectionOrder": [
+    "credentials",
+    "skillsLanguages",
+    "experience",
+    "projects",
+    "education",
+    "hobbiesInterests",
+    "honorsAwards",
+    "links"
+  ],
   "skills": ["TypeScript", "React", "Azure", "Node.js"],
   "languages": ["English", "German"],
+  "hobbiesInterests": ["Photography", "Trail running"],
+  "awards": [
+    { "title": "Employee of the Year", "issuer": "Example Co.", "year": "2024" },
+    { "title": "Regional hackathon — 2nd place", "year": "2023" }
+  ],
   "credentials": [
     {
       "issuer": "microsoft",
@@ -114,5 +131,7 @@ Below is a single JSON object (the file content you upload to Blob as `{slug}-pr
   ]
 }
 ```
+
+The `/api/cv` handler does not deeply validate the JSON schema; the web app validates payloads it displays. Optional keys such as `hobbiesInterests` and `awards` can be omitted entirely from blob JSON.
 
 For local development, configure `CV_PROFILE_SLUG`, `CV_PROFILE_STORAGE_CONNECTION_STRING`, and `CV_PROFILE_CONTAINER` (see [local-development.md](local-development.md)).

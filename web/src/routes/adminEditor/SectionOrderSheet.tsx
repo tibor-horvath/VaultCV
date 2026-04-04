@@ -14,6 +14,8 @@ const SECTION_LABEL_KEYS: Record<SectionKey, MessageKey> = {
   experience: 'experience',
   projects: 'projects',
   education: 'education',
+  hobbiesInterests: 'adminHobbiesAndInterests',
+  honorsAwards: 'adminHonorsAndAwards',
 }
 
 function SortableSheetItem({ sectionKey, label }: { sectionKey: string; label: string }) {

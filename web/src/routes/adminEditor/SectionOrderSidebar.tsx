@@ -13,6 +13,8 @@ const SECTION_LABEL_KEYS: Record<SectionKey, MessageKey> = {
   experience: 'experience',
   projects: 'projects',
   education: 'education',
+  hobbiesInterests: 'adminHobbiesAndInterests',
+  honorsAwards: 'adminHonorsAndAwards',
 }
 
 function SortableSidebarItem({ sectionKey, label }: { sectionKey: string; label: string }) {

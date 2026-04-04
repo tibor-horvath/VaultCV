@@ -8,7 +8,9 @@ The export is generated in the browser with **html2canvas** and **jsPDF**; link 
 
 The print layout is always rasterized at a **fixed width (794px, A4 content at ~96dpi)** so page breaks match desktop even on a narrow phone. Without that, a mobile viewport would reflow the HTML much taller and inflate the PDF page count.
 
-Page splits use vertical slice positions aligned to **`data-pdf-page-break`** markers in the print DOM. Sections such as experience, projects, credentials, and education add markers on logical sub-blocks (titles, link rows, date rows, bullet lists, tag rows, issuer group headers, etc.) so cuts prefer boundaries instead of splitting a single card down the middle when content is taller than one printed page.
+The PDF body follows the same **`sectionOrder`** as the unlocked CV view (profile JSON).
+
+Page splits use vertical slice positions aligned to **`data-pdf-page-break`** markers in the print DOM. Sections such as experience, projects, credentials, education, hobbies, and awards add markers on logical sub-blocks (titles, link rows, date rows, bullet lists, tag rows, issuer group headers, etc.) so cuts prefer boundaries instead of splitting a single card down the middle when content is taller than one printed page.
 
 **Profile photos hosted remotely** (for example Azure Blob Storage) must be served with **CORS** allowing your site’s origin. Before capture, the app **fetches** the image and inlines it as a data URL so **html2canvas** does not depend on a second load (which often fails or shows blank on **mobile Safari**). That fetch needs **CSP `connect-src`** for `https://*.blob.core.windows.net` (in `staticwebapp.config.json`) and correct blob CORS. See [deployment-azure.md](deployment-azure.md). On narrow viewports the raster **scale** is slightly reduced to avoid iOS canvas limits that can drop images.
 

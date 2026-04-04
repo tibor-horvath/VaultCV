@@ -29,6 +29,15 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((x) => typeof x === 'string')
 }
 
+function isValidAwardsArray(value: unknown): boolean {
+  if (!Array.isArray(value)) return false
+  for (const item of value) {
+    if (!isObject(item)) return false
+    if (typeof item.title !== 'string') return false
+  }
+  return true
+}
+
 export function isValidCvPayload(data: unknown): data is LocalizedCvData {
   if (!isObject(data)) return false
   if (!isObject(data.basics)) return false
@@ -36,6 +45,8 @@ export function isValidCvPayload(data: unknown): data is LocalizedCvData {
   if (data.basics.mobile !== undefined && typeof data.basics.mobile !== 'string') return false
   if (data.skills !== undefined && !isStringArray(data.skills)) return false
   if (data.languages !== undefined && !isStringArray(data.languages)) return false
+  if (data.hobbiesInterests !== undefined && !isStringArray(data.hobbiesInterests)) return false
+  if (data.awards !== undefined && !isValidAwardsArray(data.awards)) return false
   if (data.experience !== undefined && !Array.isArray(data.experience)) return false
   if (data.projects !== undefined && !Array.isArray(data.projects)) return false
   if (data.education !== undefined && !Array.isArray(data.education)) return false

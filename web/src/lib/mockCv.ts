@@ -121,6 +121,11 @@ function getMockCvEn(): LocalizedCvData {
         honors: 'summa cum laude',
       },
     ],
+    hobbiesInterests: ['Photography', 'Trail running', 'Open source'],
+    awards: [
+      { title: 'Employee of the Year', issuer: 'Example Co.', year: '2024' },
+      { title: 'Regional hackathon — 2nd place', year: '2023' },
+    ],
   }
 }
 
@@ -244,6 +249,11 @@ function getMockCvHu(): LocalizedCvData {
         honors: 'Kitüntetéses diploma',
       },
     ],
+    hobbiesInterests: ['Fotózás', 'Túrázás', 'Open source'],
+    awards: [
+      { title: 'Az év munkatársa', issuer: 'Example Co.', year: '2024' },
+      { title: 'Regionális hackathon — 2. helyezés', year: '2023' },
+    ],
   }
 }
 
@@ -366,6 +376,11 @@ function getMockCvDe(): LocalizedCvData {
         gpa: '3,8/4,0',
         honors: 'mit Auszeichnung',
       },
+    ],
+    hobbiesInterests: ['Fotografie', 'Trailrunning', 'Open Source'],
+    awards: [
+      { title: 'Mitarbeiter des Jahres', issuer: 'Example Co.', year: '2024' },
+      { title: 'Regionaler Hackathon — 2. Platz', year: '2023' },
     ],
   }
 }

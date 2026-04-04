@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { Fragment, forwardRef } from 'react'
 import { AtSign, BookOpenText, Calendar, FlaskConical, Globe, Mail, MapPin, ScanSearch, Sparkles } from 'lucide-react'
 import type { CvCredentialIssuer, CvData, CvEducation } from '../../../types/cv'
 import {
@@ -9,6 +9,8 @@ import {
   parseBasicsHeadline,
 } from '../../../lib/cvPresentation'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../../../lib/pdfCaptureLayout'
+import { normalizeSectionOrder } from '../../../lib/sectionOrder'
+import type { SectionKey } from '../../../lib/sectionOrder'
 import { highlightChildKey, stableEducationKey, stableExperienceKey } from '../../../lib/cvKeys'
 import { useI18n } from '../../../lib/i18n'
 import {
@@ -96,6 +98,7 @@ export const CvPdfLayout = forwardRef<
   const visibleLinks = (cv.links ?? []).filter(
     (l) => hasPdfUrl(l.url) && inferLinkKind(l) !== 'other',
   )
+  const orderedSections = normalizeSectionOrder(cv.sectionOrder)
 
   return (
     <div
@@ -188,8 +191,10 @@ export const CvPdfLayout = forwardRef<
           </section>
         ) : null}
 
-        {cv.credentials?.length ? (
-          <section className="break-inside-avoid">
+        {orderedSections.map((key: SectionKey) => {
+          if (key === 'credentials' && cv.credentials?.length) {
+            return (
+          <section key={key} className="break-inside-avoid">
             <h2
               className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
               data-pdf-page-break=""
@@ -265,40 +270,48 @@ export const CvPdfLayout = forwardRef<
               })}
             </div>
           </section>
-        ) : null}
-
-        {cv.skills?.length ? (
-          <section className="break-inside-avoid" data-pdf-page-break="">
-            <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
-              {t('skills')}
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {cv.skills.map((s) => (
-                <span key={s} className={pdfChipSmClass}>
-                  {s}
-                </span>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {cv.languages?.length ? (
-          <section className="break-inside-avoid" data-pdf-page-break="">
-            <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
-              {t('languages')}
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {cv.languages.map((s) => (
-                <span key={s} className={pdfChipSmClass}>
-                  {s}
-                </span>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {cv.experience?.length ? (
-          <section className="break-inside-avoid">
+            )
+          }
+          if (key === 'skillsLanguages') {
+            const hasSkills = Boolean(cv.skills?.length)
+            const hasLang = Boolean(cv.languages?.length)
+            if (!hasSkills && !hasLang) return null
+            return (
+              <Fragment key={key}>
+                {hasSkills ? (
+                  <section className="break-inside-avoid" data-pdf-page-break="">
+                    <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+                      {t('skills')}
+                    </h2>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(cv.skills ?? []).map((s) => (
+                        <span key={s} className={pdfChipSmClass}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+                {hasLang ? (
+                  <section className="break-inside-avoid" data-pdf-page-break="">
+                    <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+                      {t('languages')}
+                    </h2>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(cv.languages ?? []).map((s) => (
+                        <span key={s} className={pdfChipSmClass}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+              </Fragment>
+            )
+          }
+          if (key === 'experience' && cv.experience?.length) {
+            return (
+          <section key={key} className="break-inside-avoid">
             <h2
               className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
               data-pdf-page-break=""
@@ -379,10 +392,11 @@ export const CvPdfLayout = forwardRef<
               })}
             </div>
           </section>
-        ) : null}
-
-        {cv.projects?.length ? (
-          <section className="break-inside-avoid">
+            )
+          }
+          if (key === 'projects' && cv.projects?.length) {
+            return (
+          <section key={key} className="break-inside-avoid">
             <h2
               className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
               data-pdf-page-break=""
@@ -450,10 +464,11 @@ export const CvPdfLayout = forwardRef<
               })}
             </div>
           </section>
-        ) : null}
-
-        {cv.education?.length ? (
-          <section className="break-inside-avoid">
+            )
+          }
+          if (key === 'education' && cv.education?.length) {
+            return (
+          <section key={key} className="break-inside-avoid">
             <h2
               className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
               data-pdf-page-break=""
@@ -516,7 +531,55 @@ export const CvPdfLayout = forwardRef<
               })}
             </div>
           </section>
-        ) : null}
+            )
+          }
+          if (key === 'hobbiesInterests' && cv.hobbiesInterests?.length) {
+            return (
+              <section key={key} className="break-inside-avoid" data-pdf-page-break="">
+                <h2 className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+                  {t('hobbiesInterests')}
+                </h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {cv.hobbiesInterests.map((s) => (
+                    <span key={s} className={pdfChipSmClass}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )
+          }
+          if (key === 'honorsAwards' && cv.awards?.length) {
+            return (
+              <section key={key} className="break-inside-avoid">
+                <h2
+                  className="border-b border-indigo-200/80 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700"
+                  data-pdf-page-break=""
+                >
+                  {t('honorsAwards')}
+                </h2>
+                <div className="mt-3 divide-y divide-slate-100">
+                  {cv.awards.map((a, i) => (
+                    <article
+                      key={a.id ?? `${a.title}:${a.issuer ?? ''}:${a.year ?? ''}:${i}`}
+                      className="py-3 first:pt-0"
+                      data-pdf-page-break=""
+                      data-pdf-no-split=""
+                    >
+                      <div className="font-semibold text-slate-900">{a.title}</div>
+                      {a.issuer || a.year ? (
+                        <div className="mt-1 text-xs text-slate-600">
+                          {[a.issuer, a.year].filter(Boolean).join(' · ')}
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )
+          }
+          return null
+        })}
       </div>
     </div>
   )

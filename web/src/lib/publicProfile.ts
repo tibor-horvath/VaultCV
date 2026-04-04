@@ -1,5 +1,5 @@
 import type { Locale } from './i18n.tsx'
-import type { CvData, CvLink } from '../types/cv'
+import type { CvAward, CvData, CvLink } from '../types/cv'
 
 function isHttpUrl(value: string) {
   try {
@@ -17,6 +17,24 @@ function normalizeString(value: unknown) {
 function normalizeStringArray(value: unknown) {
   if (!Array.isArray(value)) return undefined
   const items = value.filter((x): x is string => typeof x === 'string').map((x) => x.trim()).filter(Boolean)
+  return items.length ? items : undefined
+}
+
+function normalizeAwards(value: unknown): CvAward[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const items: CvAward[] = value
+    .filter((x): x is Record<string, unknown> => Boolean(x && typeof x === 'object' && !Array.isArray(x)))
+    .map((x) => {
+      const title = normalizeString(x.title)
+      if (!title) return null
+      const issuer = normalizeString(x.issuer)
+      const year = normalizeString(x.year)
+      const out: CvAward = { title }
+      if (issuer) out.issuer = issuer
+      if (year) out.year = year
+      return out
+    })
+    .filter((x): x is CvAward => x != null)
   return items.length ? items : undefined
 }
 
@@ -58,6 +76,8 @@ function normalizeCvDataFromCvData(input: unknown): Partial<CvData> {
     links: normalizeLinks(obj.links),
     skills: normalizeStringArray(obj.skills),
     languages: normalizeStringArray(obj.languages),
+    hobbiesInterests: normalizeStringArray(obj.hobbiesInterests),
+    awards: normalizeAwards(obj.awards),
     // The public page can optionally show these if present in public JSON.
     credentials: Array.isArray(obj.credentials) ? (obj.credentials as any) : undefined,
     experience: Array.isArray(obj.experience) ? (obj.experience as any) : undefined,

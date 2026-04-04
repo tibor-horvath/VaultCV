@@ -7,11 +7,14 @@ import { CredentialsSection } from './CredentialsSection'
 import { EducationSection } from './EducationSection'
 import { ExperienceSection } from './ExperienceSection'
 import { ProjectsSection } from './ProjectsSection'
+import { HobbiesInterestsSection } from './HobbiesInterestsSection'
+import { HonorsAwardsSection } from './HonorsAwardsSection'
 import { SkillsLanguagesSection } from './SkillsLanguagesSection'
 import { SectionOrderSidebar } from './SectionOrderSidebar'
 import { SectionOrderSheet } from './SectionOrderSheet'
 import type { SectionKey } from '../../lib/sectionOrder'
 import type {
+  AwardRow,
   CredentialRow,
   EducationRow,
   ExperienceRow,
@@ -106,6 +109,12 @@ export function AdminEditorPage(props: {
   setPublicProjects: (updater: (cur: PublicProjectFlags[]) => PublicProjectFlags[]) => void
   projectRowErrors?: string[]
 
+  hobbiesInterests: string[]
+  setHobbiesInterests: (v: string[]) => void
+  awards: AwardRow[]
+  setAwards: (updater: (cur: AwardRow[]) => AwardRow[]) => void
+  awardRowErrors?: string[]
+
   isMobile: boolean
   onSave: () => void
 }) {
@@ -177,6 +186,11 @@ export function AdminEditorPage(props: {
     publicProjects,
     setPublicProjects,
     projectRowErrors,
+    hobbiesInterests,
+    setHobbiesInterests,
+    awards,
+    setAwards,
+    awardRowErrors,
     isMobile,
     onSave,
   } = props
@@ -247,6 +261,33 @@ export function AdminEditorPage(props: {
             />
           </div>
         )
+      case 'hobbiesInterests':
+        return (
+          <div key="hobbiesInterests" data-section="hobbiesInterests">
+            <HobbiesInterestsSection
+              hobbiesInterests={hobbiesInterests}
+              setHobbiesInterests={setHobbiesInterests}
+              publicSections={publicSections}
+              setPublicSections={setPublicSections}
+              sectionErrors={sectionErrors}
+            />
+          </div>
+        )
+      case 'honorsAwards':
+        return (
+          <div key="honorsAwards" data-section="honorsAwards">
+            <HonorsAwardsSection
+              awards={awards}
+              setAwards={setAwards}
+              publicSections={publicSections}
+              setPublicSections={setPublicSections}
+              isMobile={isMobile}
+              rowErrors={awardRowErrors}
+            />
+          </div>
+        )
+      default:
+        return null
     }
   }
 

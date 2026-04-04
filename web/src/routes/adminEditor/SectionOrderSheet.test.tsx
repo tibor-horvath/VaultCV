@@ -10,7 +10,15 @@ import { SectionOrderSheet } from './SectionOrderSheet'
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
 
-const ORDER: SectionKey[] = ['credentials', 'skillsLanguages', 'experience', 'projects', 'education']
+const ORDER: SectionKey[] = [
+  'credentials',
+  'skillsLanguages',
+  'experience',
+  'projects',
+  'education',
+  'hobbiesInterests',
+  'honorsAwards',
+]
 
 function renderSheet(isOpen: boolean, onClose = vi.fn(), setSectionOrder = vi.fn()) {
   mountedContainer = document.createElement('div')
