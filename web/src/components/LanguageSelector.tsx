@@ -176,6 +176,7 @@ export function LanguageSelector({ allowedLocales }: { allowedLocales?: readonly
                 }}
                 type="button"
                 role="menuitemradio"
+                lang={option.code}
                 aria-checked={selected}
                 tabIndex={index === activeIndex ? 0 : -1}
                 onFocus={() => setActiveIndex(index)}

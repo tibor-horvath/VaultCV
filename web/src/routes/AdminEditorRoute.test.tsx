@@ -154,15 +154,17 @@ describe('AdminEditorRoute', () => {
     expect(localeSelect.value).toBe('hu')
     expect(document.documentElement.lang).toBe('de')
 
-    const langButton = document.querySelector('[aria-haspopup="menu"]') as HTMLButtonElement
+    const langButton = document.querySelector(
+      `[aria-label="${deMessages.languageSelectorLabel}"][aria-haspopup="menu"]`,
+    ) as HTMLButtonElement | null
     expect(langButton).toBeTruthy()
     await act(async () => {
-      langButton.click()
+      langButton!.click()
     })
 
-    const huItem = Array.from(document.querySelectorAll('[role="menuitemradio"]')).find((el) =>
-      el.textContent?.toLowerCase().includes('magyar'),
-    ) as HTMLButtonElement | undefined
+    const huItem = document.querySelector(
+      '[role="menuitemradio"][lang="hu"]',
+    ) as HTMLButtonElement | null
     expect(huItem).toBeTruthy()
     await act(async () => {
       huItem!.click()
