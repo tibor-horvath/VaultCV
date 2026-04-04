@@ -116,7 +116,7 @@ afterEach(() => {
 })
 
 describe('AdminEditorRoute', () => {
-  it('initializes from the current UI locale and keeps UI language synced with editor locale changes', async () => {
+  it('initializes from the current UI locale; changing CV locale does not change interface language', async () => {
     renderRoute()
     await flushEffects()
 
@@ -132,12 +132,46 @@ describe('AdminEditorRoute', () => {
     })
     await flushEffects()
 
-    expect(document.body.textContent).toContain(huMessages.adminEditCv)
-    expect(document.documentElement.lang).toBe('hu')
+    expect(document.body.textContent).toContain(deMessages.adminEditCv)
+    expect(document.documentElement.lang).toBe('de')
     expect(localeSelect.value).toBe('hu')
 
     const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/manage/profile/private?locale=hu'))).toBe(true)
+  })
+
+  it('LanguageSelector changes interface language without changing CV locale', async () => {
+    renderRoute()
+    await flushEffects()
+
+    const localeSelect = document.getElementById('admin-editor-locale-select') as HTMLSelectElement
+    await act(async () => {
+      localeSelect.value = 'hu'
+      localeSelect.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    await flushEffects()
+
+    expect(localeSelect.value).toBe('hu')
+    expect(document.documentElement.lang).toBe('de')
+
+    const langButton = document.querySelector('[aria-haspopup="menu"]') as HTMLButtonElement
+    expect(langButton).toBeTruthy()
+    await act(async () => {
+      langButton.click()
+    })
+
+    const huItem = Array.from(document.querySelectorAll('[role="menuitemradio"]')).find((el) =>
+      el.textContent?.toLowerCase().includes('magyar'),
+    ) as HTMLButtonElement | undefined
+    expect(huItem).toBeTruthy()
+    await act(async () => {
+      huItem!.click()
+    })
+    await flushEffects()
+
+    expect(document.documentElement.lang).toBe('hu')
+    expect(document.body.textContent).toContain(huMessages.adminEditCv)
+    expect((document.getElementById('admin-editor-locale-select') as HTMLSelectElement).value).toBe('hu')
   })
 
   it('keeps profile image visible across locale switches when image exists globally', async () => {

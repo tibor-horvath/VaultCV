@@ -141,6 +141,7 @@ export const deMessages: Partial<MessageCatalog> = {
   adminSaveSettingsFailed: 'Einstellungen konnten nicht gespeichert werden.',
   adminSave: 'Speichern',
   adminLocale: 'Sprache',
+  adminCvLocale: 'CV-Sprache',
   adminAddLanguage: 'Sprache hinzufugen',
   adminAdd: 'Hinzufugen',
   adminPublic: 'Offentlich',

@@ -135,6 +135,7 @@ export const enMessages = {
   adminSaveSettingsFailed: 'Failed saving settings.',
   adminSave: 'Save',
   adminLocale: 'Locale',
+  adminCvLocale: 'CV language',
   adminAddLanguage: 'Add language',
   adminAdd: 'Add',
   adminPublic: 'Public',

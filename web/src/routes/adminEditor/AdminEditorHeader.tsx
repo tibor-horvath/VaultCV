@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react'
 import { GripVertical, Languages, Link2, LoaderCircle, LogOut, Save, Shield, SquarePen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { LanguageSelector } from '../../components/LanguageSelector'
 import type { LocaleItem } from './types'
 import { AdminPageHeader } from '../AdminPageHeader'
 import { useI18n } from '../../lib/i18n'
@@ -36,7 +37,7 @@ export function AdminEditorHeader(props: {
       headingLevel="h1"
       signedInEmail={signedInEmail}
       actions={
-        <>
+        <div className="flex w-full max-w-full flex-wrap items-center justify-end gap-2 sm:gap-3">
           <Link
             to="/admin"
             onClick={(event) => confirmIfDirty(event)}
@@ -51,12 +52,13 @@ export function AdminEditorHeader(props: {
           >
             <Link2 className="h-3.5 w-3.5 shrink-0" /> {t('adminShareCv')}
           </Link>
+          <LanguageSelector />
           <label
             htmlFor={localeSelectId}
-            className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300"
+            className="flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300"
           >
-            <span className="inline-flex items-center gap-1">
-              <Languages className="h-3.5 w-3.5 shrink-0" /> {t('adminLocale')}
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <Languages className="h-3.5 w-3.5 shrink-0" /> {t('adminCvLocale')}
             </span>
             <select
               id={localeSelectId}
@@ -126,7 +128,7 @@ export function AdminEditorHeader(props: {
           >
             <LogOut className="h-3.5 w-3.5 shrink-0" /> {t('adminSignOut')}
           </a>
-        </>
+        </div>
       }
     />
   )
