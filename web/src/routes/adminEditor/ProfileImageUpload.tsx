@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Camera, Trash2, X, Check, ZoomIn, ZoomOut } from 'lucide-react'
 import { useI18n } from '../../lib/i18n'
+import { sanitizeTrustedImageUrl } from '../../lib/sanitizeTrustedImageUrl'
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2 MB
 const OUTPUT_SIZE = 512
@@ -23,6 +24,7 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
   const imgRef = useRef<HTMLImageElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const objectUrl = useMemo(() => URL.createObjectURL(imageFile), [imageFile])
+  const safeSrc = sanitizeTrustedImageUrl(objectUrl)
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   // displaySize: pixel dimensions of the image at scale=1 (cover-fits the frame)
@@ -92,7 +94,7 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handleConfirm() {
-    if (!imgRef.current || !displaySize || !objectUrl) return
+    if (!imgRef.current || !displaySize || !safeSrc) return
     const img = imgRef.current
     const frameSize = getFrameSize()
     // effectiveScale maps display pixels → natural pixels inverse
@@ -148,10 +150,10 @@ function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
-          {objectUrl ? (
+          {safeSrc ? (
             <img
               ref={imgRef}
-              src={objectUrl}
+              src={safeSrc}
               alt=""
               draggable={false}
               onLoad={handleImgLoad}
