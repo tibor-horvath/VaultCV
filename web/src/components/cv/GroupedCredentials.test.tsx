@@ -84,6 +84,24 @@ describe('GroupedCredentials', () => {
     expect(container!.textContent).toContain('2024-03')
   })
 
+  it('normalizes blank/missing issuers to "other" instead of silently hiding them', () => {
+    // Simulate what happens when API returns credentials with missing/blank issuers (cast from `any`)
+    const credentials = [
+      { issuer: '' as unknown as CvCredential['issuer'], label: 'Blank Issuer Cert', url: 'https://blank.example' },
+      { issuer: undefined as unknown as CvCredential['issuer'], label: 'Undefined Issuer Cert', url: 'https://undef.example' },
+    ] as CvCredential[]
+    renderGrouped(credentials)
+    expect(container!.textContent).toContain('Blank Issuer Cert')
+    expect(container!.textContent).toContain('Undefined Issuer Cert')
+    expect(container!.textContent).toContain(enMessages.other)
+  })
+
+  it('renders CNCF issuer label for cncf credentials', () => {
+    renderGrouped([{ issuer: 'cncf', label: 'Certified Kubernetes Administrator', url: 'https://cncf.example' }])
+    expect(container!.textContent).toContain('CNCF')
+    expect(container!.textContent).toContain('Certified Kubernetes Administrator')
+  })
+
   it('hides earned and expiry dates when showDates is false', () => {
     renderGrouped(
       [

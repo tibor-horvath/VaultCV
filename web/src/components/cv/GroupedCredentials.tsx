@@ -3,7 +3,18 @@ import type { CvCredential, CvCredentialIssuer } from '../../types/cv'
 import type { MessageKey } from '../../i18n/messages'
 import { CredentialIssuerIcon } from './CredentialIssuerIcon'
 
-const preferredCredentialIssuerOrder = ['microsoft', 'aws', 'google', 'school', 'language', 'other'] as const
+const preferredCredentialIssuerOrder = ['microsoft', 'aws', 'google', 'cncf', 'school', 'language', 'other'] as const
+
+/** Normalize a raw issuer value to a lowercase trimmed string, falling back to 'other' for blank/missing values. */
+function normalizeIssuer(raw: unknown): string {
+  return String(raw ?? '').trim().toLowerCase() || 'other'
+}
+
+/** Safely convert an arbitrary string to a typed CvCredentialIssuer, mapping unknowns to 'other'. */
+function toKnownIssuer(issuer: string): CvCredentialIssuer {
+  const known = new Set<string>(preferredCredentialIssuerOrder)
+  return known.has(issuer) ? (issuer as CvCredentialIssuer) : 'other'
+}
 
 function formatCredentialIssuerLabel(issuer: string, t: (key: MessageKey) => string) {
   if (issuer === 'language') return t('languageExams')
@@ -12,7 +23,6 @@ function formatCredentialIssuerLabel(issuer: string, t: (key: MessageKey) => str
   if (issuer === 'aws') return 'AWS'
   if (issuer === 'cncf') return 'CNCF'
   const normalized = issuer.replace(/[-_]+/g, ' ').trim()
-  if (!normalized) return t('other')
   return normalized
     .split(' ')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -35,7 +45,7 @@ export function GroupedCredentials(props: {
   const issuerKeys = [
     ...preferredCredentialIssuerOrder,
     ...Array.from(
-      new Set((credentials ?? []).map((c) => String(c.issuer ?? '').trim().toLowerCase()).filter(Boolean)),
+      new Set((credentials ?? []).map((c) => normalizeIssuer(c.issuer))),
     ).filter((issuer) => !preferredCredentialIssuerOrder.includes(issuer as (typeof preferredCredentialIssuerOrder)[number])),
   ]
 
@@ -43,12 +53,12 @@ export function GroupedCredentials(props: {
     <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
       {issuerKeys
         .map((issuer) => {
-          const items = credentials?.filter((c) => String(c.issuer ?? '').trim().toLowerCase() === issuer) ?? []
+          const items = credentials?.filter((c) => normalizeIssuer(c.issuer) === issuer) ?? []
           if (!items.length) return null
           return (
             <div key={issuer}>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                <CredentialIssuerIcon issuer={issuer as CvCredentialIssuer} />
+                <CredentialIssuerIcon issuer={toKnownIssuer(issuer)} />
                 {formatCredentialIssuerLabel(issuer, t)}
               </div>
               <div className="mt-2 divide-y divide-slate-200/60 dark:divide-slate-800/60">
