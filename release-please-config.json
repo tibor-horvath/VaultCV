@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "95d49532e21b13de01638bf3d78be5f2cdaa536e",
+  "include-component-in-tag": false,
+  "pull-request-title-pattern": "chore: release ${version}",
+  "packages": {
+    ".": {
+      "component": "vaultcv",
+      "release-type": "node",
+      "changelog-path": "CHANGELOG.md",
+      "initial-version": "1.0.0",
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        "web/package.json",
+        "api/package.json",
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$['packages'][''].version"
+        },
+        {
+          "type": "json",
+          "path": "web/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "web/package-lock.json",
+          "jsonpath": "$['packages'][''].version"
+        },
+        {
+          "type": "json",
+          "path": "api/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "api/package-lock.json",
+          "jsonpath": "$['packages'][''].version"
+        }
+      ]
+    }
+  }
+}

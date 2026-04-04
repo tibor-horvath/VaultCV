@@ -69,5 +69,5 @@ For local dev, set these in `web/.env.local` (gitignored). For Azure Static Web 
 
 ## Acknowledgments
 
-Parts of this repository were developed using [Cursor](https://cursor.com) (AI-assisted editing).
+Parts of this repository and its documentation were created with AI assistance, including AI-assisted editing and AI-generated documentation using [Cursor](https://cursor.com) and [GitHub Copilot](https://github.com/features/copilot).
 
