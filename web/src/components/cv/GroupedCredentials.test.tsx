@@ -89,10 +89,12 @@ describe('GroupedCredentials', () => {
     const credentials = [
       { issuer: '' as unknown as CvCredential['issuer'], label: 'Blank Issuer Cert', url: 'https://blank.example' },
       { issuer: undefined as unknown as CvCredential['issuer'], label: 'Undefined Issuer Cert', url: 'https://undef.example' },
+      { issuer: '   ' as unknown as CvCredential['issuer'], label: 'Whitespace Issuer Cert', url: 'https://ws.example' },
     ] as CvCredential[]
     renderGrouped(credentials)
     expect(container!.textContent).toContain('Blank Issuer Cert')
     expect(container!.textContent).toContain('Undefined Issuer Cert')
+    expect(container!.textContent).toContain('Whitespace Issuer Cert')
     expect(container!.textContent).toContain(enMessages.other)
   })
 

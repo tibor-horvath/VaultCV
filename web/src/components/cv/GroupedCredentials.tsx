@@ -23,6 +23,7 @@ function formatCredentialIssuerLabel(issuer: string, t: (key: MessageKey) => str
   if (issuer === 'aws') return 'AWS'
   if (issuer === 'cncf') return 'CNCF'
   const normalized = issuer.replace(/[-_]+/g, ' ').trim()
+  if (!normalized) return t('other')
   return normalized
     .split(' ')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
