@@ -12,7 +12,27 @@
       "bump-minor-pre-major": true,
       "extra-files": [
         "web/package.json",
-        "api/package.json"
+        "api/package.json",
+        {
+          "type": "json",
+          "path": "web/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "web/package-lock.json",
+          "jsonpath": "$['packages'][''].version"
+        },
+        {
+          "type": "json",
+          "path": "api/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "api/package-lock.json",
+          "jsonpath": "$['packages'][''].version"
+        }
       ]
     }
   }

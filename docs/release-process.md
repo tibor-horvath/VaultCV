@@ -22,6 +22,6 @@ docs: clarify local setup steps
 ## Notes for maintainers
 
 - The repo is treated as a **single product release** even though it contains both `web/` and `api/` packages.
-- The `release-please-config.json` file keeps the `web/package.json` and `api/package.json` versions aligned with the root release version.
+- The `release-please-config.json` file keeps `web/package.json`, `api/package.json`, and their `package-lock.json` versions aligned with the root release version.
 - The initial setup uses a `bootstrap-sha` so release notes start from the release automation introduction rather than the entire project history.
 - If you want other workflows to run automatically on release PRs, you may prefer using a PAT instead of the default `GITHUB_TOKEN`.
