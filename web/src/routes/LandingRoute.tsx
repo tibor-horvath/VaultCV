@@ -49,7 +49,7 @@ function sanitizePublicBasicsForLanding(input: CvData['basics'] | undefined): Cv
 }
 
 const skeletonBar =
-  'animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/50'
+  'animate-pulse bg-slate-200/90 dark:bg-slate-700/50'
 
 function LandingPublicPreviewSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
@@ -61,22 +61,22 @@ function LandingPublicPreviewSkeleton({ loadingLabel }: { loadingLabel: string }
             <div className={`h-48 w-48 rounded-full sm:h-56 sm:w-56 ${skeletonBar}`} />
           </div>
           <div className="min-w-0 flex-1 space-y-3">
-            <div className={`h-8 max-w-sm ${skeletonBar} w-3/4`} />
-            <div className={`h-4 max-w-xs ${skeletonBar} w-1/2`} />
-            <div className={`h-4 max-w-sm ${skeletonBar} w-2/3`} />
+            <div className={`h-8 max-w-sm rounded-md ${skeletonBar} w-3/4`} />
+            <div className={`h-4 max-w-xs rounded-md ${skeletonBar} w-1/2`} />
+            <div className={`h-4 max-w-sm rounded-md ${skeletonBar} w-2/3`} />
           </div>
         </div>
       </div>
       <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-        <div className={`h-5 w-36 ${skeletonBar}`} />
+        <div className={`h-5 w-36 rounded-md ${skeletonBar}`} />
         <div className="mt-4 space-y-2">
-          <div className={`h-4 w-full ${skeletonBar}`} />
-          <div className={`h-4 w-[92%] ${skeletonBar}`} />
-          <div className={`h-4 w-4/5 ${skeletonBar}`} />
+          <div className={`h-4 w-full rounded-md ${skeletonBar}`} />
+          <div className={`h-4 w-[92%] rounded-md ${skeletonBar}`} />
+          <div className={`h-4 w-4/5 rounded-md ${skeletonBar}`} />
         </div>
       </div>
       <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-        <div className={`h-5 w-44 ${skeletonBar}`} />
+        <div className={`h-5 w-44 rounded-md ${skeletonBar}`} />
         <div className="mt-4 flex flex-wrap gap-2">
           <div className={`h-6 w-16 rounded-md ${skeletonBar}`} />
           <div className={`h-6 w-20 rounded-md ${skeletonBar}`} />
