@@ -2,6 +2,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { getBrand } from '../lib/brand'
 import { AppShell } from './AppShell'
 
 vi.mock('../lib/appView', () => ({
@@ -87,6 +88,11 @@ describe('AppShell route width behavior', () => {
   it('uses compact width for admin dashboard and footer', () => {
     renderShell('/admin')
     expectMainAndFooterToContain('max-w-6xl')
+  })
+
+  it('shows the branded app version in the footer', () => {
+    renderShell('/')
+    expect(document.body.textContent).toContain(getBrand().displayName)
   })
 
   it('uses compact width for admin share and footer', () => {

@@ -14,7 +14,11 @@ type MockResponse = {
   status: number
   text: () => Promise<string>
   json: () => Promise<unknown>
+  headers: { get: (name: string) => string | null }
+  blob: () => Promise<Blob>
 }
+
+type BitmapStub = Pick<ImageBitmap, 'width' | 'height' | 'close'>
 
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
@@ -43,6 +47,28 @@ function jsonResponse(body: unknown, status = 200): MockResponse {
     status,
     text: async () => text,
     json: async () => body,
+    headers: { get: () => null },
+    blob: async () => new Blob(),
+  }
+}
+
+function imageResponse(mimeType = 'image/jpeg'): MockResponse {
+  const blob = new Blob([], { type: mimeType })
+  return {
+    ok: true,
+    status: 200,
+    text: async () => '',
+    json: async () => ({}),
+    headers: { get: (name: string) => (name === 'content-type' ? mimeType : null) },
+    blob: async () => blob,
+  }
+}
+
+function makeBitmap(width = 320, height = 240): BitmapStub {
+  return {
+    width,
+    height,
+    close: vi.fn(),
   }
 }
 
@@ -75,6 +101,20 @@ beforeEach(() => {
   window.localStorage.clear()
   window.localStorage.setItem('cv-locale', 'de')
   vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+  // jsdom does not implement URL.createObjectURL / revokeObjectURL
+  URL.createObjectURL = vi.fn(() => 'blob:http://localhost/mock-image')
+  URL.revokeObjectURL = vi.fn()
+  vi.stubGlobal('createImageBitmap', vi.fn(async () => makeBitmap()))
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+    () =>
+      ({
+        clearRect: vi.fn(),
+        drawImage: vi.fn(),
+        imageSmoothingEnabled: false,
+        imageSmoothingQuality: 'low',
+      }) as unknown as CanvasRenderingContext2D,
+  )
 
   vi.stubGlobal(
     'fetch',
@@ -202,7 +242,7 @@ describe('AdminEditorRoute', () => {
         return jsonResponse({ json: '{}' })
       }
       if (url.includes('/api/manage/profile/image')) {
-        return jsonResponse({}, 200)
+        return imageResponse()
       }
       return jsonResponse({}, 404)
     })
@@ -210,7 +250,7 @@ describe('AdminEditorRoute', () => {
     renderRoute()
     await flushEffects()
 
-    const initialPreview = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const initialPreview = document.querySelector('canvas[aria-label]')
     expect(initialPreview).toBeTruthy()
 
     const localeSelect = document.getElementById('admin-editor-locale-select') as HTMLSelectElement
@@ -220,7 +260,7 @@ describe('AdminEditorRoute', () => {
     })
     await flushEffects()
 
-    const previewAfterSwitch = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const previewAfterSwitch = document.querySelector('canvas[aria-label]')
     expect(previewAfterSwitch).toBeTruthy()
   })
 
@@ -257,7 +297,7 @@ describe('AdminEditorRoute', () => {
     renderRoute()
     await flushEffects()
 
-    const initialPreview = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const initialPreview = document.querySelector('canvas[aria-label]')
     expect(initialPreview).toBeNull()
 
     const localeSelect = document.getElementById('admin-editor-locale-select') as HTMLSelectElement
@@ -267,7 +307,7 @@ describe('AdminEditorRoute', () => {
     })
     await flushEffects()
 
-    const previewAfterSwitch = document.querySelector('img[src*="/api/manage/profile/image"]')
+    const previewAfterSwitch = document.querySelector('canvas[aria-label]')
     expect(previewAfterSwitch).toBeNull()
   })
 })

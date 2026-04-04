@@ -165,11 +165,11 @@ function formatLocalTimestamp(date: Date): string {
 }
 
 function buildPdfGeneratedAtFooter(date?: Date, brand = getBrand()): string {
-  return `Generated on ${formatLocalTimestamp(date ?? new Date())} by ${brand.name} (${brand.repoUrl})`
+  return `Generated on ${formatLocalTimestamp(date ?? new Date())} by ${brand.displayName} (${brand.repoUrl})`
 }
 
 function buildPdfGeneratedAtFooterPrefix(date?: Date, brand = getBrand()): string {
-  return `Generated on ${formatLocalTimestamp(date ?? new Date())} by ${brand.name} (`
+  return `Generated on ${formatLocalTimestamp(date ?? new Date())} by ${brand.displayName} (`
 }
 
 function sanitizePdfFileBaseName(fileBaseName: string): string {
