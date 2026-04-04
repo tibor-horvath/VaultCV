@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Camera, Trash2, X, Check, ZoomIn, ZoomOut } from 'lucide-react'
 import { useI18n } from '../../lib/i18n'
-import { sanitizeTrustedImageUrl } from '../../lib/sanitizeTrustedImageUrl'
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2 MB
 const OUTPUT_SIZE = 512
@@ -14,21 +13,27 @@ function clamp(value: number, min: number, max: number) {
 }
 
 interface CropModalProps {
-  imageSrc: string
+  imageFile: File
   onConfirm: (blob: Blob) => void
   onCancel: () => void
 }
 
-function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
+function CropModal({ imageFile, onConfirm, onCancel }: CropModalProps) {
   const { t } = useI18n()
   const imgRef = useRef<HTMLImageElement>(null)
-  const safeImageSrc = sanitizeTrustedImageUrl(imageSrc)
   const containerRef = useRef<HTMLDivElement>(null)
+  const objectUrl = useMemo(() => URL.createObjectURL(imageFile), [imageFile])
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   // displaySize: pixel dimensions of the image at scale=1 (cover-fits the frame)
   const [displaySize, setDisplaySize] = useState<{ w: number; h: number } | null>(null)
   const dragRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null)
+
+  useEffect(() => {
+    return () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [objectUrl])
 
   // Constrain offset so the image always fills the crop frame.
   // baseW/baseH are the display pixel dimensions of the image at scale=1.
@@ -87,7 +92,7 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
   }
 
   function handleConfirm() {
-    if (!imgRef.current || !displaySize || !safeImageSrc) return
+    if (!imgRef.current || !displaySize || !objectUrl) return
     const img = imgRef.current
     const frameSize = getFrameSize()
     // effectiveScale maps display pixels → natural pixels inverse
@@ -143,10 +148,10 @@ function CropModal({ imageSrc, onConfirm, onCancel }: CropModalProps) {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
-          {safeImageSrc ? (
+          {objectUrl ? (
             <img
               ref={imgRef}
-              src={safeImageSrc}
+              src={objectUrl}
               alt=""
               draggable={false}
               onLoad={handleImgLoad}
@@ -225,18 +230,71 @@ interface ProfileImageUploadProps {
 export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUploadProps) {
   const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
   const [uploadState, setUploadState] = useState<UploadState>('idle')
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null)
+  const [previewVersion, setPreviewVersion] = useState(0)
 
   useEffect(() => {
-    if (hasProfileImage) {
-      setPreviewUrl(`/api/manage/profile/image?_=${Date.now()}`)
-    } else {
-      setPreviewUrl(null)
+    if (!previewSrc?.startsWith('blob:')) return
+
+    return () => {
+      URL.revokeObjectURL(previewSrc)
     }
-  }, [hasProfileImage])
+  }, [previewSrc])
+
+  useEffect(() => {
+    if (!hasProfileImage) {
+      setPreviewSrc(null)
+      return
+    }
+
+    let isActive = true
+
+    void (async () => {
+      try {
+        const res = await fetch(`/api/manage/profile/image?_=${previewVersion}`, {
+          method: 'GET',
+          credentials: 'same-origin',
+        })
+        if (!res.ok) {
+          throw new Error(`Preview failed (${res.status})`)
+        }
+
+        const contentType = (res.headers.get('content-type') ?? '').toLowerCase()
+        if (!ALLOWED_TYPES.includes(contentType)) {
+          throw new Error('Unexpected image content type.')
+        }
+
+        const blob = await res.blob()
+        const nextObjectUrl = URL.createObjectURL(blob)
+        if (!isActive) {
+          URL.revokeObjectURL(nextObjectUrl)
+          return
+        }
+
+        setPreviewSrc((current) => {
+          if (current?.startsWith('blob:')) {
+            URL.revokeObjectURL(current)
+          }
+          return nextObjectUrl
+        })
+      } catch {
+        if (!isActive) return
+        setPreviewSrc((current) => {
+          if (current?.startsWith('blob:')) {
+            URL.revokeObjectURL(current)
+          }
+          return null
+        })
+      }
+    })()
+
+    return () => {
+      isActive = false
+    }
+  }, [hasProfileImage, previewVersion])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -252,13 +310,11 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
       return
     }
     setUploadError(null)
-    const url = URL.createObjectURL(file)
-    setCropSrc(url)
+    setCropFile(file)
   }
 
   async function handleCropConfirm(blob: Blob) {
-    if (cropSrc) URL.revokeObjectURL(cropSrc)
-    setCropSrc(null)
+    setCropFile(null)
     setUploadState('uploading')
     setUploadError(null)
     try {
@@ -282,7 +338,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
         const body = (await res.json().catch(() => ({}))) as { error?: string }
         throw new Error(body.error ?? `Upload failed (${res.status})`)
       }
-      setPreviewUrl(`/api/manage/profile/image?_=${Date.now()}`)
+      setPreviewVersion(Date.now())
       onChange(true)
       setUploadState('idle')
     } catch (e: unknown) {
@@ -292,8 +348,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
   }
 
   function handleCropCancel() {
-    if (cropSrc) URL.revokeObjectURL(cropSrc)
-    setCropSrc(null)
+    setCropFile(null)
   }
 
   async function handleDelete() {
@@ -309,7 +364,7 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
         const body = (await res.json().catch(() => ({}))) as { error?: string }
         throw new Error(body.error ?? `Delete failed (${res.status})`)
       }
-      setPreviewUrl(null)
+      setPreviewSrc(null)
       onChange(false)
       setUploadState('idle')
     } catch (e: unknown) {
@@ -319,21 +374,20 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
   }
 
   const isLoading = uploadState === 'uploading'
-  const safePreviewUrl = sanitizeTrustedImageUrl(previewUrl)
 
   return (
     <>
-      {cropSrc ? <CropModal imageSrc={cropSrc} onConfirm={handleCropConfirm} onCancel={handleCropCancel} /> : null}
+      {cropFile ? <CropModal imageFile={cropFile} onConfirm={handleCropConfirm} onCancel={handleCropCancel} /> : null}
 
       <div className="flex items-center gap-3">
         {/* Circular preview */}
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-          {safePreviewUrl ? (
+          {previewSrc ? (
             <img
-              src={safePreviewUrl}
+              src={previewSrc}
               alt={t('adminProfilePhotoPreview')}
               className="h-full w-full object-cover"
-              onError={() => setPreviewUrl(null)}
+              onError={() => setPreviewSrc(null)}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-slate-400 dark:text-slate-500">
