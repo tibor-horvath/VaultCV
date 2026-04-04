@@ -46,6 +46,29 @@ For UI-only work, enable mock mode:
 - Run `cd web && npm run lint` for frontend changes.
 - Update docs when behavior, setup, or environment requirements change.
 
+## Commit conventions
+
+VaultCV uses [Conventional Commits](https://www.conventionalcommits.org/) in the upstream template repository so `release-please` can generate version bumps and release notes automatically.
+
+Examples:
+
+- `feat: add public profile QR download`
+- `fix: prevent duplicate share-link creation`
+- `feat!: change public profile URL format`
+- `docs: clarify local development`
+
+As a rule of thumb:
+
+- `feat:` -> minor release
+- `fix:` -> patch release
+- `!` or `BREAKING CHANGE:` -> breaking release
+
+## Release automation
+
+The upstream VaultCV template repository uses `release-please` to open release PRs and maintain `CHANGELOG.md`, GitHub tags, and GitHub Releases from changes merged into `main`.
+
+If you create a repository from this template, this automation is **optional**. You may keep, modify, or remove `.github/workflows/release-please.yml` to match your own release process.
+
 ## Pull requests
 
 - Use a descriptive title and explain the motivation (why), not only file changes (what).
@@ -59,6 +82,7 @@ For UI-only work, enable mock mode:
 - Security model: `docs/security.md`
 - Local setup: `docs/local-development.md`
 - Deployment: `docs/deployment-azure.md`
+- Release process: `docs/release-process.md`
 - Admin flows: `docs/admin.md`
 
 ## Security notes
