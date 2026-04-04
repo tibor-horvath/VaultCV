@@ -48,6 +48,45 @@ function sanitizePublicBasicsForLanding(input: CvData['basics'] | undefined): Cv
   }
 }
 
+const skeletonBar =
+  'animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/50'
+
+function LandingPublicPreviewSkeleton({ loadingLabel }: { loadingLabel: string }) {
+  return (
+    <div className="space-y-6" aria-busy="true" role="status">
+      <span className="sr-only">{loadingLabel}</span>
+      <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="mx-auto flex-shrink-0 sm:mx-0">
+            <div className={`h-48 w-48 rounded-full sm:h-56 sm:w-56 ${skeletonBar}`} />
+          </div>
+          <div className="min-w-0 flex-1 space-y-3">
+            <div className={`h-8 max-w-sm ${skeletonBar} w-3/4`} />
+            <div className={`h-4 max-w-xs ${skeletonBar} w-1/2`} />
+            <div className={`h-4 max-w-sm ${skeletonBar} w-2/3`} />
+          </div>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
+        <div className={`h-5 w-36 ${skeletonBar}`} />
+        <div className="mt-4 space-y-2">
+          <div className={`h-4 w-full ${skeletonBar}`} />
+          <div className={`h-4 w-[92%] ${skeletonBar}`} />
+          <div className={`h-4 w-4/5 ${skeletonBar}`} />
+        </div>
+      </div>
+      <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
+        <div className={`h-5 w-44 ${skeletonBar}`} />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <div className={`h-6 w-16 rounded-md ${skeletonBar}`} />
+          <div className={`h-6 w-20 rounded-md ${skeletonBar}`} />
+          <div className={`h-6 w-[4.5rem] rounded-md ${skeletonBar}`} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function LandingRoute() {
   const { locale, t } = useI18n()
   const { openCv } = useAppView()
@@ -105,7 +144,6 @@ export function LandingRoute() {
 
   const effectiveToken = urlShare.trim() || tokenInput.trim()
   const isUnlocked = Boolean(effectiveToken)
-  const isAccessDetected = Boolean(urlShare.trim())
 
   useEffect(() => {
     const trimmed = initialUrlAccess
@@ -169,7 +207,9 @@ export function LandingRoute() {
           className="h-9 w-9 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-600 dark:border-t-slate-200"
           aria-hidden
         />
-        <p className="text-center text-sm text-slate-600 dark:text-slate-400">{t('loadingCv')}</p>
+        <p className="text-center text-sm text-slate-600 dark:text-slate-400">
+          {urlTokenValidating ? t('loadingCv') : t('checkingAccess')}
+        </p>
       </div>
     )
   }
@@ -209,8 +249,10 @@ export function LandingRoute() {
           </button>
         </div>
 
+        <div className="mt-4 flex flex-col gap-7">
+          <div className={`min-w-0 ${!isUnlocked ? 'order-2 sm:order-1' : 'order-1'}`}>
         {!publicLoading ? (
-          <div className="mt-4 space-y-6">
+          <div className="space-y-6">
             <BasicsCard basics={basics} links={links} showPhoto={showPublicPhoto} />
 
             {orderedSections.map((key) => {
@@ -303,78 +345,88 @@ export function LandingRoute() {
             })}
           </div>
         ) : (
-          <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-            {t('loading')}
-          </h1>
+          <LandingPublicPreviewSkeleton loadingLabel={t('loadingPublicPreview')} />
         )}
-
-        <div className="mt-7 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45 sm:p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            <KeyRound className="h-4 w-4" />
-            {t('accessCode')}
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <label className="sr-only" htmlFor="token">
+          <div
+            className={`flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/75 p-4 dark:border-slate-800/80 dark:bg-slate-900/45 sm:p-5 ${!isUnlocked ? 'order-1 sm:order-2' : 'order-2'}`}
+          >
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <KeyRound className="h-4 w-4" />
               {t('accessCode')}
-            </label>
-            <div className="relative w-full">
-              <input
-                id="token"
-                type={isTokenVisible ? 'text' : 'password'}
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-                placeholder={t('pasteAccessCode')}
-                inputMode="text"
-                autoComplete="off"
-                className="w-full rounded-xl border border-slate-200/70 bg-white py-2.5 pl-4 pr-11 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-slate-600"
-              />
-              {tokenInput.trim().length ? (
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <label className="sr-only" htmlFor="token">
+                {t('accessCode')}
+              </label>
+              <div className="relative w-full">
+                <input
+                  id="token"
+                  type={isTokenVisible ? 'text' : 'password'}
+                  value={tokenInput}
+                  onChange={(e) => setTokenInput(e.target.value)}
+                  placeholder={t('pasteAccessCode')}
+                  inputMode="text"
+                  autoComplete="off"
+                  aria-describedby={!isUnlocked ? 'token-hint' : undefined}
+                  className="w-full rounded-xl border border-slate-200/70 bg-white py-2.5 pl-4 pr-11 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-slate-600"
+                />
+                {tokenInput.trim().length ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsTokenVisible((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900/70 dark:hover:text-slate-200"
+                    aria-label={isTokenVisible ? t('accessCodeHide') : t('accessCodeShow')}
+                    aria-pressed={isTokenVisible}
+                  >
+                    {isTokenVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            {!isUnlocked ? (
+              <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400" id="token-hint">
+                {t('accessCodeHint')}
+              </p>
+            ) : null}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {isUnlocked ? (
                 <button
                   type="button"
-                  onClick={() => setIsTokenVisible((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900/70 dark:hover:text-slate-200"
-                  aria-label={isTokenVisible ? 'Hide access code' : 'Show access code'}
-                  aria-pressed={isTokenVisible}
+                  onClick={() => {
+                    setStoredAccessCode(effectiveToken)
+                    openCv()
+                  }}
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 sm:w-auto dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                 >
-                  {isTokenVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {t('openCv')}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  aria-describedby="token-hint"
+                  className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200/70 bg-white/60 px-4 py-2.5 text-sm font-semibold text-slate-400 shadow-sm transition focus:outline-none sm:w-auto dark:border-slate-700/80 dark:bg-slate-950/30 dark:text-slate-500"
+                >
+                  {t('openCv')}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
+
+              <SessionStatusBadge
+                isLocked={!isUnlocked}
+                lockedText={t('lockedUntilCode')}
+                unlockedText={t('accessDetected')}
+                activeTooltipText={t('accessActiveBadgeHint')}
+                size="sm"
+                minWidthClass="min-w-0"
+              />
             </div>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {isUnlocked ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setStoredAccessCode(effectiveToken)
-                  openCv()
-                }}
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 sm:w-auto dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-              >
-                {t('openCv')}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200/70 bg-white/60 px-4 py-2.5 text-sm font-semibold text-slate-400 shadow-sm transition focus:outline-none sm:w-auto dark:border-slate-700/80 dark:bg-slate-950/30 dark:text-slate-500"
-              >
-                {t('openCv')}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
-
-            <SessionStatusBadge
-              isLocked={!isAccessDetected}
-              lockedText={t('lockedUntilCode')}
-              unlockedText={t('accessDetected')}
-              activeTooltipText={t('accessActiveBadgeHint')}
-              size="sm"
-              minWidthClass="min-w-0"
-            />
           </div>
         </div>
       </div>
