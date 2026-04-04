@@ -59,6 +59,12 @@ describe('resolveUiLocale and getUiDictionary', () => {
     expect(getUiDictionary('zz').loading).toBeDefined()
   })
 
+  it('includes landing access hint and public preview loading strings', () => {
+    const dict = getUiDictionary('en')
+    expect(dict.accessCodeHint).toBeDefined()
+    expect(dict.loadingPublicPreview).toBeDefined()
+  })
+
   it('resolves base for regional codes', () => {
     expect(resolveUiLocale('en-US')).toBe('en')
   })
