@@ -167,4 +167,40 @@ describe('LandingRoute', () => {
     }
     expect(found).not.toBeNull()
   })
+
+  it('renders public credentials in a grouped two-column layout and omits earned dates', async () => {
+    vi.mocked(fetchPublicCvProfile).mockResolvedValue({
+      basics: { name: 'Test User', headline: 'Engineer' },
+      sectionOrder: [],
+      credentials: [
+        {
+          issuer: 'microsoft',
+          label: 'Microsoft Certified: Azure AI Fundamentals',
+          url: 'https://learn.microsoft.com/credentials/example',
+          dateEarned: '2026-03',
+        },
+        {
+          issuer: 'language',
+          label: 'English — TELC B2 (oral)',
+          url: 'https://example.com/telc',
+        },
+      ],
+    })
+
+    renderLanding('/')
+
+    await flushUntil(() => document.body.textContent?.includes('Test User') ?? false)
+
+    expect(document.body.textContent).toContain(enMessages.credentials)
+    expect(document.body.textContent).toContain(enMessages.languageExams)
+    expect(document.body.textContent).toContain('Microsoft Certified: Azure AI Fundamentals')
+    expect(document.body.textContent).toContain('English — TELC B2 (oral)')
+
+    const grid = document.querySelector('[class*="lg:grid-cols-2"]')
+    expect(grid).not.toBeNull()
+
+    // Landing strips dates for privacy; GroupedCredentials uses showDates={false}.
+    expect(document.body.textContent).not.toContain(`${enMessages.earned} 2026`)
+    expect(document.body.textContent).not.toContain(`${enMessages.earned} 2026-03`)
+  })
 })
