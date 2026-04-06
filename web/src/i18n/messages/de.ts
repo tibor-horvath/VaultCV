@@ -64,6 +64,12 @@ export const deMessages: Partial<MessageCatalog> = {
     'Diese Website verwendet ein technisch notwendiges sicheres Session-Cookie (cv_session), um den CV-Zugriff nach dem Entsperren aktiv zu halten. Es werden keine Analyse- oder Marketing-Cookies verwendet.',
   downloadPdf: 'PDF herunterladen',
   generatingPdf: 'Wird erzeugt…',
+  pdfGenerationFailed: 'PDF-Erstellung fehlgeschlagen.',
+  pdfStagePreparing: 'Bilder werden vorbereitet…',
+  pdfStageRendering: 'Wird gerendert…',
+  pdfStageBuilding: 'PDF wird erstellt…',
+  downloadSearchablePdf: 'Durchsuchbares PDF',
+  downloadingSearchablePdf: 'Wird heruntergeladen…',
   backToCv: 'Zurück zum CV',
   pdfLayoutTitle: 'Drucklayout',
   pdfSessionExpiredHint:

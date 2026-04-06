@@ -40,7 +40,8 @@ import {
   getStoredAccessCode,
 } from '../lib/accessSession'
 import { buildPhotoSrc } from '../lib/cvPresentation'
-import { downloadCvPdf } from '../lib/downloadCvPdf'
+import { downloadCvPdf, type PdfProgressStage } from '../lib/downloadCvPdf'
+import { downloadCvPdfServer } from '../lib/downloadCvPdfServerSide'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../lib/pdfCaptureLayout'
 import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
 import { normalizeSectionOrder } from '../lib/sectionOrder'
@@ -199,7 +200,9 @@ export function CvRoute() {
   const { basicsSentinelRef, isBasicsInView } = useBasicsVisibility(state.kind)
   const orderedSections: SectionKey[] = state.kind === 'ready' ? normalizeSectionOrder(state.cv.sectionOrder) : []
   const pdfCaptureRef = useRef<HTMLDivElement>(null)
-  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState<'client' | 'server' | false>(false)
+  const [pdfStage, setPdfStage] = useState<PdfProgressStage | null>(null)
+  const [pdfError, setPdfError] = useState<string | null>(null)
   const [availablePrivateLocales, setAvailablePrivateLocales] = useState<string[] | null>(null)
 
   useEffect(() => {
@@ -217,10 +220,36 @@ export function CvRoute() {
   async function handleDownloadPdf() {
     const el = pdfCaptureRef.current
     if (!el || state.kind !== 'ready') return
-    setPdfBusy(true)
+    setPdfBusy('client')
+    setPdfStage(null)
+    setPdfError(null)
     try {
       const name = state.cv.basics.name?.trim().replace(/\s+/g, '-') || 'cv'
-      await downloadCvPdf({ root: el, fileBaseName: name })
+      await downloadCvPdf({
+        root: el,
+        fileBaseName: name,
+        onProgress: (stage) => setPdfStage(stage),
+      })
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : t('pdfGenerationFailed'))
+    } finally {
+      setPdfBusy(false)
+      setPdfStage(null)
+    }
+  }
+
+  async function handleDownloadPdfServer() {
+    if (state.kind !== 'ready') return
+    setPdfBusy('server')
+    setPdfError(null)
+    try {
+      const name = state.cv.basics.name?.trim().replace(/\s+/g, '-') || 'cv'
+      const result = await downloadCvPdfServer({ fileBaseName: name, locale })
+      if (!result.ok) {
+        setPdfError(result.error)
+      }
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : t('pdfGenerationFailed'))
     } finally {
       setPdfBusy(false)
     }
@@ -286,6 +315,14 @@ export function CvRoute() {
       />
     ) : null
 
+  const pdfClientLabel = (() => {
+    if (pdfBusy !== 'client') return t('downloadPdf')
+    if (pdfStage === 'preparing') return t('pdfStagePreparing')
+    if (pdfStage === 'rendering') return t('pdfStageRendering')
+    if (pdfStage === 'building') return t('pdfStageBuilding')
+    return t('generatingPdf')
+  })()
+
   return (
     <div className="space-y-6 lg:pt-20">
       {state.kind === 'locked' ? (
@@ -338,26 +375,63 @@ export function CvRoute() {
                   <button
                     type="button"
                     onClick={() => void handleDownloadPdf()}
-                    disabled={pdfBusy}
+                    disabled={pdfBusy !== false}
                     className="hidden items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50 sm:inline-flex"
                   >
                     <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+                    {pdfClientLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadPdfServer()}
+                    disabled={pdfBusy !== false}
+                    className="hidden items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900 sm:inline-flex"
+                  >
+                    <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {pdfBusy === 'server' ? t('downloadingSearchablePdf') : t('downloadSearchablePdf')}
                   </button>
                   <LanguageSelector allowedLocales={availablePrivateLocales ?? EMPTY_LOCALES} />
                   {themeToggle}
                 </div>
               }
               belowLinks={
-                <button
-                  type="button"
-                  onClick={() => void handleDownloadPdf()}
-                  disabled={pdfBusy}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
-                >
-                  <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
-                </button>
+                <div className="flex w-full flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadPdf()}
+                    disabled={pdfBusy !== false}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
+                  >
+                    <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {pdfClientLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadPdfServer()}
+                    disabled={pdfBusy !== false}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
+                  >
+                    <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {pdfBusy === 'server' ? t('downloadingSearchablePdf') : t('downloadSearchablePdf')}
+                  </button>
+                  {pdfError ? (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2 rounded-lg border border-red-200/80 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-400"
+                    >
+                      <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="flex-1">{pdfError}</span>
+                      <button
+                        type="button"
+                        onClick={() => setPdfError(null)}
+                        aria-label="Dismiss"
+                        className="shrink-0 opacity-60 hover:opacity-100 focus:outline-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               }
             />
           </div>

@@ -64,6 +64,12 @@ export const huMessages: Partial<MessageCatalog> = {
     'Ez az oldal egy szigorúan szükséges biztonságos munkamenet-sütit (cv_session) használ a hozzáférés fenntartásához. Analitikai vagy marketing sütiket nem használunk.',
   downloadPdf: 'PDF letöltése',
   generatingPdf: 'Generálás…',
+  pdfGenerationFailed: 'A PDF generálása sikertelen.',
+  pdfStagePreparing: 'Képek előkészítése…',
+  pdfStageRendering: 'Megjelenítés…',
+  pdfStageBuilding: 'PDF összeállítása…',
+  downloadSearchablePdf: 'Kereshető PDF',
+  downloadingSearchablePdf: 'Letöltés…',
   backToCv: 'Vissza az önéletrajzhoz',
   pdfLayoutTitle: 'Nyomtatási elrendezés',
   pdfSessionExpiredHint:

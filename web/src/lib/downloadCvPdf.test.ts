@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   _buildPdfGeneratedAtFooter,
   canvasPageSliceHeightPx,
@@ -6,10 +6,17 @@ import {
   computePdfSliceEnds,
   _mapRectsToCanvas,
   _sanitizePdfFileBaseName,
+  downloadCvPdf,
   type PdfLinkRect,
 } from './downloadCvPdf'
 import { getBrand } from './brand'
 import { PDF_CAPTURE_ROOT_WIDTH_PX } from './pdfCaptureLayout'
+
+vi.mock('html2canvas', () => ({ default: vi.fn() }))
+vi.mock('jspdf', () => ({ jsPDF: vi.fn() }))
+
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 
 describe('clipVerticalToPage', () => {
   it('returns intersection when rect overlaps page band', () => {
@@ -79,5 +86,85 @@ describe('_buildPdfGeneratedAtFooter', () => {
     expect(_buildPdfGeneratedAtFooter(date)).toBe(
       `Generated on 2026-03-30 14:05:09 by ${brand.displayName} (${brand.repoUrl})`,
     )
+  })
+})
+
+describe('downloadCvPdf', () => {
+  let pdfSaveSpy: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    pdfSaveSpy = vi.fn()
+    const save = pdfSaveSpy
+    ;(jsPDF as unknown as { mockImplementation: (c: unknown) => void }).mockImplementation(
+      class MockPDF {
+        addPage = vi.fn()
+        addImage = vi.fn()
+        link = vi.fn()
+        setPage = vi.fn()
+        getNumberOfPages = vi.fn(() => 1)
+        setFontSize = vi.fn()
+        setTextColor = vi.fn()
+        text = vi.fn()
+        getTextWidth = vi.fn(() => 5)
+        getFontSize = vi.fn(() => 8)
+        save = save
+        internal = { scaleFactor: 1 }
+      },
+    )
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      cb(0)
+      return 0
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('calls pdf.save with the sanitized filename on success', async () => {
+    ;(html2canvas as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ width: 100, height: 100 })
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D)
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,')
+
+    const root = document.createElement('div')
+    await downloadCvPdf({ root, fileBaseName: 'John-Doe' })
+
+    expect(pdfSaveSpy).toHaveBeenCalledWith('John-Doe.pdf')
+    expect(html2canvas).toHaveBeenCalled()
+  })
+
+  it('propagates the error when html2canvas rejects', async () => {
+    ;(html2canvas as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('canvas capture failed'))
+
+    const root = document.createElement('div')
+    await expect(downloadCvPdf({ root })).rejects.toThrow('canvas capture failed')
+  })
+
+  it('throws when the 2d context is unavailable on a slice canvas', async () => {
+    ;(html2canvas as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ width: 100, height: 100 })
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
+
+    const root = document.createElement('div')
+    await expect(downloadCvPdf({ root })).rejects.toThrow('2d context unavailable')
+  })
+
+  it('calls onProgress at preparing, rendering, and building stages', async () => {
+    ;(html2canvas as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ width: 100, height: 100 })
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D)
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,')
+
+    const onProgress = vi.fn()
+    const root = document.createElement('div')
+    await downloadCvPdf({ root, onProgress })
+
+    expect(onProgress).toHaveBeenCalledWith('preparing')
+    expect(onProgress).toHaveBeenCalledWith('rendering')
+    expect(onProgress).toHaveBeenCalledWith('building')
+    expect(onProgress).toHaveBeenCalledTimes(3)
   })
 })

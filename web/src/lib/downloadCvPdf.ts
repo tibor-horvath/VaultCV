@@ -144,10 +144,13 @@ function mapRectsToCanvas(rects: PdfLinkRect[], rootW: number, rootH: number, ca
   }))
 }
 
+export type PdfProgressStage = 'preparing' | 'rendering' | 'building'
+
 export type DownloadCvPdfOptions = {
   root: HTMLElement
   scale?: number
   fileBaseName?: string
+  onProgress?: (stage: PdfProgressStage) => void
 }
 
 function pad2(n: number): string {
@@ -436,7 +439,7 @@ export function canvasPageSliceHeightPx(contentH_mm: number, contentW_mm: number
 /**
  * html2canvas raster + jsPDF with link annotations. CORS: useCORS for remote photos.
  */
-export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: DownloadCvPdfOptions): Promise<void> {
+export async function downloadCvPdf({ root, scale, fileBaseName = 'cv', onProgress }: DownloadCvPdfOptions): Promise<void> {
   const { margin, pageW, pageH, contentW, contentH } = a4LayoutMm()
   const captureScale = defaultHtml2canvasScale(scale)
   const restoreViewport = normalizePdfCaptureViewport(root)
@@ -446,12 +449,14 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
   try {
     await nextFrame()
     await nextFrame()
+    onProgress?.('preparing')
     await withTimeout(waitForImages(root), IMAGE_LOAD_TIMEOUT_MS + IMAGE_DECODE_TIMEOUT_MS, 'waiting for images')
     await withTimeout(inlineRemoteImagesForPdfCapture(root), 30000, 'inlining remote images')
     await withTimeout(waitForImages(root), IMAGE_LOAD_TIMEOUT_MS + IMAGE_DECODE_TIMEOUT_MS, 'waiting for inlined images')
     await nextFrame()
     rootW = root.offsetWidth
     rootH = root.offsetHeight
+    onProgress?.('rendering')
     canvas = await withTimeout(
       html2canvas(root, {
         scale: captureScale,
@@ -506,6 +511,7 @@ export async function downloadCvPdf({ root, scale, fileBaseName = 'cv' }: Downlo
     restoreViewport()
   }
 
+  onProgress?.('building')
   const rectsDom = collectPdfLinkRects(root)
   const rects = mapRectsToCanvas(rectsDom, rootW, rootH, canvas.width, canvas.height)
 
