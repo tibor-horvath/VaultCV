@@ -223,24 +223,27 @@ describe('LandingRoute', () => {
     document.body.appendChild(container)
     const root = createRoot(container)
 
-    act(() => {
-      root.render(
-        <MemoryRouter initialEntries={['/?s=test-share-token']}>
-          <LocationCapture />
-          <LocaleProvider>
-            <ThemeProvider>
-              <LandingRoute />
-            </ThemeProvider>
-          </LocaleProvider>
-        </MemoryRouter>,
-      )
-    })
+    try {
+      act(() => {
+        root.render(
+          <MemoryRouter initialEntries={['/?s=test-share-token']}>
+            <LocationCapture />
+            <LocaleProvider>
+              <ThemeProvider>
+                <LandingRoute />
+              </ThemeProvider>
+            </LocaleProvider>
+          </MemoryRouter>,
+        )
+      })
 
-    await flushMicrotasks()
-
-    act(() => { root.unmount() })
-    container.remove()
-
+      await flushMicrotasks()
+    } finally {
+      act(() => {
+        root.unmount()
+      })
+      container.remove()
+    }
     const lastSearch = searchValues[searchValues.length - 1]
     expect(lastSearch).not.toContain('s=test-share-token')
     expect(lastSearch).toBe('')
