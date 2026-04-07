@@ -114,8 +114,8 @@ export async function deleteProfileJsonV2(args: { kind: 'public' | 'private'; lo
   const client = getBlobClientByName(name)
   try {
     await client.delete()
-  } catch (e: any) {
-    if (e?.statusCode === 404) return
+  } catch (e: unknown) {
+    if (typeof e === 'object' && e !== null && (e as Record<string, unknown>).statusCode === 404) return
     throw e
   }
 }

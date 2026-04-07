@@ -668,14 +668,15 @@ export function useAdminEditorProfile(params: {
         throw new Error(bodyResult.ok ? (bodyResult.value.error ?? `Request failed`) : bodyResult.error)
       }
 
+      let nextLocales: typeof locales = []
       setLocales((current) => {
         const next = current.filter((x) => x.locale !== localeToRemove)
-        return next.length ? next : current
+        nextLocales = next.length ? next : current
+        return nextLocales
       })
       setLocale((current) => {
         if (current !== localeToRemove) return current
-        const remaining = locales.filter((x) => x.locale !== localeToRemove)
-        return remaining[0]?.locale ?? 'en'
+        return nextLocales[0]?.locale ?? 'en'
       })
       setStatus(t('adminLanguageRemoved'))
     } catch (e: unknown) {
