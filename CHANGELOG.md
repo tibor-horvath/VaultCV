@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/tibor-horvath/VaultCV/compare/v1.0.1...v1.0.2) (2026-04-07)
+
+
+### Bug Fixes
+
+* clear share ID from URL after consuming it ([#40](https://github.com/tibor-horvath/VaultCV/issues/40)) ([85ada9d](https://github.com/tibor-horvath/VaultCV/commit/85ada9daaf573738a1d2f4974febc4bbbf9aff5b))
+
 ## [1.0.1](https://github.com/tibor-horvath/VaultCV/compare/v1.0.0...v1.0.1) (2026-04-04)
 
 
