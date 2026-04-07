@@ -88,6 +88,7 @@ export function useAdminEditorProfile(params: {
   const [privateValidation, setPrivateValidation] = useState<PrivateValidation>(emptyPrivateValidation())
 
   const [hasProfileImage, setHasProfileImage] = useState(false)
+  const [isLocalePublished, setIsLocalePublished] = useState(true)
   const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
     name: false,
     headline: false,
@@ -156,6 +157,7 @@ export function useAdminEditorProfile(params: {
         publicExperience,
         publicEducation,
         publicProjects,
+        isLocalePublished,
       }),
     [
       basicsName,
@@ -181,6 +183,7 @@ export function useAdminEditorProfile(params: {
       publicExperience,
       publicEducation,
       publicProjects,
+      isLocalePublished,
     ],
   )
 
@@ -314,6 +317,10 @@ export function useAdminEditorProfile(params: {
 
       const privateJsonText = typeof privateBody.json === 'string' ? privateBody.json : ''
       const publicJsonText = typeof publicBody.json === 'string' ? publicBody.json : ''
+
+      // A locale is considered published when its public blob has content.
+      // If both blobs are empty (brand-new locale), treat it as published so the first save publishes it.
+      const isLocalePublishedInitial = publicJsonText.trim() !== '' || privateJsonText.trim() === ''
 
       const parsedPrivate = privateJsonText.trim() ? safeJsonParse<Record<string, unknown>>(privateJsonText) : { ok: true as const, value: {} }
       if (!parsedPrivate.ok) throw new Error(parsedPrivate.error)
@@ -566,6 +573,7 @@ export function useAdminEditorProfile(params: {
         publicExperience: nextPublicExperience,
         publicEducation: nextPublicEducation,
         publicProjects: nextPublicProjects,
+        isLocalePublished: isLocalePublishedInitial,
       })
 
       setPublicBasics(nextPublicBasics)
@@ -573,6 +581,7 @@ export function useAdminEditorProfile(params: {
       setPublicExperience(nextPublicExperience)
       setPublicEducation(nextPublicEducation)
       setPublicProjects(nextPublicProjects)
+      setIsLocalePublished(isLocalePublishedInitial)
       setBasicsName(nextBasicsName)
       setBasicsHeadline(nextBasicsHeadline)
       setBasicsEmail(nextBasicsEmail)
@@ -632,59 +641,6 @@ export function useAdminEditorProfile(params: {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meLoading, isAdmin, locale])
-
-  async function handleRemoveLocale(localeToRemove: string) {
-    if (!localeToRemove) return
-    const confirmed = window.confirm(t('adminRemoveLanguageConfirm'))
-    if (!confirmed) return
-
-    setIsSaving(true)
-    setError(null)
-    setStatus(null)
-    try {
-      const qs = new URLSearchParams()
-      qs.set('locale', localeToRemove)
-      const mutationHeaders = { 'x-cv-admin': '1', accept: 'application/json' }
-
-      const [privateRes, publicRes] = await Promise.all([
-        fetch(`/api/manage/profile/private?${qs.toString()}`, {
-          method: 'DELETE',
-          headers: mutationHeaders,
-          credentials: 'same-origin',
-        }),
-        fetch(`/api/manage/profile/public?${qs.toString()}`, {
-          method: 'DELETE',
-          headers: mutationHeaders,
-          credentials: 'same-origin',
-        }),
-      ])
-
-      if (privateRes.status === 401 || publicRes.status === 401) {
-        redirectToLogin('/admin/editor')
-        return
-      }
-      if (!privateRes.ok || !publicRes.ok) {
-        const bodyResult = await readJsonResponse<{ error?: string }>(privateRes.ok ? publicRes : privateRes)
-        throw new Error(bodyResult.ok ? (bodyResult.value.error ?? `Request failed`) : bodyResult.error)
-      }
-
-      let nextLocales: typeof locales = []
-      setLocales((current) => {
-        const next = current.filter((x) => x.locale !== localeToRemove)
-        nextLocales = next.length ? next : current
-        return nextLocales
-      })
-      setLocale((current) => {
-        if (current !== localeToRemove) return current
-        return nextLocales[0]?.locale ?? 'en'
-      })
-      setStatus(t('adminLanguageRemoved'))
-    } catch (e: unknown) {
-      setError(toErrorMessage(e, t('adminRemoveLanguageFailed')))
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   useEffect(() => {
     const prev = previousBasicsSnapshotRef.current
@@ -1248,8 +1204,25 @@ export function useAdminEditorProfile(params: {
 
       const privatePut = await put('private', privateJson)
       if (!privatePut.ok) return
-      const publicPut = await put('public', publicJson)
-      if (!publicPut.ok) return
+
+      if (isLocalePublished) {
+        const publicPut = await put('public', publicJson)
+        if (!publicPut.ok) return
+      } else {
+        const delRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, {
+          method: 'DELETE',
+          headers: { 'x-cv-admin': '1', accept: 'application/json' },
+          credentials: 'same-origin',
+        })
+        if (delRes.status === 401) {
+          redirectToLogin('/admin/editor')
+          return
+        }
+        if (!delRes.ok && delRes.status !== 404) {
+          const bodyResult = await readJsonResponse<{ error?: string }>(delRes)
+          throw new Error(bodyResult.ok ? (bodyResult.value.error ?? `Request failed (${delRes.status})`) : bodyResult.error)
+        }
+      }
 
       await load()
       setIsDirty(false)
@@ -1279,7 +1252,8 @@ export function useAdminEditorProfile(params: {
     setLocale,
     handleLocaleChange,
     handleAddLocale,
-    handleRemoveLocale,
+    isLocalePublished,
+    setIsLocalePublished,
     errorBannerRef,
 
     basicsName,

@@ -49,7 +49,8 @@ export function AdminEditorRoute() {
       addableLocales={editor.addableLocales}
       onLocaleChange={editor.handleLocaleChange}
       onAddLocale={editor.handleAddLocale}
-      onRemoveLocale={editor.handleRemoveLocale}
+      isLocalePublished={editor.isLocalePublished}
+      onToggleLocalePublished={editor.setIsLocalePublished}
       hasUnsavedChanges={editor.isDirty}
       loading={editor.loading}
       saving={editor.isSaving}
