@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import { GripVertical, Languages, Link2, LoaderCircle, LogOut, Save, Shield, SquarePen } from 'lucide-react'
+import { GripVertical, Languages, Link2, LoaderCircle, LogOut, Save, Shield, SquarePen, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { LanguageSelector } from '../../components/LanguageSelector'
@@ -13,6 +13,7 @@ export function AdminEditorHeader(props: {
   addableLocales: LocaleItem[]
   setLocale: (locale: string) => void
   onAddLocale: (locale: string) => void
+  onRemoveLocale: (locale: string) => Promise<void>
   hasUnsavedChanges: boolean
   loading: boolean
   saving: boolean
@@ -20,7 +21,7 @@ export function AdminEditorHeader(props: {
   onSave: () => void
   onOpenReorderSheet?: () => void
 }) {
-  const { locale, locales, addableLocales, setLocale, onAddLocale, hasUnsavedChanges, loading, saving, signedInEmail, onSave, onOpenReorderSheet } = props
+  const { locale, locales, addableLocales, setLocale, onAddLocale, onRemoveLocale, hasUnsavedChanges, loading, saving, signedInEmail, onSave, onOpenReorderSheet } = props
   const { t } = useI18n()
   const [newLocale, setNewLocale] = useState('')
   const localeSelectId = 'admin-editor-locale-select'
@@ -73,6 +74,16 @@ export function AdminEditorHeader(props: {
               ))}
             </select>
           </label>
+          {locales.length > 1 ? (
+            <button
+              type="button"
+              disabled={loading || saving}
+              onClick={() => void onRemoveLocale(locale)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200/70 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-800/60 dark:text-red-400 dark:hover:bg-red-950/40"
+            >
+              <Trash2 className="h-3.5 w-3.5 shrink-0" /> {t('adminRemoveLanguage')}
+            </button>
+          ) : null}
           {addableLocales.length ? (
             <div className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
               <label htmlFor={addLocaleSelectId}>{t('adminAddLanguage')}</label>

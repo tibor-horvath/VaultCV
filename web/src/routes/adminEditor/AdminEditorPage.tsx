@@ -44,6 +44,7 @@ export function AdminEditorPage(props: {
   addableLocales: LocaleItem[]
   onLocaleChange: (nextLocale: string) => void
   onAddLocale: (nextLocale: string) => void
+  onRemoveLocale: (locale: string) => Promise<void>
 
   hasUnsavedChanges: boolean
   loading: boolean
@@ -130,6 +131,7 @@ export function AdminEditorPage(props: {
     addableLocales,
     onLocaleChange,
     onAddLocale,
+    onRemoveLocale,
     hasUnsavedChanges,
     loading,
     saving,
@@ -373,6 +375,7 @@ export function AdminEditorPage(props: {
         addableLocales={addableLocales}
         setLocale={onLocaleChange}
         onAddLocale={onAddLocale}
+        onRemoveLocale={onRemoveLocale}
         hasUnsavedChanges={hasUnsavedChanges}
         loading={loading}
         saving={saving}

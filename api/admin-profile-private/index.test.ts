@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../lib/profileBlobStore', () => ({
   readProfileJsonV2: vi.fn(async () => '{"basics":{"name":"Test"}}'),
   writeProfileJsonV2: vi.fn(async () => undefined),
+  deleteProfileJsonV2: vi.fn(async () => undefined),
 }))
 
 vi.mock('../lib/swaAuth', () => ({
@@ -12,10 +13,12 @@ vi.mock('../lib/swaAuth', () => ({
 vi.mock('../lib/localeRegistry', () => ({
   normalizeLocale: vi.fn((v: string | undefined) => (v ?? '').split('-')[0]?.toLowerCase() || 'en'),
   readSupportedLocalesCached: vi.fn(async () => ['en', 'hu']),
+  invalidateLocalesCache: vi.fn(),
 }))
 
-import { readProfileJsonV2, writeProfileJsonV2 } from '../lib/profileBlobStore'
+import { readProfileJsonV2, writeProfileJsonV2, deleteProfileJsonV2 } from '../lib/profileBlobStore'
 import { requireAdmin } from '../lib/swaAuth'
+import { invalidateLocalesCache } from '../lib/localeRegistry'
 import handler from './index'
 
 const originalEnv = { ...process.env }
@@ -163,11 +166,62 @@ describe('/api/admin-profile-private', () => {
   })
 
   describe('unsupported methods', () => {
-    it('returns 405 for DELETE', async () => {
+    it('returns 405 for PATCH', async () => {
       process.env.CV_PROFILE_SLUG = 'john-doe'
       const context: { res?: unknown } = {}
-      await handler(context, { method: 'DELETE', headers: {}, query: { locale: 'en' } })
+      await handler(context, { method: 'PATCH', headers: {}, query: { locale: 'en' } })
       expect(context.res).toMatchObject({ status: 405 })
+    })
+  })
+
+  describe('DELETE', () => {
+    it('returns 403 when Origin does not match host', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'DELETE',
+        headers: { origin: 'https://evil.com', host: 'example.com', 'x-cv-admin': '1' },
+        query: { locale: 'en' },
+      })
+      expect(context.res).toMatchObject({ status: 403 })
+    })
+
+    it('returns 400 when x-cv-admin header is missing', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'DELETE',
+        headers: { origin: 'https://example.com', host: 'example.com' },
+        query: { locale: 'en' },
+      })
+      expect(context.res).toMatchObject({ status: 400 })
+    })
+
+    it('deletes private profile blob and invalidates cache', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'DELETE',
+        headers: { origin: 'https://example.com', host: 'example.com', 'x-cv-admin': '1' },
+        query: { locale: 'en' },
+      })
+      expect(deleteProfileJsonV2).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: 'private', locale: 'en', slugFromName: 'john-doe' }),
+      )
+      expect(invalidateLocalesCache).toHaveBeenCalledWith('john-doe')
+      expect(context.res).toMatchObject({ status: 200, body: { ok: true } })
+    })
+
+    it('returns 500 when deleteProfileJsonV2 throws', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      ;(deleteProfileJsonV2 as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('delete failed'))
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'DELETE',
+        headers: { origin: 'https://example.com', host: 'example.com', 'x-cv-admin': '1' },
+        query: { locale: 'en' },
+      })
+      expect(context.res).toMatchObject({ status: 500, body: { error: 'delete failed' } })
     })
   })
 

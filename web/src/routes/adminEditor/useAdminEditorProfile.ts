@@ -633,6 +633,58 @@ export function useAdminEditorProfile(params: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meLoading, isAdmin, locale])
 
+  async function handleRemoveLocale(localeToRemove: string) {
+    if (!localeToRemove) return
+    const confirmed = window.confirm(t('adminRemoveLanguageConfirm'))
+    if (!confirmed) return
+
+    setIsSaving(true)
+    setError(null)
+    setStatus(null)
+    try {
+      const qs = new URLSearchParams()
+      qs.set('locale', localeToRemove)
+      const mutationHeaders = { 'x-cv-admin': '1', accept: 'application/json' }
+
+      const [privateRes, publicRes] = await Promise.all([
+        fetch(`/api/manage/profile/private?${qs.toString()}`, {
+          method: 'DELETE',
+          headers: mutationHeaders,
+          credentials: 'same-origin',
+        }),
+        fetch(`/api/manage/profile/public?${qs.toString()}`, {
+          method: 'DELETE',
+          headers: mutationHeaders,
+          credentials: 'same-origin',
+        }),
+      ])
+
+      if (privateRes.status === 401 || publicRes.status === 401) {
+        redirectToLogin('/admin/editor')
+        return
+      }
+      if (!privateRes.ok || !publicRes.ok) {
+        const bodyResult = await readJsonResponse<{ error?: string }>(privateRes.ok ? publicRes : privateRes)
+        throw new Error(bodyResult.ok ? (bodyResult.value.error ?? `Request failed`) : bodyResult.error)
+      }
+
+      setLocales((current) => {
+        const next = current.filter((x) => x.locale !== localeToRemove)
+        return next.length ? next : current
+      })
+      setLocale((current) => {
+        if (current !== localeToRemove) return current
+        const remaining = locales.filter((x) => x.locale !== localeToRemove)
+        return remaining[0]?.locale ?? 'en'
+      })
+      setStatus(t('adminLanguageRemoved'))
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, t('adminRemoveLanguageFailed')))
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   useEffect(() => {
     const prev = previousBasicsSnapshotRef.current
     setPublicValidation((cur) => {
@@ -1226,6 +1278,7 @@ export function useAdminEditorProfile(params: {
     setLocale,
     handleLocaleChange,
     handleAddLocale,
+    handleRemoveLocale,
     errorBannerRef,
 
     basicsName,

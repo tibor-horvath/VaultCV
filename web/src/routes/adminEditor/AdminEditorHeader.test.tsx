@@ -27,6 +27,7 @@ function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn(), onOpenReo
             addableLocales={[{ locale: 'hu', label: 'Magyar' }]}
             setLocale={setLocale}
             onAddLocale={() => {}}
+            onRemoveLocale={async () => {}}
             hasUnsavedChanges={hasUnsavedChanges}
             loading={false}
             saving={false}
