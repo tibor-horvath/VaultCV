@@ -1,7 +1,7 @@
-import { deleteProfileJsonV2, readProfileJsonV2, writeProfileJsonV2 } from '../lib/profileBlobStore'
+import { readProfileJsonV2, writeProfileJsonV2 } from '../lib/profileBlobStore'
 import { readAllowedOriginsFromEnv, requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { getHeaderInsensitive, firstLanguageTagFromAcceptLanguage } from '../lib/httpHeaders'
-import { invalidateLocalesCache, normalizeLocale, readSupportedLocalesCached } from '../lib/localeRegistry'
+import { normalizeLocale, readSupportedLocalesCached } from '../lib/localeRegistry'
 import { requireAdmin } from '../lib/swaAuth'
 
 type Context = {
@@ -97,23 +97,6 @@ export default async function (context: Context, req: HttpRequest) {
         return
       }
       await writeProfileJsonV2({ kind: 'private', locale: requestedLocale, slugFromName, jsonText: json })
-      context.res = jsonResponse(200, { ok: true })
-      return
-    }
-
-    if (method === 'DELETE') {
-      const sameOrigin = requireSameOriginMutation(req.headers, { allowedOrigins: readAllowedOriginsFromEnv() })
-      if (!sameOrigin.ok) {
-        context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
-        return
-      }
-      const adminHdr = requireAdminMutationHeader(req.headers)
-      if (!adminHdr.ok) {
-        context.res = jsonResponse(adminHdr.status, { error: adminHdr.error })
-        return
-      }
-      await deleteProfileJsonV2({ kind: 'private', locale: requestedLocale, slugFromName })
-      invalidateLocalesCache(slugFromName)
       context.res = jsonResponse(200, { ok: true })
       return
     }

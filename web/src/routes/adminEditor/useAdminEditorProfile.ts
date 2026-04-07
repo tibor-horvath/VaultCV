@@ -318,9 +318,13 @@ export function useAdminEditorProfile(params: {
       const privateJsonText = typeof privateBody.json === 'string' ? privateBody.json : ''
       const publicJsonText = typeof publicBody.json === 'string' ? publicBody.json : ''
 
-      // A locale is considered published when its public blob has content.
-      // If both blobs are empty (brand-new locale), treat it as published so the first save publishes it.
-      const isLocalePublishedInitial = publicJsonText.trim() !== '' || privateJsonText.trim() === ''
+      // Determine the initial published state for this locale:
+      // - public blob has content → published
+      // - both blobs are empty (brand-new locale) → published (first save will create both)
+      // - public blob is empty but private has content → unpublished (was previously disabled)
+      const determineInitialPublishState = () =>
+        publicJsonText.trim() !== '' || privateJsonText.trim() === ''
+      const isLocalePublishedInitial = determineInitialPublishState()
 
       const parsedPrivate = privateJsonText.trim() ? safeJsonParse<Record<string, unknown>>(privateJsonText) : { ok: true as const, value: {} }
       if (!parsedPrivate.ok) throw new Error(parsedPrivate.error)
