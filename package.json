@@ -1,7 +1,7 @@
 {
   "name": "cv-root",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "sync:swa-config": "node scripts/sync-swa-config.mjs",
     "test": "npm run test --prefix web && npm run test --prefix api"
