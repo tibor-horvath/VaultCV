@@ -82,7 +82,7 @@ export function LandingRoute() {
   const { locale, t } = useI18n()
   const { openCv } = useAppView()
   const { theme, toggleTheme } = useTheme()
-  const [params] = useSearchParams()
+  const [params, setSearchParams] = useSearchParams()
   const urlShare = params.get('s') ?? ''
   const initialUrlAccess = urlShare.trim()
   const [shareLinkAccessLoading, setShareLinkAccessLoading] = useState(() => Boolean(initialUrlAccess))
@@ -155,8 +155,10 @@ export function LandingRoute() {
     // IMPORTANT: do not "pre-validate" by calling `/api/auth` here.
     // `CvRoute` exchanges the token; doing it here too doubles share-link view counts.
     setStoredAccessCode(trimmed)
+    // Remove the share ID from the URL so it cannot be accidentally reshared.
+    setSearchParams({}, { replace: true })
     openCv()
-  }, [initialUrlAccess, openCv])
+  }, [initialUrlAccess, openCv, setSearchParams])
 
   useEffect(() => {
     if (!tokenInput.trim()) return
