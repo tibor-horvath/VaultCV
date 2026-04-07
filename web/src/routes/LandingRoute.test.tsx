@@ -1,6 +1,6 @@
-import { act } from 'react'
+import { act, useEffect } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { enMessages } from '../i18n/messages/en'
 import { fetchCv } from '../lib/api'
@@ -202,5 +202,50 @@ describe('LandingRoute', () => {
     // Landing strips dates for privacy; GroupedCredentials uses showDates={false}.
     expect(document.body.textContent).not.toContain(`${enMessages.earned} 2026`)
     expect(document.body.textContent).not.toContain(`${enMessages.earned} 2026-03`)
+  })
+
+  it('removes the share ID query param from the URL after consuming it', async () => {
+    vi.mocked(fetchPublicCvProfile).mockResolvedValue({
+      basics: { name: 'Test User', headline: 'Engineer' },
+      sectionOrder: [],
+    })
+
+    const searchValues: string[] = []
+    function LocationCapture() {
+      const { search } = useLocation()
+      useEffect(() => {
+        searchValues.push(search)
+      }, [search])
+      return null
+    }
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+
+    try {
+      act(() => {
+        root.render(
+          <MemoryRouter initialEntries={['/?s=test-share-token']}>
+            <LocationCapture />
+            <LocaleProvider>
+              <ThemeProvider>
+                <LandingRoute />
+              </ThemeProvider>
+            </LocaleProvider>
+          </MemoryRouter>,
+        )
+      })
+
+      await flushMicrotasks()
+    } finally {
+      act(() => {
+        root.unmount()
+      })
+      container.remove()
+    }
+    const lastSearch = searchValues[searchValues.length - 1]
+    expect(lastSearch).not.toContain('s=test-share-token')
+    expect(lastSearch).toBe('')
   })
 })
