@@ -1212,6 +1212,8 @@ export function useAdminEditorProfile(params: {
       if (isLocalePublished) {
         const publicPut = await put('public', publicJson)
         if (!publicPut.ok) return
+        // Reload from server to sync any server-side normalisation.
+        await load()
       } else {
         const delRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, {
           method: 'DELETE',
@@ -1226,9 +1228,14 @@ export function useAdminEditorProfile(params: {
           const bodyResult = await readJsonResponse<{ error?: string }>(delRes)
           throw new Error(bodyResult.ok ? (bodyResult.value.error ?? `Request failed (${delRes.status})`) : bodyResult.error)
         }
+        // Skip load() for the unpublish path: reloading would re-derive all public
+        // visibility flags from the now-deleted public blob, resetting them to all-private
+        // and losing the user's configuration. Instead, update the dirty baseline directly
+        // so the current form state (including visibility flags) is treated as saved.
+        lastLoadedDraftSignatureRef.current = draftSignature
+        suppressDirtyTrackingRef.current = true
       }
 
-      await load()
       setIsDirty(false)
       setPublicValidation(emptyPublicValidation())
       setPrivateValidation(emptyPrivateValidation())

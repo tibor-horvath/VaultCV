@@ -53,13 +53,44 @@ export default async function (context: Context, req: HttpRequest) {
     }
 
     const supported = await readSupportedLocalesCached(slugFromName)
+    const method = (req.method ?? '').toUpperCase()
+
+    // DELETE derives locale exclusively from the query param — Accept-Language must not
+    // be used for destructive operations to prevent accidentally deleting the wrong locale.
+    if (method === 'DELETE') {
+      const rawLocale = req.query?.locale?.trim()
+      if (!rawLocale) {
+        context.res = jsonResponse(400, { error: 'locale query parameter is required for DELETE.' })
+        return
+      }
+      const deleteLocale = normalizeLocale(rawLocale)
+      if (!supported.includes(deleteLocale)) {
+        context.res = jsonResponse(400, { error: 'Unsupported locale.' })
+        return
+      }
+      const sameOrigin = requireSameOriginMutation(req.headers, { allowedOrigins: readAllowedOriginsFromEnv() })
+      if (!sameOrigin.ok) {
+        context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
+        return
+      }
+      const adminHdr = requireAdminMutationHeader(req.headers)
+      if (!adminHdr.ok) {
+        context.res = jsonResponse(adminHdr.status, { error: adminHdr.error })
+        return
+      }
+      await deleteProfileJsonV2({ kind: 'public', locale: deleteLocale, slugFromName })
+      invalidateLocalesCache(slugFromName)
+      context.res = jsonResponse(200, { ok: true })
+      return
+    }
+
+    // GET and PUT resolve locale with Accept-Language as fallback.
     const requestedLocale = normalizeLocale(req.query?.locale ?? firstLanguageTagFromAcceptLanguage(getHeaderInsensitive(req.headers, 'accept-language')))
     if (!supported.includes(requestedLocale)) {
       context.res = jsonResponse(400, { error: 'Unsupported locale.' })
       return
     }
 
-    const method = (req.method ?? '').toUpperCase()
     if (method === 'GET') {
       const jsonText = await readProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName })
       context.res = jsonResponse(200, { json: jsonText })
@@ -97,29 +128,6 @@ export default async function (context: Context, req: HttpRequest) {
         return
       }
       await writeProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName, jsonText: json })
-      context.res = jsonResponse(200, { ok: true })
-      return
-    }
-
-    if (method === 'DELETE') {
-      // Require an explicit locale query param for destructive operations to avoid
-      // accidentally deleting an unintended locale based on Accept-Language headers.
-      if (!req.query?.locale?.trim()) {
-        context.res = jsonResponse(400, { error: 'locale query parameter is required for DELETE.' })
-        return
-      }
-      const sameOrigin = requireSameOriginMutation(req.headers, { allowedOrigins: readAllowedOriginsFromEnv() })
-      if (!sameOrigin.ok) {
-        context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
-        return
-      }
-      const adminHdr = requireAdminMutationHeader(req.headers)
-      if (!adminHdr.ok) {
-        context.res = jsonResponse(adminHdr.status, { error: adminHdr.error })
-        return
-      }
-      await deleteProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName })
-      invalidateLocalesCache(slugFromName)
       context.res = jsonResponse(200, { ok: true })
       return
     }

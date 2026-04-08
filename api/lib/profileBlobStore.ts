@@ -109,7 +109,7 @@ export async function writeProfileJsonV2(args: { kind: 'public' | 'private'; loc
   return writeBlobText(getBlobClientByName(name), args.jsonText)
 }
 
-export async function deleteProfileJsonV2(args: { kind: 'public' | 'private'; locale: string; slugFromName: string }) {
+export async function deleteProfileJsonV2(args: { kind: 'public'; locale: string; slugFromName: string }) {
   const name = blobNameV2(args)
   const client = getBlobClientByName(name)
   try {
