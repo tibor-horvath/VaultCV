@@ -164,6 +164,28 @@ describe('/api/manage/locale-visibility', () => {
       })
       expect((context.res as { status: number }).status).toBeGreaterThanOrEqual(400)
     })
+
+    it('returns 400 when disabled is missing', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'PUT',
+        headers: makeAdminHeaders(),
+        body: { locale: 'hu' },
+      })
+      expect(context.res).toMatchObject({ status: 400, body: { error: 'disabled must be a boolean.' } })
+    })
+
+    it('returns 400 when disabled is a string instead of boolean', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'PUT',
+        headers: makeAdminHeaders(),
+        body: { locale: 'hu', disabled: 'true' },
+      })
+      expect(context.res).toMatchObject({ status: 400, body: { error: 'disabled must be a boolean.' } })
+    })
   })
 
   describe('unsupported methods', () => {

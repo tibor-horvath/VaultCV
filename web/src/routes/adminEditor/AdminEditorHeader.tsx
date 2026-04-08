@@ -14,8 +14,8 @@ export function AdminEditorHeader(props: {
   addableLocales: LocaleItem[]
   setLocale: (locale: string) => void
   onAddLocale: (locale: string) => void
-  isLocalePublished: boolean
-  onToggleLocalePublished: (published: boolean) => void
+  isLocaleEnabled: boolean
+  onToggleLocaleEnabled: (enabled: boolean) => void
   hasUnsavedChanges: boolean
   loading: boolean
   saving: boolean
@@ -23,7 +23,7 @@ export function AdminEditorHeader(props: {
   onSave: () => void
   onOpenReorderSheet?: () => void
 }) {
-  const { locale, locales, addableLocales, setLocale, onAddLocale, isLocalePublished, onToggleLocalePublished, hasUnsavedChanges, loading, saving, signedInEmail, onSave, onOpenReorderSheet } = props
+  const { locale, locales, addableLocales, setLocale, onAddLocale, isLocaleEnabled, onToggleLocaleEnabled, hasUnsavedChanges, loading, saving, signedInEmail, onSave, onOpenReorderSheet } = props
   const { t } = useI18n()
   const [newLocale, setNewLocale] = useState('')
   const localeSelectId = 'admin-editor-locale-select'
@@ -77,8 +77,8 @@ export function AdminEditorHeader(props: {
             </select>
           </label>
           <ToggleButton
-            pressed={isLocalePublished}
-            onClick={() => onToggleLocalePublished(!isLocalePublished)}
+            pressed={isLocaleEnabled}
+            onClick={() => onToggleLocaleEnabled(!isLocaleEnabled)}
             title={t('adminLocaleVisibilityTitle')}
             label={t('adminCvLocale')}
             pressedLabel={t('adminEnabled')}

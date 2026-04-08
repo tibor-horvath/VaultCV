@@ -88,7 +88,7 @@ export function useAdminEditorProfile(params: {
   const [privateValidation, setPrivateValidation] = useState<PrivateValidation>(emptyPrivateValidation())
 
   const [hasProfileImage, setHasProfileImage] = useState(false)
-  const [isLocalePublished, setIsLocalePublished] = useState(true)
+  const [isLocaleEnabled, setIsLocaleEnabled] = useState(true)
   const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
     name: false,
     headline: false,
@@ -157,7 +157,7 @@ export function useAdminEditorProfile(params: {
         publicExperience,
         publicEducation,
         publicProjects,
-        isLocalePublished,
+        isLocaleEnabled,
       }),
     [
       basicsName,
@@ -183,7 +183,7 @@ export function useAdminEditorProfile(params: {
       publicExperience,
       publicEducation,
       publicProjects,
-      isLocalePublished,
+      isLocaleEnabled,
     ],
   )
 
@@ -335,12 +335,12 @@ export function useAdminEditorProfile(params: {
 
       // Determine the initial enabled state for this locale:
       // - locale is in disabledLocales → disabled regardless of blob state
-      // - locale not disabled AND public blob has content → enabled (published)
+      // - locale not disabled AND public blob has content → enabled
       // - locale not disabled AND both blobs empty (brand-new locale) → enabled (first save creates both)
       // - locale not disabled AND public blob empty but private has content → disabled
-      const determineInitialPublishState = () =>
+      const determineInitialEnabledState = () =>
         !isLocaleDisabled && (publicJsonText.trim() !== '' || privateJsonText.trim() === '')
-      const isLocalePublishedInitial = determineInitialPublishState()
+      const isLocaleEnabledInitial = determineInitialEnabledState()
 
       const parsedPrivate = privateJsonText.trim() ? safeJsonParse<Record<string, unknown>>(privateJsonText) : { ok: true as const, value: {} }
       if (!parsedPrivate.ok) throw new Error(parsedPrivate.error)
@@ -593,7 +593,7 @@ export function useAdminEditorProfile(params: {
         publicExperience: nextPublicExperience,
         publicEducation: nextPublicEducation,
         publicProjects: nextPublicProjects,
-        isLocalePublished: isLocalePublishedInitial,
+        isLocaleEnabled: isLocaleEnabledInitial,
       })
 
       setPublicBasics(nextPublicBasics)
@@ -601,7 +601,7 @@ export function useAdminEditorProfile(params: {
       setPublicExperience(nextPublicExperience)
       setPublicEducation(nextPublicEducation)
       setPublicProjects(nextPublicProjects)
-      setIsLocalePublished(isLocalePublishedInitial)
+      setIsLocaleEnabled(isLocaleEnabledInitial)
       setBasicsName(nextBasicsName)
       setBasicsHeadline(nextBasicsHeadline)
       setBasicsEmail(nextBasicsEmail)
@@ -1243,7 +1243,7 @@ export function useAdminEditorProfile(params: {
         return { ok: true as const }
       }
 
-      if (isLocalePublished) {
+      if (isLocaleEnabled) {
         const publicPut = await put('public', publicJson)
         if (!publicPut.ok) return
         const visibilityUpdate = await updateLocaleVisibility(false)
@@ -1301,8 +1301,8 @@ export function useAdminEditorProfile(params: {
     setLocale,
     handleLocaleChange,
     handleAddLocale,
-    isLocalePublished,
-    setIsLocalePublished,
+    isLocaleEnabled,
+    setIsLocaleEnabled,
     errorBannerRef,
 
     basicsName,

@@ -93,7 +93,11 @@ export default async function (context: Context, req: HttpRequest) {
         return
       }
 
-      const disabled = payload?.disabled === true
+      if (typeof payload?.disabled !== 'boolean') {
+        context.res = jsonResponse(400, { error: 'disabled must be a boolean.' })
+        return
+      }
+      const disabled = payload.disabled
       await setLocaleDisabled(slugFromName, locale, disabled)
       invalidateLocalesCache(slugFromName)
       context.res = jsonResponse(200, { ok: true })

@@ -74,19 +74,22 @@ export async function readSupportedLocalesFromBlob(slug: string) {
   return parseSupportedLocales((parsed as { supportedLocales?: unknown }).supportedLocales)
 }
 
-export async function readDisabledLocalesFromBlob(slug: string) {
+async function readSettingsObject(slug: string): Promise<Record<string, unknown> | null> {
   const jsonText = await readSettingsJson({ slugFromName: slug })
-  if (!jsonText.trim()) return []
-
-  let parsed: unknown
+  if (!jsonText.trim()) return null
   try {
-    parsed = JSON.parse(jsonText)
+    const parsed = JSON.parse(jsonText)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+    return parsed as Record<string, unknown>
   } catch {
-    return []
+    return null
   }
+}
 
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return []
-  return parseDisabledLocales((parsed as { disabledLocales?: unknown }).disabledLocales)
+export async function readDisabledLocalesFromBlob(slug: string) {
+  const settings = await readSettingsObject(slug)
+  if (!settings) return []
+  return parseDisabledLocales(settings.disabledLocales)
 }
 
 export async function setLocaleDisabled(slug: string, locale: string, disabled: boolean) {
@@ -141,8 +144,20 @@ export async function readSupportedLocalesForProfileCached(slug: string, kind: P
     return [...cached.value]
   }
 
-  const supported = await readSupportedLocalesCached(slug)
-  const disabledLocales = kind === 'private' ? await readDisabledLocalesFromBlob(slug) : []
+  let supported: string[]
+  let disabledLocales: string[]
+  if (kind === 'private') {
+    // Read settings blob once to extract both supported and disabled locales,
+    // avoiding a duplicate blob download that would occur if we called
+    // readSupportedLocalesCached (on cache miss) and readDisabledLocalesFromBlob separately.
+    const settings = await readSettingsObject(slug)
+    const fromBlob = settings ? parseSupportedLocales(settings.supportedLocales) : null
+    supported = fromBlob && fromBlob.length ? fromBlob : [...defaultSupportedLocales]
+    disabledLocales = settings ? parseDisabledLocales(settings.disabledLocales) : []
+  } else {
+    supported = await readSupportedLocalesCached(slug)
+    disabledLocales = []
+  }
 
   const results = await Promise.all(
     supported.map(async (locale) => {

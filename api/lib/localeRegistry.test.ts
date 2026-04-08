@@ -87,9 +87,9 @@ describe('readSupportedLocalesForProfileCached', () => {
   })
 
   it('excludes disabled locales from private scope results', async () => {
-    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce(JSON.stringify({ supportedLocales: ['en', 'hu', 'de'], disabledLocales: ['hu'] }))
-      .mockResolvedValueOnce(JSON.stringify({ supportedLocales: ['en', 'hu', 'de'], disabledLocales: ['hu'] }))
+    ;(readSettingsJson as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      JSON.stringify({ supportedLocales: ['en', 'hu', 'de'], disabledLocales: ['hu'] }),
+    )
 
     ;(readProfileJsonV2 as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce('{"locale":"en"}')
