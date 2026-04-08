@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/tibor-horvath/VaultCV/compare/v1.1.0...v1.1.1) (2026-04-08)
+
+
+### Bug Fixes
+
+* Rework CV language toggle: Public/Private → Enabled/Disabled (hides from both CV views) ([#44](https://github.com/tibor-horvath/VaultCV/issues/44)) ([f09d0f4](https://github.com/tibor-horvath/VaultCV/commit/f09d0f48cb0e86beebfc87f187655a843ff1bb97))
+
 ## [1.1.0](https://github.com/tibor-horvath/VaultCV/compare/v1.0.2...v1.1.0) (2026-04-08)
 
 
