@@ -138,6 +138,17 @@ describe('/api/admin-profile-public', () => {
   })
 
   describe('DELETE', () => {
+    it('returns 400 when locale query param is missing', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'DELETE',
+        headers: { origin: 'https://example.com', host: 'example.com', 'x-cv-admin': '1' },
+        query: {},
+      })
+      expect(context.res).toMatchObject({ status: 400, body: { error: 'locale query parameter is required for DELETE.' } })
+    })
+
     it('returns 403 when Origin does not match host', async () => {
       process.env.CV_PROFILE_SLUG = 'john-doe'
       const context: { res?: unknown } = {}

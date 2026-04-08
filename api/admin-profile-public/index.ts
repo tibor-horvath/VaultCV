@@ -102,6 +102,12 @@ export default async function (context: Context, req: HttpRequest) {
     }
 
     if (method === 'DELETE') {
+      // Require an explicit locale query param for destructive operations to avoid
+      // accidentally deleting an unintended locale based on Accept-Language headers.
+      if (!req.query?.locale?.trim()) {
+        context.res = jsonResponse(400, { error: 'locale query parameter is required for DELETE.' })
+        return
+      }
       const sameOrigin = requireSameOriginMutation(req.headers, { allowedOrigins: readAllowedOriginsFromEnv() })
       if (!sameOrigin.ok) {
         context.res = jsonResponse(sameOrigin.status, { error: sameOrigin.error })
