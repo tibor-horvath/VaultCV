@@ -163,10 +163,21 @@ describe('/api/admin-profile-private', () => {
   })
 
   describe('unsupported methods', () => {
+    it('returns 405 for PATCH', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, { method: 'PATCH', headers: {}, query: { locale: 'en' } })
+      expect(context.res).toMatchObject({ status: 405 })
+    })
+
     it('returns 405 for DELETE', async () => {
       process.env.CV_PROFILE_SLUG = 'john-doe'
       const context: { res?: unknown } = {}
-      await handler(context, { method: 'DELETE', headers: {}, query: { locale: 'en' } })
+      await handler(context, {
+        method: 'DELETE',
+        headers: { origin: 'https://example.com', host: 'example.com', 'x-cv-admin': '1' },
+        query: { locale: 'en' },
+      })
       expect(context.res).toMatchObject({ status: 405 })
     })
   })

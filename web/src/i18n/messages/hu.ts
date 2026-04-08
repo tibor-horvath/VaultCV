@@ -146,6 +146,7 @@ export const huMessages: Partial<MessageCatalog> = {
   adminLocale: 'Nyelv',
   adminCvLocale: 'Önéletrajz nyelve',
   adminAddLanguage: 'Nyelv hozzáadása',
+  adminLocaleVisibilityTitle: 'Be- vagy kikapcsolja, hogy ez a nyelv nyilvánosan látható-e',
   adminAdd: 'Hozzáadás',
   adminPublic: 'Nyilvános',
   adminPrivate: 'Privát',

@@ -10,7 +10,14 @@ import { LocaleProvider } from '../../lib/i18n'
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
 
-function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn(), onOpenReorderSheet?: () => void) {
+function renderHeader(
+  hasUnsavedChanges: boolean,
+  setLocale = vi.fn(),
+  onOpenReorderSheet?: () => void,
+  opts: { isLocalePublished?: boolean; onToggleLocalePublished?: () => void } = {},
+) {
+  const isLocalePublished = opts.isLocalePublished ?? true
+  const onToggleLocalePublished = opts.onToggleLocalePublished ?? vi.fn()
   mountedContainer = document.createElement('div')
   document.body.appendChild(mountedContainer)
   mountedRoot = createRoot(mountedContainer)
@@ -27,6 +34,8 @@ function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn(), onOpenReo
             addableLocales={[{ locale: 'hu', label: 'Magyar' }]}
             setLocale={setLocale}
             onAddLocale={() => {}}
+            isLocalePublished={isLocalePublished}
+            onToggleLocalePublished={onToggleLocalePublished}
             hasUnsavedChanges={hasUnsavedChanges}
             loading={false}
             saving={false}
@@ -37,7 +46,7 @@ function renderHeader(hasUnsavedChanges: boolean, setLocale = vi.fn(), onOpenReo
       </MemoryRouter>,
     )
   })
-  return setLocale
+  return { setLocale, onToggleLocalePublished }
 }
 
 afterEach(() => {
@@ -81,5 +90,36 @@ describe('AdminEditorHeader', () => {
       reorderButton.click()
     })
     expect(onOpenReorderSheet).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders toggle button showing Public when isLocalePublished is true', () => {
+    renderHeader(false, vi.fn(), undefined, { isLocalePublished: true })
+    const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
+      node.textContent?.includes('Public'),
+    ) as HTMLButtonElement
+    expect(toggleButton).toBeTruthy()
+    expect(toggleButton.getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('renders toggle button showing Private when isLocalePublished is false', () => {
+    renderHeader(false, vi.fn(), undefined, { isLocalePublished: false })
+    const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
+      node.textContent?.includes('Private'),
+    ) as HTMLButtonElement
+    expect(toggleButton).toBeTruthy()
+    expect(toggleButton.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('calls onToggleLocalePublished with new value when toggle is clicked', () => {
+    const onToggleLocalePublished = vi.fn()
+    renderHeader(false, vi.fn(), undefined, { isLocalePublished: true, onToggleLocalePublished })
+    const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
+      node.textContent?.includes('Public'),
+    ) as HTMLButtonElement
+    act(() => {
+      toggleButton.click()
+    })
+    expect(onToggleLocalePublished).toHaveBeenCalledTimes(1)
+    expect(onToggleLocalePublished).toHaveBeenCalledWith(false)
   })
 })

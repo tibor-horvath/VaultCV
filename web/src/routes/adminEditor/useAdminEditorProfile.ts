@@ -88,6 +88,7 @@ export function useAdminEditorProfile(params: {
   const [privateValidation, setPrivateValidation] = useState<PrivateValidation>(emptyPrivateValidation())
 
   const [hasProfileImage, setHasProfileImage] = useState(false)
+  const [isLocalePublished, setIsLocalePublished] = useState(true)
   const [publicBasics, setPublicBasics] = useState<PublicBasicsFlags>({
     name: false,
     headline: false,
@@ -156,6 +157,7 @@ export function useAdminEditorProfile(params: {
         publicExperience,
         publicEducation,
         publicProjects,
+        isLocalePublished,
       }),
     [
       basicsName,
@@ -181,6 +183,7 @@ export function useAdminEditorProfile(params: {
       publicExperience,
       publicEducation,
       publicProjects,
+      isLocalePublished,
     ],
   )
 
@@ -314,6 +317,14 @@ export function useAdminEditorProfile(params: {
 
       const privateJsonText = typeof privateBody.json === 'string' ? privateBody.json : ''
       const publicJsonText = typeof publicBody.json === 'string' ? publicBody.json : ''
+
+      // Determine the initial published state for this locale:
+      // - public blob has content → published
+      // - both blobs are empty (brand-new locale) → published (first save will create both)
+      // - public blob is empty but private has content → unpublished
+      const determineInitialPublishState = () =>
+        publicJsonText.trim() !== '' || privateJsonText.trim() === ''
+      const isLocalePublishedInitial = determineInitialPublishState()
 
       const parsedPrivate = privateJsonText.trim() ? safeJsonParse<Record<string, unknown>>(privateJsonText) : { ok: true as const, value: {} }
       if (!parsedPrivate.ok) throw new Error(parsedPrivate.error)
@@ -566,6 +577,7 @@ export function useAdminEditorProfile(params: {
         publicExperience: nextPublicExperience,
         publicEducation: nextPublicEducation,
         publicProjects: nextPublicProjects,
+        isLocalePublished: isLocalePublishedInitial,
       })
 
       setPublicBasics(nextPublicBasics)
@@ -573,6 +585,7 @@ export function useAdminEditorProfile(params: {
       setPublicExperience(nextPublicExperience)
       setPublicEducation(nextPublicEducation)
       setPublicProjects(nextPublicProjects)
+      setIsLocalePublished(isLocalePublishedInitial)
       setBasicsName(nextBasicsName)
       setBasicsHeadline(nextBasicsHeadline)
       setBasicsEmail(nextBasicsEmail)
@@ -1195,10 +1208,34 @@ export function useAdminEditorProfile(params: {
 
       const privatePut = await put('private', privateJson)
       if (!privatePut.ok) return
-      const publicPut = await put('public', publicJson)
-      if (!publicPut.ok) return
 
-      await load()
+      if (isLocalePublished) {
+        const publicPut = await put('public', publicJson)
+        if (!publicPut.ok) return
+        // Reload from server to sync any server-side normalisation.
+        await load()
+      } else {
+        const delRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, {
+          method: 'DELETE',
+          headers: { 'x-cv-admin': '1', accept: 'application/json' },
+          credentials: 'same-origin',
+        })
+        if (delRes.status === 401) {
+          redirectToLogin('/admin/editor')
+          return
+        }
+        if (!delRes.ok && delRes.status !== 404) {
+          const bodyResult = await readJsonResponse<{ error?: string }>(delRes)
+          throw new Error(bodyResult.ok ? (bodyResult.value.error ?? `Request failed (${delRes.status})`) : bodyResult.error)
+        }
+        // Skip load() for the unpublish path: reloading would re-derive all public
+        // visibility flags from the now-deleted public blob, resetting them to all-private
+        // and losing the user's configuration. Instead, update the dirty baseline directly
+        // so the current form state (including visibility flags) is treated as saved.
+        lastLoadedDraftSignatureRef.current = draftSignature
+        suppressDirtyTrackingRef.current = true
+      }
+
       setIsDirty(false)
       setPublicValidation(emptyPublicValidation())
       setPrivateValidation(emptyPrivateValidation())
@@ -1226,6 +1263,8 @@ export function useAdminEditorProfile(params: {
     setLocale,
     handleLocaleChange,
     handleAddLocale,
+    isLocalePublished,
+    setIsLocalePublished,
     errorBannerRef,
 
     basicsName,

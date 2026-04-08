@@ -109,6 +109,17 @@ export async function writeProfileJsonV2(args: { kind: 'public' | 'private'; loc
   return writeBlobText(getBlobClientByName(name), args.jsonText)
 }
 
+export async function deleteProfileJsonV2(args: { kind: 'public'; locale: string; slugFromName: string }) {
+  const name = blobNameV2(args)
+  const client = getBlobClientByName(name)
+  try {
+    await client.delete()
+  } catch (e: unknown) {
+    if (typeof e === 'object' && e !== null && (e as Record<string, unknown>).statusCode === 404) return
+    throw e
+  }
+}
+
 export async function readSettingsJson(args: { slugFromName: string }) {
   const name = settingsBlobName(args.slugFromName)
   return readBlobText(getBlobClientByName(name))

@@ -144,6 +144,7 @@ export const enMessages = {
   adminLocale: 'Locale',
   adminCvLocale: 'CV language',
   adminAddLanguage: 'Add language',
+  adminLocaleVisibilityTitle: 'Toggle whether this language is publicly visible',
   adminAdd: 'Add',
   adminPublic: 'Public',
   adminPrivate: 'Private',

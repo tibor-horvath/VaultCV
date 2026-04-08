@@ -5,7 +5,7 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get", "put"],
+      "methods": ["get", "put", "delete"],
       "route": "manage/profile/public"
     },
     {

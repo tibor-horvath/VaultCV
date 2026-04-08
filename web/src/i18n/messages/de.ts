@@ -150,6 +150,7 @@ export const deMessages: Partial<MessageCatalog> = {
   adminLocale: 'Sprache',
   adminCvLocale: 'CV-Sprache',
   adminAddLanguage: 'Sprache hinzufügen',
+  adminLocaleVisibilityTitle: 'Öffentliche Sichtbarkeit dieser Sprache umschalten',
   adminAdd: 'Hinzufügen',
   adminPublic: 'Öffentlich',
   adminPrivate: 'Privat',

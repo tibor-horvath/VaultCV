@@ -6,6 +6,7 @@ import { LanguageSelector } from '../../components/LanguageSelector'
 import type { LocaleItem } from './types'
 import { AdminPageHeader } from '../AdminPageHeader'
 import { useI18n } from '../../lib/i18n'
+import { ToggleButton } from './ToggleButton'
 
 export function AdminEditorHeader(props: {
   locale: string
@@ -13,6 +14,8 @@ export function AdminEditorHeader(props: {
   addableLocales: LocaleItem[]
   setLocale: (locale: string) => void
   onAddLocale: (locale: string) => void
+  isLocalePublished: boolean
+  onToggleLocalePublished: (published: boolean) => void
   hasUnsavedChanges: boolean
   loading: boolean
   saving: boolean
@@ -20,7 +23,7 @@ export function AdminEditorHeader(props: {
   onSave: () => void
   onOpenReorderSheet?: () => void
 }) {
-  const { locale, locales, addableLocales, setLocale, onAddLocale, hasUnsavedChanges, loading, saving, signedInEmail, onSave, onOpenReorderSheet } = props
+  const { locale, locales, addableLocales, setLocale, onAddLocale, isLocalePublished, onToggleLocalePublished, hasUnsavedChanges, loading, saving, signedInEmail, onSave, onOpenReorderSheet } = props
   const { t } = useI18n()
   const [newLocale, setNewLocale] = useState('')
   const localeSelectId = 'admin-editor-locale-select'
@@ -73,6 +76,12 @@ export function AdminEditorHeader(props: {
               ))}
             </select>
           </label>
+          <ToggleButton
+            pressed={isLocalePublished}
+            onClick={() => onToggleLocalePublished(!isLocalePublished)}
+            title={t('adminLocaleVisibilityTitle')}
+            label={t('adminCvLocale')}
+          />
           {addableLocales.length ? (
             <div className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
               <label htmlFor={addLocaleSelectId}>{t('adminAddLanguage')}</label>
