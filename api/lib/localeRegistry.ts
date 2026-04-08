@@ -1,4 +1,4 @@
-import { readProfileJsonV2, readSettingsJson } from './profileBlobStore'
+import { readProfileJsonV2, readSettingsJson, writeSettingsJson } from './profileBlobStore'
 
 export const fallbackLocale = 'en'
 export const defaultSupportedLocales = [fallbackLocale, 'hu', 'de']
@@ -9,6 +9,17 @@ const LOCALES_CACHE_TTL_MS = 60_000
 const localesCache = new Map<string, { value: string[]; expiresAt: number }>()
 const profileLocalesCache = new Map<string, { value: string[]; expiresAt: number }>()
 type ProfileKind = 'public' | 'private'
+
+function parseDisabledLocales(locales: unknown) {
+  const unique: string[] = []
+  if (!Array.isArray(locales)) return unique
+  for (const candidate of locales) {
+    const locale = parseLocale(typeof candidate === 'string' ? candidate : undefined)
+    if (!locale) continue
+    if (!unique.includes(locale)) unique.push(locale)
+  }
+  return unique
+}
 
 export function parseLocale(input: string | undefined) {
   const normalized = input?.trim().toLowerCase()
@@ -63,6 +74,52 @@ export async function readSupportedLocalesFromBlob(slug: string) {
   return parseSupportedLocales((parsed as { supportedLocales?: unknown }).supportedLocales)
 }
 
+async function readSettingsObject(slug: string): Promise<Record<string, unknown> | null> {
+  const jsonText = await readSettingsJson({ slugFromName: slug })
+  if (!jsonText.trim()) return null
+  try {
+    const parsed = JSON.parse(jsonText)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+    return parsed as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+export async function readDisabledLocalesFromBlob(slug: string) {
+  const settings = await readSettingsObject(slug)
+  if (!settings) return []
+  return parseDisabledLocales(settings.disabledLocales)
+}
+
+export async function setLocaleDisabled(slug: string, locale: string, disabled: boolean) {
+  const jsonText = await readSettingsJson({ slugFromName: slug })
+  let settings: Record<string, unknown> = {}
+  if (jsonText.trim()) {
+    try {
+      const parsed = JSON.parse(jsonText)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        settings = parsed as Record<string, unknown>
+      }
+    } catch {
+      // start with empty settings on parse error
+    }
+  }
+
+  const existing = parseDisabledLocales(settings.disabledLocales)
+  const hasLocale = existing.includes(locale)
+
+  if (disabled && !hasLocale) {
+    settings.disabledLocales = [...existing, locale]
+  } else if (!disabled && hasLocale) {
+    settings.disabledLocales = existing.filter((l) => l !== locale)
+  } else {
+    return
+  }
+
+  await writeSettingsJson({ slugFromName: slug, jsonText: JSON.stringify(settings) })
+}
+
 export async function readSupportedLocalesCached(slug: string) {
   const now = Date.now()
   const cached = localesCache.get(slug)
@@ -87,7 +144,20 @@ export async function readSupportedLocalesForProfileCached(slug: string, kind: P
     return [...cached.value]
   }
 
-  const supported = await readSupportedLocalesCached(slug)
+  let supported: string[]
+  let disabledLocales: string[]
+  if (kind === 'private') {
+    // Read settings blob once to extract both supported and disabled locales,
+    // avoiding a duplicate blob download that would occur if we called
+    // readSupportedLocalesCached (on cache miss) and readDisabledLocalesFromBlob separately.
+    const settings = await readSettingsObject(slug)
+    const fromBlob = settings ? parseSupportedLocales(settings.supportedLocales) : null
+    supported = fromBlob && fromBlob.length ? fromBlob : [...defaultSupportedLocales]
+    disabledLocales = settings ? parseDisabledLocales(settings.disabledLocales) : []
+  } else {
+    supported = await readSupportedLocalesCached(slug)
+    disabledLocales = []
+  }
 
   const results = await Promise.all(
     supported.map(async (locale) => {
@@ -97,7 +167,7 @@ export async function readSupportedLocalesForProfileCached(slug: string, kind: P
   )
 
   const available: string[] = results
-    .filter((result) => result.raw.trim())
+    .filter((result) => result.raw.trim() && !disabledLocales.includes(result.locale))
     .map((result) => result.locale)
 
   profileLocalesCache.set(cacheKey, {

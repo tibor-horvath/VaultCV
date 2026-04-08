@@ -14,10 +14,10 @@ function renderHeader(
   hasUnsavedChanges: boolean,
   setLocale = vi.fn(),
   onOpenReorderSheet?: () => void,
-  opts: { isLocalePublished?: boolean; onToggleLocalePublished?: () => void } = {},
+  opts: { isLocaleEnabled?: boolean; onToggleLocaleEnabled?: () => void } = {},
 ) {
-  const isLocalePublished = opts.isLocalePublished ?? true
-  const onToggleLocalePublished = opts.onToggleLocalePublished ?? vi.fn()
+  const isLocaleEnabled = opts.isLocaleEnabled ?? true
+  const onToggleLocaleEnabled = opts.onToggleLocaleEnabled ?? vi.fn()
   mountedContainer = document.createElement('div')
   document.body.appendChild(mountedContainer)
   mountedRoot = createRoot(mountedContainer)
@@ -34,8 +34,8 @@ function renderHeader(
             addableLocales={[{ locale: 'hu', label: 'Magyar' }]}
             setLocale={setLocale}
             onAddLocale={() => {}}
-            isLocalePublished={isLocalePublished}
-            onToggleLocalePublished={onToggleLocalePublished}
+            isLocaleEnabled={isLocaleEnabled}
+            onToggleLocaleEnabled={onToggleLocaleEnabled}
             hasUnsavedChanges={hasUnsavedChanges}
             loading={false}
             saving={false}
@@ -46,7 +46,7 @@ function renderHeader(
       </MemoryRouter>,
     )
   })
-  return { setLocale, onToggleLocalePublished }
+  return { setLocale, onToggleLocaleEnabled }
 }
 
 afterEach(() => {
@@ -92,34 +92,34 @@ describe('AdminEditorHeader', () => {
     expect(onOpenReorderSheet).toHaveBeenCalledTimes(1)
   })
 
-  it('renders toggle button showing Public when isLocalePublished is true', () => {
-    renderHeader(false, vi.fn(), undefined, { isLocalePublished: true })
+  it('renders toggle button showing Enabled when isLocaleEnabled is true', () => {
+    renderHeader(false, vi.fn(), undefined, { isLocaleEnabled: true })
     const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('Public'),
+      node.textContent?.includes('Enabled'),
     ) as HTMLButtonElement
     expect(toggleButton).toBeTruthy()
     expect(toggleButton.getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('renders toggle button showing Private when isLocalePublished is false', () => {
-    renderHeader(false, vi.fn(), undefined, { isLocalePublished: false })
+  it('renders toggle button showing Disabled when isLocaleEnabled is false', () => {
+    renderHeader(false, vi.fn(), undefined, { isLocaleEnabled: false })
     const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('Private'),
+      node.textContent?.includes('Disabled'),
     ) as HTMLButtonElement
     expect(toggleButton).toBeTruthy()
     expect(toggleButton.getAttribute('aria-pressed')).toBe('false')
   })
 
-  it('calls onToggleLocalePublished with new value when toggle is clicked', () => {
-    const onToggleLocalePublished = vi.fn()
-    renderHeader(false, vi.fn(), undefined, { isLocalePublished: true, onToggleLocalePublished })
+  it('calls onToggleLocaleEnabled with new value when toggle is clicked', () => {
+    const onToggleLocaleEnabled = vi.fn()
+    renderHeader(false, vi.fn(), undefined, { isLocaleEnabled: true, onToggleLocaleEnabled })
     const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('Public'),
+      node.textContent?.includes('Enabled'),
     ) as HTMLButtonElement
     act(() => {
       toggleButton.click()
     })
-    expect(onToggleLocalePublished).toHaveBeenCalledTimes(1)
-    expect(onToggleLocalePublished).toHaveBeenCalledWith(false)
+    expect(onToggleLocaleEnabled).toHaveBeenCalledTimes(1)
+    expect(onToggleLocaleEnabled).toHaveBeenCalledWith(false)
   })
 })

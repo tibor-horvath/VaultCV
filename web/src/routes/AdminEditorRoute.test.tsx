@@ -131,6 +131,9 @@ beforeEach(() => {
       if (url.includes('/api/locales')) {
         return jsonResponse({ locales: ['en', 'de', 'hu'] })
       }
+      if (url.includes('/api/manage/locale-visibility')) {
+        return jsonResponse({ disabledLocales: [] })
+      }
       if (url.includes('/api/manage/profile/private')) {
         return jsonResponse({ json: '{}' })
       }
@@ -231,6 +234,9 @@ describe('AdminEditorRoute', () => {
       if (url.includes('/api/locales')) {
         return jsonResponse({ locales: ['en', 'de', 'hu'] })
       }
+      if (url.includes('/api/manage/locale-visibility')) {
+        return jsonResponse({ disabledLocales: [] })
+      }
       if (url.includes('/api/manage/profile/private?locale=de')) {
         return jsonResponse({ json: JSON.stringify({ basics: { name: 'Admin CV' } }) })
       }
@@ -278,6 +284,9 @@ describe('AdminEditorRoute', () => {
       }
       if (url.includes('/api/locales')) {
         return jsonResponse({ locales: ['en', 'de', 'hu'] })
+      }
+      if (url.includes('/api/manage/locale-visibility')) {
+        return jsonResponse({ disabledLocales: [] })
       }
       if (url.includes('/api/manage/profile/private?locale=de')) {
         return jsonResponse({ json: JSON.stringify({ basics: { name: 'Admin CV', photoUrl: '/api/private-profile/image' } }) })

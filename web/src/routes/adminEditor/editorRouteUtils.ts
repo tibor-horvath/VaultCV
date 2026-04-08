@@ -126,7 +126,7 @@ export function buildDraftSignature(input: {
   publicExperience: PublicExperienceFlags[]
   publicEducation: PublicEducationFlags[]
   publicProjects: PublicProjectFlags[]
-  isLocalePublished: boolean
+  isLocaleEnabled: boolean
 }) {
   return JSON.stringify(input)
 }
