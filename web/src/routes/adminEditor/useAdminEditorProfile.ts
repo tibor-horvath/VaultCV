@@ -321,7 +321,7 @@ export function useAdminEditorProfile(params: {
       // Determine the initial published state for this locale:
       // - public blob has content → published
       // - both blobs are empty (brand-new locale) → published (first save will create both)
-      // - public blob is empty but private has content → unpublished (was previously disabled)
+      // - public blob is empty but private has content → unpublished
       const determineInitialPublishState = () =>
         publicJsonText.trim() !== '' || privateJsonText.trim() === ''
       const isLocalePublishedInitial = determineInitialPublishState()
