@@ -92,19 +92,19 @@ describe('AdminEditorHeader', () => {
     expect(onOpenReorderSheet).toHaveBeenCalledTimes(1)
   })
 
-  it('renders toggle button showing Public when isLocalePublished is true', () => {
+  it('renders toggle button showing Enabled when isLocalePublished is true', () => {
     renderHeader(false, vi.fn(), undefined, { isLocalePublished: true })
     const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('Public'),
+      node.textContent?.includes('Enabled'),
     ) as HTMLButtonElement
     expect(toggleButton).toBeTruthy()
     expect(toggleButton.getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('renders toggle button showing Private when isLocalePublished is false', () => {
+  it('renders toggle button showing Disabled when isLocalePublished is false', () => {
     renderHeader(false, vi.fn(), undefined, { isLocalePublished: false })
     const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('Private'),
+      node.textContent?.includes('Disabled'),
     ) as HTMLButtonElement
     expect(toggleButton).toBeTruthy()
     expect(toggleButton.getAttribute('aria-pressed')).toBe('false')
@@ -114,7 +114,7 @@ describe('AdminEditorHeader', () => {
     const onToggleLocalePublished = vi.fn()
     renderHeader(false, vi.fn(), undefined, { isLocalePublished: true, onToggleLocalePublished })
     const toggleButton = Array.from(document.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('Public'),
+      node.textContent?.includes('Enabled'),
     ) as HTMLButtonElement
     act(() => {
       toggleButton.click()

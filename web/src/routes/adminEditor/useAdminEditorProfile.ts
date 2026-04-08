@@ -290,8 +290,11 @@ export function useAdminEditorProfile(params: {
       const qs = new URLSearchParams()
       if (locale) qs.set('locale', locale)
 
-      const privateRes = await fetch(`/api/manage/profile/private?${qs.toString()}`, { credentials: 'same-origin' })
-      const publicRes = await fetch(`/api/manage/profile/public?${qs.toString()}`, { credentials: 'same-origin' })
+      const [privateRes, publicRes, visibilityRes] = await Promise.all([
+        fetch(`/api/manage/profile/private?${qs.toString()}`, { credentials: 'same-origin' }),
+        fetch(`/api/manage/profile/public?${qs.toString()}`, { credentials: 'same-origin' }),
+        fetch('/api/manage/locale-visibility', { headers: { 'x-cv-admin': '1', accept: 'application/json' }, credentials: 'same-origin' }),
+      ])
       let imageRes = new Response(null, { status: 204 })
       try {
         imageRes = await fetch('/api/manage/profile/image', { method: 'HEAD', credentials: 'same-origin' })
@@ -318,12 +321,17 @@ export function useAdminEditorProfile(params: {
       const privateJsonText = typeof privateBody.json === 'string' ? privateBody.json : ''
       const publicJsonText = typeof publicBody.json === 'string' ? publicBody.json : ''
 
-      // Determine the initial published state for this locale:
-      // - public blob has content → published
-      // - both blobs are empty (brand-new locale) → published (first save will create both)
-      // - public blob is empty but private has content → unpublished
+      const visibilityBody = visibilityRes.ok ? await visibilityRes.json().catch(() => null) : null
+      const disabledLocales: string[] = Array.isArray(visibilityBody?.disabledLocales) ? (visibilityBody.disabledLocales as string[]) : []
+      const isLocaleDisabled = disabledLocales.includes(locale)
+
+      // Determine the initial enabled state for this locale:
+      // - locale is in disabledLocales → disabled regardless of blob state
+      // - locale not disabled AND public blob has content → enabled (published)
+      // - locale not disabled AND both blobs empty (brand-new locale) → enabled (first save creates both)
+      // - locale not disabled AND public blob empty but private has content → disabled
       const determineInitialPublishState = () =>
-        publicJsonText.trim() !== '' || privateJsonText.trim() === ''
+        !isLocaleDisabled && (publicJsonText.trim() !== '' || privateJsonText.trim() === '')
       const isLocalePublishedInitial = determineInitialPublishState()
 
       const parsedPrivate = privateJsonText.trim() ? safeJsonParse<Record<string, unknown>>(privateJsonText) : { ok: true as const, value: {} }
@@ -1209,9 +1217,29 @@ export function useAdminEditorProfile(params: {
       const privatePut = await put('private', privateJson)
       if (!privatePut.ok) return
 
+      const updateLocaleVisibility = async (disabled: boolean) => {
+        const res = await fetch('/api/manage/locale-visibility', {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json', accept: 'application/json', 'x-cv-admin': '1' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ locale, disabled }),
+        })
+        if (res.status === 401) {
+          redirectToLogin('/admin/editor')
+          return { ok: false as const }
+        }
+        const bodyResult = await readJsonResponse<{ ok?: boolean; error?: string }>(res)
+        if (!bodyResult.ok) throw new Error(bodyResult.error)
+        const body = bodyResult.value
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+        return { ok: true as const }
+      }
+
       if (isLocalePublished) {
         const publicPut = await put('public', publicJson)
         if (!publicPut.ok) return
+        const visibilityUpdate = await updateLocaleVisibility(false)
+        if (!visibilityUpdate.ok) return
         // Reload from server to sync any server-side normalisation.
         await load()
       } else {
@@ -1228,7 +1256,9 @@ export function useAdminEditorProfile(params: {
           const bodyResult = await readJsonResponse<{ error?: string }>(delRes)
           throw new Error(bodyResult.ok ? (bodyResult.value.error ?? `Request failed (${delRes.status})`) : bodyResult.error)
         }
-        // Skip load() for the unpublish path: reloading would re-derive all public
+        const visibilityUpdate = await updateLocaleVisibility(true)
+        if (!visibilityUpdate.ok) return
+        // Skip load() when disabling: reloading would re-derive all public
         // visibility flags from the now-deleted public blob, resetting them to all-private
         // and losing the user's configuration. Instead, update the dirty baseline directly
         // so the current form state (including visibility flags) is treated as saved.

@@ -1,10 +1,12 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { useI18n } from '../../lib/i18n'
 
-export function ToggleButton(props: { pressed: boolean; onClick: () => void; title?: string; label?: string }) {
+export function ToggleButton(props: { pressed: boolean; onClick: () => void; title?: string; label?: string; pressedLabel?: string; unpressedLabel?: string }) {
   const { t } = useI18n()
   const { pressed, onClick } = props
   const label = (props.label ?? '').trim()
+  const pressedLabel = props.pressedLabel ?? t('adminPublic')
+  const unpressedLabel = props.unpressedLabel ?? t('adminPrivate')
   return (
     <button
       type="button"
@@ -15,11 +17,11 @@ export function ToggleButton(props: { pressed: boolean; onClick: () => void; tit
           ? 'border-emerald-400/60 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-950/60'
           : 'border-red-300/70 bg-red-50 text-red-800 hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-950/60'
       }`}
-      title={props.title ?? (pressed ? t('adminPublic') : t('adminPrivate'))}
+      title={props.title ?? (pressed ? pressedLabel : unpressedLabel)}
     >
       {pressed ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
       {label ? <span className="text-slate-700/80 dark:text-slate-200/80">{label}</span> : null}
-      <span>{pressed ? t('adminPublic') : t('adminPrivate')}</span>
+      <span>{pressed ? pressedLabel : unpressedLabel}</span>
     </button>
   )
 }

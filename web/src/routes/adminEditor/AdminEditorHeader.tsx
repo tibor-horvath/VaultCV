@@ -81,6 +81,8 @@ export function AdminEditorHeader(props: {
             onClick={() => onToggleLocalePublished(!isLocalePublished)}
             title={t('adminLocaleVisibilityTitle')}
             label={t('adminCvLocale')}
+            pressedLabel={t('adminEnabled')}
+            unpressedLabel={t('adminDisabled')}
           />
           {addableLocales.length ? (
             <div className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
