@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/tibor-horvath/VaultCV/compare/v1.0.2...v1.1.0) (2026-04-08)
+
+
+### Features
+
+* replace remove-language with publish/unpublish toggle for CV locale ([#42](https://github.com/tibor-horvath/VaultCV/issues/42)) ([d61b1e7](https://github.com/tibor-horvath/VaultCV/commit/d61b1e72579b8180c12f8f9bfbd2ec1a039f0c07))
+
 ## [1.0.2](https://github.com/tibor-horvath/VaultCV/compare/v1.0.1...v1.0.2) (2026-04-07)
 
 
