@@ -303,9 +303,15 @@ export function useAdminEditorProfile(params: {
         // keep loading the editor and let existing hasProfileImage/photoUrl heuristics apply.
       }
 
-      if (privateRes.status === 401 || publicRes.status === 401 || imageRes.status === 401) {
+      if (privateRes.status === 401 || publicRes.status === 401 || visibilityRes.status === 401 || imageRes.status === 401) {
         redirectToLogin('/admin/editor')
         return
+      }
+
+      if (!visibilityRes.ok) {
+        const visErrResult = await readJsonResponse<{ error?: string }>(visibilityRes)
+        const visErr = visErrResult.ok ? visErrResult.value.error : visErrResult.error
+        throw new Error(visErr || `Failed to load locale visibility (${visibilityRes.status})`)
       }
 
       const privateBodyResult = await readJsonResponse<{ json?: string; error?: string }>(privateRes)
@@ -321,7 +327,9 @@ export function useAdminEditorProfile(params: {
       const privateJsonText = typeof privateBody.json === 'string' ? privateBody.json : ''
       const publicJsonText = typeof publicBody.json === 'string' ? publicBody.json : ''
 
-      const visibilityBody = visibilityRes.ok ? await visibilityRes.json().catch(() => null) : null
+      const visibilityBodyResult = await readJsonResponse<{ disabledLocales?: unknown }>(visibilityRes)
+      if (!visibilityBodyResult.ok) throw new Error(visibilityBodyResult.error)
+      const visibilityBody = visibilityBodyResult.value
       const disabledLocales: string[] = Array.isArray(visibilityBody?.disabledLocales) ? (visibilityBody.disabledLocales as string[]) : []
       const isLocaleDisabled = disabledLocales.includes(locale)
 

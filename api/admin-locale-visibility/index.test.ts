@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../lib/localeRegistry', () => ({
-  readDisabledLocalesFromBlob: vi.fn(async () => []),
-  setLocaleDisabled: vi.fn(async () => undefined),
-  invalidateLocalesCache: vi.fn(),
-  normalizeLocale: vi.fn((v: string | undefined) => (v ?? '').split('-')[0]?.toLowerCase() || 'en'),
-  readSupportedLocalesCached: vi.fn(async () => ['en', 'hu', 'de']),
-}))
+vi.mock('../lib/localeRegistry', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/localeRegistry')>()
+  return {
+    ...actual,
+    readDisabledLocalesFromBlob: vi.fn(async () => []),
+    setLocaleDisabled: vi.fn(async () => undefined),
+    invalidateLocalesCache: vi.fn(),
+    readSupportedLocalesCached: vi.fn(async () => ['en', 'hu', 'de']),
+  }
+})
 
 vi.mock('../lib/swaAuth', () => ({
   requireAdmin: vi.fn(() => ({ ok: true, principal: { userId: 'admin-user', userRoles: ['admin'] } })),
@@ -38,7 +41,7 @@ function makeAdminHeaders() {
 }
 
 afterEach(() => {
-  vi.restoreAllMocks()
+  vi.clearAllMocks()
   resetEnv()
 })
 
@@ -125,6 +128,30 @@ describe('/api/manage/locale-visibility', () => {
         body: { locale: 'xx', disabled: true },
       })
       expect(context.res).toMatchObject({ status: 400, body: { error: 'Unsupported locale.' } })
+    })
+
+    it('returns 400 for an invalid locale format', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'PUT',
+        headers: makeAdminHeaders(),
+        body: { locale: 'not-a-valid!!!locale', disabled: true },
+      })
+      expect(context.res).toMatchObject({ status: 400, body: { error: 'Invalid locale format.' } })
+    })
+
+    it('does not silently coerce an invalid locale to the fallback locale', async () => {
+      process.env.CV_PROFILE_SLUG = 'john-doe'
+      const context: { res?: unknown } = {}
+      await handler(context, {
+        method: 'PUT',
+        headers: makeAdminHeaders(),
+        body: { locale: '@@@', disabled: true },
+      })
+      // Must not accidentally disable 'en' (the fallback locale)
+      expect(setLocaleDisabled).not.toHaveBeenCalled()
+      expect((context.res as { status: number }).status).toBe(400)
     })
 
     it('returns 403 when x-cv-admin header is missing', async () => {

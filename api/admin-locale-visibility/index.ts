@@ -1,4 +1,4 @@
-import { readDisabledLocalesFromBlob, setLocaleDisabled, invalidateLocalesCache, normalizeLocale, readSupportedLocalesCached } from '../lib/localeRegistry'
+import { readDisabledLocalesFromBlob, setLocaleDisabled, invalidateLocalesCache, parseLocale, readSupportedLocalesCached } from '../lib/localeRegistry'
 import { readAllowedOriginsFromEnv, requireAdminMutationHeader, requireJsonContentType, requireSameOriginMutation } from '../lib/adminRequestGuards'
 import { requireAdmin } from '../lib/swaAuth'
 
@@ -82,7 +82,11 @@ export default async function (context: Context, req: HttpRequest) {
         return
       }
 
-      const locale = normalizeLocale(rawLocale)
+      const locale = parseLocale(rawLocale)
+      if (!locale) {
+        context.res = jsonResponse(400, { error: 'Invalid locale format.' })
+        return
+      }
       const supported = await readSupportedLocalesCached(slugFromName)
       if (!supported.includes(locale)) {
         context.res = jsonResponse(400, { error: 'Unsupported locale.' })
