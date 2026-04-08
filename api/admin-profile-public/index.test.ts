@@ -124,6 +124,7 @@ describe('/api/admin-profile-public', () => {
       expect(writeProfileJsonV2).toHaveBeenCalledWith(
         expect.objectContaining({ kind: 'public', locale: 'en', slugFromName: 'john-doe', jsonText: '{"basics":{"name":"Public"}}' }),
       )
+      expect(invalidateLocalesCache).toHaveBeenCalledWith('john-doe')
       expect(context.res).toMatchObject({ status: 200, body: { ok: true } })
     })
   })

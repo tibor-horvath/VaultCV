@@ -128,6 +128,7 @@ export default async function (context: Context, req: HttpRequest) {
         return
       }
       await writeProfileJsonV2({ kind: 'public', locale: requestedLocale, slugFromName, jsonText: json })
+      invalidateLocalesCache(slugFromName)
       context.res = jsonResponse(200, { ok: true })
       return
     }
