@@ -4,6 +4,7 @@ import { GraduationCap, Plus, Trash2 } from 'lucide-react'
 import type { EducationRow, PublicEducationFlags } from './types'
 import { StringListEditor } from './StringListEditor'
 import { useI18n } from '../../lib/i18n'
+import { useEffect, useState } from 'react'
 import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -21,10 +22,38 @@ export function EducationSection(props: {
   const { t } = useI18n()
   const { education, setEducation, publicEducation, setPublicEducation, isMobile, rowErrors } = props
 
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null)
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor),
   )
+
+  function addEducationRow() {
+    const newId = crypto.randomUUID()
+    setEducation((cur) => [...cur, { school: '', program: '', highlights: [], _id: newId }])
+    setPublicEducation((cur) => [
+      ...cur,
+      {
+        school: false,
+        schoolUrl: false,
+        degree: false,
+        field: false,
+        program: false,
+        start: false,
+        end: false,
+        location: false,
+        highlights: false,
+      },
+    ])
+    setLastAddedId(newId)
+  }
+
+  useEffect(() => {
+    if (!lastAddedId) return
+    document.getElementById(`education-row-${lastAddedId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    ;(document.getElementById(`education-school-${lastAddedId}`) as HTMLInputElement | null)?.focus()
+  }, [lastAddedId])
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -44,23 +73,7 @@ export function EducationSection(props: {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              setEducation((cur) => [...cur, { school: '', program: '', highlights: [], _id: crypto.randomUUID() }])
-              setPublicEducation((cur) => [
-                ...cur,
-                {
-                  school: false,
-                  schoolUrl: false,
-                  degree: false,
-                  field: false,
-                  program: false,
-                  start: false,
-                  end: false,
-                  location: false,
-                  highlights: false,
-                },
-              ])
-            }}
+            onClick={addEducationRow}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <Plus className="h-3.5 w-3.5 shrink-0" /> {t('adminAdd')}
@@ -72,9 +85,12 @@ export function EducationSection(props: {
           <SortableContext items={education.map((e) => e._id)} strategy={verticalListSortingStrategy}>
         {education.map((e, idx) => (
           <SortableRow key={e._id} id={e._id}>
-          <div className="group flex items-start gap-1">
+          <div id={`education-row-${e._id}`} className="group flex items-start gap-1">
             <DragHandle className="mt-2.5" />
-            <details open={!isMobile} className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+            <details
+              open={!isMobile || e._id === lastAddedId}
+              className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20"
+            >
             <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
               <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
               {t('adminEducationItem')} {idx + 1}: {(e.school || e.program || t('adminUntitled')).slice(0, 60)}
@@ -100,6 +116,7 @@ export function EducationSection(props: {
                   <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                     {t('adminSchool')}
                     <input
+                      id={`education-school-${e._id}`}
                       value={e.school}
                       onChange={(ev) => setEducation((cur) => cur.map((x, i) => (i === idx ? { ...x, school: ev.target.value } : x)))}
                       className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
@@ -293,6 +310,16 @@ export function EducationSection(props: {
         ))}
           </SortableContext>
         </DndContext>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={addEducationRow}
+          className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+        >
+          <Plus className="h-3.5 w-3.5 shrink-0" /> {t('adminAdd')}
+        </button>
       </div>
     </section>
   )

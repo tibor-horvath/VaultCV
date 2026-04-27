@@ -5,6 +5,7 @@ import type { ProjectRow, PublicProjectFlags } from './types'
 import { SiAppstoreIcon, SiGithubIcon, SiGitlabIcon, SiGoogleplayIcon, SiNpmIcon, SiPypiIcon, SiYoutubeIcon } from '../../components/icons/SimpleBrandIcons'
 import { IconSelect } from './IconSelect'
 import { useI18n } from '../../lib/i18n'
+import { useEffect, useState } from 'react'
 import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -26,10 +27,25 @@ export function ProjectsSection(props: {
   const { t } = useI18n()
   const { projects, setProjects, publicProjects, setPublicProjects, isMobile, rowErrors } = props
 
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null)
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor),
   )
+
+  function addProjectRow() {
+    const newId = crypto.randomUUID()
+    setProjects((cur) => [...cur, { name: '', description: '', tags: [], links: [], _id: newId }])
+    setPublicProjects((cur) => [...cur, { name: false, tags: false, description: false }])
+    setLastAddedId(newId)
+  }
+
+  useEffect(() => {
+    if (!lastAddedId) return
+    document.getElementById(`project-row-${lastAddedId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    ;(document.getElementById(`project-name-${lastAddedId}`) as HTMLInputElement | null)?.focus()
+  }, [lastAddedId])
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -49,10 +65,7 @@ export function ProjectsSection(props: {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              setProjects((cur) => [...cur, { name: '', description: '', tags: [], links: [], _id: crypto.randomUUID() }])
-              setPublicProjects((cur) => [...cur, { name: false, tags: false, description: false }])
-            }}
+            onClick={addProjectRow}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <Plus className="h-3.5 w-3.5 shrink-0" /> {t('adminAdd')}
@@ -65,9 +78,12 @@ export function ProjectsSection(props: {
           <SortableContext items={projects.map((p) => p._id)} strategy={verticalListSortingStrategy}>
         {projects.map((p, idx) => (
           <SortableRow key={p._id} id={p._id}>
-          <div className="group flex items-start gap-1">
+          <div id={`project-row-${p._id}`} className="group flex items-start gap-1">
             <DragHandle className="mt-3" />
-            <details open={!isMobile} className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20">
+            <details
+              open={!isMobile || p._id === lastAddedId}
+              className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20"
+            >
             <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">
               <span className="mr-2 inline-block w-3 text-center transition-transform group-open:rotate-90">{'>'}</span>
               {t('adminProjectItem')} {idx + 1}: {(p.name || t('adminUntitled')).slice(0, 60)}
@@ -92,6 +108,7 @@ export function ProjectsSection(props: {
                 <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                   {t('adminName')}
                   <input
+                    id={`project-name-${p._id}`}
                     value={p.name}
                     onChange={(ev) => setProjects((cur) => cur.map((x, i) => (i === idx ? { ...x, name: ev.target.value } : x)))}
                     className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
@@ -276,6 +293,16 @@ export function ProjectsSection(props: {
         ))}
           </SortableContext>
         </DndContext>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={addProjectRow}
+          className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+        >
+          <Plus className="h-3.5 w-3.5 shrink-0" /> {t('adminAdd')}
+        </button>
       </div>
     </section>
   )
