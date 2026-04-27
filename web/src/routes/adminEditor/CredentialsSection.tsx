@@ -28,6 +28,10 @@ export function CredentialsSection(props: {
     useSensor(KeyboardSensor),
   )
 
+  function addCredentialRow() {
+    setCredentials((cur) => [...cur, { issuer: '', label: '', url: '', isPublic: false, _id: crypto.randomUUID() }])
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -45,9 +49,7 @@ export function CredentialsSection(props: {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              setCredentials((cur) => [...cur, { issuer: '', label: '', url: '', isPublic: false, _id: crypto.randomUUID() }])
-            }}
+            onClick={addCredentialRow}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <Plus className="h-3.5 w-3.5 shrink-0" /> {t('adminAdd')}

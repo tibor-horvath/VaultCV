@@ -16,6 +16,10 @@ export function HonorsAwardsSection(props: {
   const { t } = useI18n()
   const { awards, setAwards, publicSections, setPublicSections, isMobile, rowErrors, sectionErrors } = props
 
+  function addAwardRow() {
+    setAwards((cur) => [...cur, { _id: crypto.randomUUID(), title: '', issuer: '', year: '' }])
+  }
+
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
       <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
@@ -25,9 +29,7 @@ export function HonorsAwardsSection(props: {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              setAwards((cur) => [...cur, { _id: crypto.randomUUID(), title: '', issuer: '', year: '' }])
-            }}
+            onClick={addAwardRow}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
             <Plus className="h-3.5 w-3.5 shrink-0" /> {t('adminAddAward')}
