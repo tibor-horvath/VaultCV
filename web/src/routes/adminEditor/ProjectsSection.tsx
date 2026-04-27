@@ -43,8 +43,12 @@ export function ProjectsSection(props: {
 
   useEffect(() => {
     if (!lastAddedId) return
+    const details = document.getElementById(`project-details-${lastAddedId}`) as HTMLDetailsElement | null
+    if (details) details.open = true
+
     document.getElementById(`project-row-${lastAddedId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     ;(document.getElementById(`project-name-${lastAddedId}`) as HTMLInputElement | null)?.focus()
+    setLastAddedId(null)
   }, [lastAddedId])
 
   function handleDragEnd(event: DragEndEvent) {
@@ -81,7 +85,8 @@ export function ProjectsSection(props: {
           <div id={`project-row-${p._id}`} className="group flex items-start gap-1">
             <DragHandle className="mt-3" />
             <details
-              open={!isMobile || p._id === lastAddedId}
+              id={`project-details-${p._id}`}
+              open={!isMobile}
               className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-950/20"
             >
             <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">

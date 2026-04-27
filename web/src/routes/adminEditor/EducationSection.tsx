@@ -51,8 +51,12 @@ export function EducationSection(props: {
 
   useEffect(() => {
     if (!lastAddedId) return
+    const details = document.getElementById(`education-details-${lastAddedId}`) as HTMLDetailsElement | null
+    if (details) details.open = true
+
     document.getElementById(`education-row-${lastAddedId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     ;(document.getElementById(`education-school-${lastAddedId}`) as HTMLInputElement | null)?.focus()
+    setLastAddedId(null)
   }, [lastAddedId])
 
   function handleDragEnd(event: DragEndEvent) {
@@ -88,7 +92,8 @@ export function EducationSection(props: {
           <div id={`education-row-${e._id}`} className="group flex items-start gap-1">
             <DragHandle className="mt-2.5" />
             <details
-              open={!isMobile || e._id === lastAddedId}
+              id={`education-details-${e._id}`}
+              open={!isMobile}
               className="min-w-0 flex-1 rounded-xl border border-slate-200/60 bg-white/50 p-3 dark:border-slate-800 dark:bg-slate-950/20"
             >
             <summary className="cursor-pointer list-none text-xs font-semibold text-slate-700 dark:text-slate-300 md:hidden">

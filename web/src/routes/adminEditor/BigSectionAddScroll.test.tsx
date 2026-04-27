@@ -15,14 +15,32 @@ vi.mock('../../lib/i18n', () => ({
 let mountedRoot: Root | null = null
 let mountedContainer: HTMLDivElement | null = null
 
-function setupScrollAndUuid(id = 'id-1') {
-  // JSDOM doesn't implement scrollIntoView.
-  Element.prototype.scrollIntoView = vi.fn()
+let scrollIntoViewOriginalDesc: PropertyDescriptor | undefined
+let scrollIntoViewPatched = false
 
-  if (!globalThis.crypto) {
-    ;(globalThis as unknown as { crypto: Crypto }).crypto = {} as Crypto
+function setupScrollAndUuid(id = 'id-1') {
+  // JSDOM doesn't implement scrollIntoView in some setups.
+  // Patch once per file load; restore in afterEach.
+  if (!scrollIntoViewPatched) {
+    scrollIntoViewOriginalDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
+    if (!scrollIntoViewOriginalDesc) {
+      Object.defineProperty(Element.prototype, 'scrollIntoView', {
+        value: () => {},
+        writable: true,
+        configurable: true,
+      })
+    }
+    scrollIntoViewPatched = true
   }
-  ;(globalThis.crypto as unknown as { randomUUID: () => string }).randomUUID = vi.fn(() => id)
+  vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {})
+
+  const baseCrypto = globalThis.crypto ?? ({} as Crypto)
+  vi.stubGlobal(
+    'crypto',
+    Object.assign({}, baseCrypto, {
+      randomUUID: vi.fn(() => id),
+    }) as Crypto,
+  )
 }
 
 afterEach(() => {
@@ -34,7 +52,18 @@ afterEach(() => {
   }
   mountedRoot = null
   mountedContainer = null
+  vi.unstubAllGlobals()
   vi.restoreAllMocks()
+
+  if (scrollIntoViewPatched) {
+    if (scrollIntoViewOriginalDesc) {
+      Object.defineProperty(Element.prototype, 'scrollIntoView', scrollIntoViewOriginalDesc)
+    } else {
+      delete (Element.prototype as unknown as { scrollIntoView?: unknown }).scrollIntoView
+    }
+    scrollIntoViewPatched = false
+    scrollIntoViewOriginalDesc = undefined
+  }
 })
 
 describe('Admin big sections: Add scroll + focus', () => {
