@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/tibor-horvath/VaultCV/compare/v1.1.1...v1.2.0) (2026-04-27)
+
+
+### Features
+
+* add functionality to dynamically add rows in various sections of the admin editor ([#47](https://github.com/tibor-horvath/VaultCV/issues/47)) ([e6d66bb](https://github.com/tibor-horvath/VaultCV/commit/e6d66bbe42dcec67520dfd59622f9ff852b672ec))
+
 ## [1.1.1](https://github.com/tibor-horvath/VaultCV/compare/v1.1.0...v1.1.1) (2026-04-08)
 
 
