@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/tibor-horvath/VaultCV/compare/v1.2.0...v1.2.1) (2026-07-19)
+
+
+### Bug Fixes
+
+* localize session countdown, correct copy-failure banner, and trap focus in QR modal ([e2cb6dd](https://github.com/tibor-horvath/VaultCV/commit/e2cb6dd5acbcd9fb4d91aa974db11a1515b755e2))
+
 ## [1.2.0](https://github.com/tibor-horvath/VaultCV/compare/v1.1.1...v1.2.0) (2026-04-27)
 
 
