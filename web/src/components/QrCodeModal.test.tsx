@@ -126,6 +126,81 @@ describe('QrCodeModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('moves focus to the Close button when opened', () => {
+    renderModal('https://example.com/?s=abc123')
+    const closeBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Close',
+    ) as HTMLButtonElement
+    expect(document.activeElement).toBe(closeBtn)
+  })
+
+  it('restores focus to the previously focused element on close', () => {
+    const trigger = document.createElement('button')
+    document.body.appendChild(trigger)
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+
+    renderModal('https://example.com/?s=abc123')
+    expect(document.activeElement).not.toBe(trigger)
+
+    act(() => {
+      mountedRoot!.unmount()
+    })
+    mountedContainer!.remove()
+    mountedRoot = null
+    mountedContainer = null
+
+    expect(document.activeElement).toBe(trigger)
+    trigger.remove()
+  })
+
+  it('wraps focus from the last focusable back to the first on Tab', () => {
+    renderModal('https://example.com/?s=abc123')
+    const dialog = document.querySelector('[role="dialog"]') as HTMLDivElement
+    const card = dialog.querySelector('.relative.z-10') as HTMLDivElement
+    const focusables = Array.from(
+      card.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), select:not([disabled])'),
+    )
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+
+    act(() => {
+      last.focus()
+    })
+    const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    act(() => {
+      last.dispatchEvent(event)
+    })
+
+    expect(document.activeElement).toBe(first)
+  })
+
+  it('wraps focus from the first focusable back to the last on Shift+Tab', () => {
+    renderModal('https://example.com/?s=abc123')
+    const dialog = document.querySelector('[role="dialog"]') as HTMLDivElement
+    const card = dialog.querySelector('.relative.z-10') as HTMLDivElement
+    const focusables = Array.from(
+      card.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), select:not([disabled])'),
+    )
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+
+    act(() => {
+      first.focus()
+    })
+    const event = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    act(() => {
+      first.dispatchEvent(event)
+    })
+
+    expect(document.activeElement).toBe(last)
+  })
+
   it('shows language selector when multiple locales are provided', () => {
     renderModal('https://example.com/?s=abc123')
     expect(document.querySelector('select')).toBeTruthy()

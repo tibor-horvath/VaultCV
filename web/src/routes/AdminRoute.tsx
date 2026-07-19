@@ -241,11 +241,13 @@ export function AdminShareRoute() {
   }
 
   async function copyShareUrl(shareUrl: string) {
+    setError(null)
+    setStatus(null)
     try {
       await navigator.clipboard.writeText(shareUrl)
       setStatus(t('adminShareLinkCopied'))
     } catch {
-      setStatus(t('adminShareLinkCopyFailed'))
+      setError(t('adminShareLinkCopyFailed'))
     }
   }
 
