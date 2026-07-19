@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 import { Share2 } from 'lucide-react'
 import { useI18n } from '../lib/i18n'
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 type LangOption = { value: string; label: string }
 
@@ -15,6 +18,8 @@ type QrCodeModalProps = {
 export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }: QrCodeModalProps) {
   const { t } = useI18n()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const [lang, setLang] = useState(initialLang)
 
   const url = useMemo(
@@ -31,6 +36,37 @@ export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }:
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
+
+  // Move focus into the dialog on open, and return it to the trigger on close.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    closeButtonRef.current?.focus()
+    return () => {
+      previouslyFocused?.focus?.()
+    }
+  }, [])
+
+  // Keep Tab inside the dialog while it is open.
+  function handleTabKey(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (e.key !== 'Tab') return
+    const card = cardRef.current
+    if (!card) return
+    const focusables = Array.from(card.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+    if (!focusables.length) return
+
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+    const active = document.activeElement
+    const isInside = active instanceof Node && card.contains(active)
+
+    if (e.shiftKey && (!isInside || active === first)) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && (!isInside || active === last)) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
 
   const canShareFiles =
     typeof navigator !== 'undefined' &&
@@ -66,6 +102,7 @@ export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }:
       role="dialog"
       aria-modal="true"
       aria-label={t('adminQrCodeFor').replace('{url}', url)}
+      onKeyDown={handleTabKey}
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
       {/* Backdrop */}
@@ -76,7 +113,10 @@ export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }:
       />
 
       {/* Card */}
-      <div className="relative z-10 flex flex-col items-center gap-4 rounded-2xl border border-slate-200/70 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+      <div
+        ref={cardRef}
+        className="relative z-10 flex flex-col items-center gap-4 rounded-2xl border border-slate-200/70 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-950"
+      >
         <div className="text-sm font-semibold text-slate-900 dark:text-white">
           {t('adminQrCode')}
         </div>
@@ -129,6 +169,7 @@ export function QrCodeModal({ shareUrlBase, initialLang, langOptions, onClose }:
             {t('adminQrDownload')}
           </button>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"

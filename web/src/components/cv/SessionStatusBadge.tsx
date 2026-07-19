@@ -1,4 +1,5 @@
 import { Lock, ShieldCheck } from 'lucide-react'
+import { useI18n } from '../../lib/i18n'
 
 export function SessionStatusBadge({
   isLocked,
@@ -17,6 +18,7 @@ export function SessionStatusBadge({
   size?: 'sm' | 'xs'
   minWidthClass?: string
 }) {
+  const { t } = useI18n()
   const sizeClasses = size === 'xs' ? 'text-xs px-3 py-1' : 'text-sm px-3 py-1'
   const iconClass = size === 'xs' ? 'h-3.5 w-3.5' : 'h-4 w-4'
 
@@ -28,16 +30,18 @@ export function SessionStatusBadge({
     if (clamped < 3600) {
       const minutes = Math.floor(clamped / 60)
       const seconds = clamped % 60
-      return `${minutes}m ${seconds}s`
+      return t('durationMinutesSeconds')
+        .replace('{minutes}', String(minutes))
+        .replace('{seconds}', String(seconds))
     }
     const hours = Math.floor(clamped / 3600)
     const minutes = Math.floor((clamped % 3600) / 60)
-    return `${hours}h ${minutes}m`
+    return t('durationHoursMinutes').replace('{hours}', String(hours)).replace('{minutes}', String(minutes))
   }
 
   const activeLabel =
     !derivedIsLocked && expiresInSeconds !== undefined
-      ? `Access active • ${formatTimeRemaining(expiresInSeconds)}`
+      ? `${t('accessActive')} • ${formatTimeRemaining(expiresInSeconds)}`
       : unlockedText
 
   return (
