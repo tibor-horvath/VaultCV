@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  buildPhotoSrc,
-  inferLinkKind,
-  inferProjectLinkLabelKind,
-  isCrossOriginImageUrl,
-  parseBasicsHeadline,
-} from './cvPresentation'
+import { buildPhotoSrc, inferLinkKind, inferProjectLinkLabelKind, parseBasicsHeadline } from './cvPresentation'
 
 describe('buildPhotoSrc', () => {
   it('returns photoUrl when set', () => {
@@ -15,24 +9,6 @@ describe('buildPhotoSrc', () => {
   it('returns data URL when photoUrl missing', () => {
     const src = buildPhotoSrc({ name: 'A' })
     expect(src.startsWith('data:image/svg+xml')).toBe(true)
-  })
-})
-
-describe('isCrossOriginImageUrl', () => {
-  it('is true for http(s) and protocol-relative URLs', () => {
-    expect(isCrossOriginImageUrl('https://x.blob.core.windows.net/p.jpg')).toBe(true)
-    expect(isCrossOriginImageUrl('http://example.com/x.png')).toBe(true)
-    expect(isCrossOriginImageUrl('//cdn.example/x.png')).toBe(true)
-  })
-
-  it('is false for data URLs and relative paths', () => {
-    expect(isCrossOriginImageUrl('data:image/svg+xml;base64,xx')).toBe(false)
-    expect(isCrossOriginImageUrl('/assets/photo.jpg')).toBe(false)
-  })
-
-  it('is false for null or undefined', () => {
-    expect(isCrossOriginImageUrl(undefined)).toBe(false)
-    expect(isCrossOriginImageUrl(null)).toBe(false)
   })
 })
 

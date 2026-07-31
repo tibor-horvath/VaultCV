@@ -16,7 +16,6 @@ import {
   TentTree,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
-import { CvPdfLayout } from '../components/cv/pdf/CvPdfLayout'
 import { FloatingBasicsMenu } from '../components/cv/FloatingBasicsMenu'
 import { AwardsList } from '../components/cv/AwardsList'
 import { EducationList } from '../components/cv/EducationList'
@@ -41,7 +40,6 @@ import {
 } from '../lib/accessSession'
 import { buildPhotoSrc } from '../lib/cvPresentation'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
-import { PDF_CAPTURE_ROOT_WIDTH_PX } from '../lib/pdfCaptureLayout'
 import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
 import { normalizeSectionOrder } from '../lib/sectionOrder'
 
@@ -198,8 +196,8 @@ export function CvRoute() {
   const publicName = usePublicName(locale)
   const { basicsSentinelRef, isBasicsInView } = useBasicsVisibility(state.kind)
   const orderedSections: SectionKey[] = state.kind === 'ready' ? normalizeSectionOrder(state.cv.sectionOrder) : []
-  const pdfCaptureRef = useRef<HTMLDivElement>(null)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfError, setPdfError] = useState(false)
   const [availablePrivateLocales, setAvailablePrivateLocales] = useState<string[] | null>(null)
 
   useEffect(() => {
@@ -215,12 +213,15 @@ export function CvRoute() {
   }, [])
 
   async function handleDownloadPdf() {
-    const el = pdfCaptureRef.current
-    if (!el || state.kind !== 'ready') return
+    if (state.kind !== 'ready') return
     setPdfBusy(true)
+    setPdfError(false)
     try {
       const name = state.cv.basics.name?.trim().replace(/\s+/g, '-') || 'cv'
-      await downloadCvPdf({ root: el, fileBaseName: name })
+      await downloadCvPdf({ cv: state.cv, t, locale, fileBaseName: name })
+    } catch {
+      // Previously this rejected unhandled and the button just reset, leaving no feedback.
+      setPdfError(true)
     } finally {
       setPdfBusy(false)
     }
@@ -349,15 +350,25 @@ export function CvRoute() {
                 </div>
               }
               belowLinks={
-                <button
-                  type="button"
-                  onClick={() => void handleDownloadPdf()}
-                  disabled={pdfBusy}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
-                >
-                  <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadPdf()}
+                    disabled={pdfBusy}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
+                  >
+                    <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+                  </button>
+                  {pdfError ? (
+                    <p
+                      role="alert"
+                      className="mt-2 rounded-lg border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/40 dark:text-rose-100"
+                    >
+                      {t('pdfGenerationFailed')}
+                    </p>
+                  ) : null}
+                </>
               }
             />
           </div>
@@ -430,13 +441,6 @@ export function CvRoute() {
             }
             return null
           })}
-          <div
-            className="pointer-events-none fixed left-[-10000px] top-0 z-0 shrink-0"
-            style={{ width: PDF_CAPTURE_ROOT_WIDTH_PX }}
-            aria-hidden="true"
-          >
-            <CvPdfLayout ref={pdfCaptureRef} cv={state.cv} profilePhotoSrc={profilePhotoSrc} />
-          </div>
         </div>
       ) : null}
     </div>

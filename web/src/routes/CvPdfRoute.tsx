@@ -1,35 +1,64 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, CircleAlert, FileDown, Hourglass, Lock } from 'lucide-react'
-import { CvPdfLayout } from '../components/cv/pdf/CvPdfLayout'
+import { PDFViewer } from '@react-pdf/renderer'
+import { CvPdfDocument } from '../components/cv/pdf/document/CvPdfDocument'
 import { Section } from '../components/cv/Section'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
+import { buildPhotoSrc } from '../lib/cvPresentation'
+import { registerPdfFonts } from '../lib/pdf/fonts'
+import { resolvePdfProfilePhoto, type PdfProfilePhoto } from '../lib/pdf/pdfImage'
 import { getMockCv } from '../lib/mockCv'
 import { useI18n } from '../lib/i18n'
 import { clearStoredAccessCode, getStoredAccessCode } from '../lib/accessSession'
 import { useCvRouteState } from '../hooks/useCvRouteState'
 
-export function CvPdfRoute() {
+/**
+ * Dev-only preview. `App.tsx` lazy-loads this route and redirects it in production, which is what
+ * keeps `@react-pdf/renderer` (imported eagerly here for `PDFViewer`) out of the shipped bundle.
+ */
+export default function CvPdfRoute() {
   const { locale, t } = useI18n()
   const [params] = useSearchParams()
   const accessCode = getStoredAccessCode()
   const state = useCvRouteState(accessCode, locale)
-  const captureRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
+  const [photo, setPhoto] = useState<PdfProfilePhoto | null>(null)
 
   /** Dev-only: `/cv/pdf?preview=1` shows mock CV layout without unlocking (for layout testing). */
   const pdfDevPreview = import.meta.env.DEV && params.get('preview') === '1'
-  const previewCv = pdfDevPreview ? getMockCv(locale) : null
+  // Memoized: `getMockCv` returns a fresh object each call, which would otherwise retrigger the
+  // photo effect below on every render.
+  const previewCv = useMemo(() => (pdfDevPreview ? getMockCv(locale) : null), [pdfDevPreview, locale])
   const cvReady = pdfDevPreview ? Boolean(previewCv) : state.kind === 'ready'
   const cvData = pdfDevPreview && previewCv ? previewCv : state.kind === 'ready' ? state.cv : null
 
+  useEffect(() => {
+    registerPdfFonts()
+  }, [])
+
+  // `PDFViewer` takes a synchronous element, so the photo has to be resolved before mounting it.
+  const photoSrc = cvData ? buildPhotoSrc(cvData.basics) : null
+  useEffect(() => {
+    let cancelled = false
+    if (!photoSrc) {
+      setPhoto(null)
+      return
+    }
+    void resolvePdfProfilePhoto(photoSrc).then((resolved) => {
+      if (!cancelled) setPhoto(resolved)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [photoSrc])
+
   async function handleDownload() {
-    const el = captureRef.current
-    if (!el || !cvReady || !cvData) return
+    if (!cvReady || !cvData) return
     setBusy(true)
     try {
       const name = cvData.basics.name?.trim().replace(/\s+/g, '-') || 'cv'
-      await downloadCvPdf({ root: el, fileBaseName: name })
+      await downloadCvPdf({ cv: cvData, t, locale, fileBaseName: name })
     } finally {
       setBusy(false)
     }
@@ -110,7 +139,11 @@ export function CvPdfRoute() {
         </Section>
       ) : null}
 
-      {cvReady && cvData ? <CvPdfLayout ref={captureRef} cv={cvData} /> : null}
+      {cvReady && cvData && photo ? (
+        <PDFViewer style={{ width: '100%', height: '90vh', border: 0 }} showToolbar>
+          <CvPdfDocument cv={cvData} t={t} locale={locale} photo={photo} />
+        </PDFViewer>
+      ) : null}
     </div>
   )
 }
