@@ -65,6 +65,7 @@ export const enMessages = {
     'This site uses a strictly necessary secure session cookie (cv_session) to keep CV access active after unlock. No analytics or marketing cookies are used.',
   downloadPdf: 'Download PDF',
   generatingPdf: 'Generating…',
+  pdfGenerationFailed: 'The PDF could not be generated. Please try again.',
   backToCv: 'Back to CV',
   pdfLayoutTitle: 'Print layout',
   pdfSessionExpiredHint:

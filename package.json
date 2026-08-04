@@ -2,7 +2,15 @@
   "name": "cv-root",
   "private": true,
   "version": "1.2.1",
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
+    "setup": "node scripts/setup-local.mjs",
+    "dev": "npm run dev --prefix web",
+    "dev:api": "npm run start --prefix api",
+    "build": "npm run build --prefix web && npm run build --prefix api",
+    "lint": "npm run lint --prefix web",
     "sync:swa-config": "node scripts/sync-swa-config.mjs",
     "test": "npm run test --prefix web && npm run test --prefix api"
   }

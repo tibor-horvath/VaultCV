@@ -21,6 +21,10 @@ Thumbs.db
 .env.*
 web/.env.local
 
+# ...but keep the committed templates
+!**/.env.example
+!**/.env.local.example
+
 # QR output
 tools/*.png
 tools/*.svg
