@@ -47,7 +47,7 @@ export function PdfHeader({ cv, photo }: { cv: CvData; photo: PdfProfilePhoto })
         {basics.location ? (
           <View style={s.headerLocation}>
             <PdfIconRow icon="mapPin" iconColor={color.indigo500}>
-              <Text>{basics.location}</Text>
+              <Text style={s.headerLocationText}>{basics.location}</Text>
             </PdfIconRow>
           </View>
         ) : null}

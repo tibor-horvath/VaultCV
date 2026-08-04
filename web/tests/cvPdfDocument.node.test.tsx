@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { Font, renderToBuffer } from '@react-pdf/renderer'
 import { getMockCv } from '../src/lib/mockCv'
+import { getBrand } from '../src/lib/brand'
 import { enMessages } from '../src/i18n/messages'
 import type { MessageKey } from '../src/i18n/messages'
 import { huMessages } from '../src/i18n/messages/hu'
@@ -221,6 +222,53 @@ describe('CvPdfDocument', () => {
     for (const ch of ['ő', 'ű', 'Ő', 'Ű', 'í', 'ó']) {
       expect(cps.has(ch.codePointAt(0)!), `${ch} must be extractable`).toBe(true)
     }
+  })
+})
+
+const A4_WIDTH_PT = 595.28
+const A4_HEIGHT_PT = 841.89
+
+/**
+ * Link annotations paired with their URI, which lives in a separate action object (`/A 20 0 R`).
+ */
+function linkAnnotations(pdf: Buffer): Array<{ uri: string; rect: number[] }> {
+  const latin = pdf.toString('latin1')
+  const uriByObject = new Map<string, string>()
+  for (const m of latin.matchAll(/(\d+) 0 obj\s*<<\s*\/S \/URI\s*\/URI \(([^)]*)\)/g)) {
+    uriByObject.set(m[1]!, m[2]!)
+  }
+  return [...latin.matchAll(/\/Subtype \/Link[\s\S]{0,400}?>>/g)].flatMap((m) => {
+    const uri = uriByObject.get(m[0].match(/\/A (\d+) 0 R/)?.[1] ?? '')
+    const rect = m[0].match(/\/Rect \[([^\]]*)\]/)?.[1]
+    if (!uri || !rect) return []
+    return [{ uri, rect: rect.trim().split(/\s+/).map(Number) }]
+  })
+}
+
+describe('generated-at footer', () => {
+  it('prints on exactly one page', async () => {
+    const pages = pageTexts(await render('en'))
+    const withFooter = pages.filter((p) => p.includes(getBrand().repoUrl))
+    // `render` gates on `pageNumber === totalPages`; more than one means the gate broke.
+    expect(withFooter).toHaveLength(1)
+    expect(withFooter[0]).toContain('Generated on')
+  })
+
+  /**
+   * Regression: the footer was present in the file but drawn ~5.7 million points below the page,
+   * so no reader ever showed it. react-pdf re-resolves styles on every relayout pass and multiplies
+   * a unitless `lineHeight` by `fontSize` each time; only `render`-prop nodes are re-laid out, so
+   * the footer's leading compounded to ~7^10. Decoded text alone cannot catch this — the glyphs are
+   * emitted either way — so the annotation rectangle is what gets asserted.
+   */
+  it('lands inside the page box', async () => {
+    const annotations = linkAnnotations(await render('en'))
+    expect(annotations.length).toBeGreaterThan(5)
+
+    const strays = annotations.filter(({ rect: [left, bottom, right, top] }) => {
+      return left! < 0 || bottom! < 0 || right! > A4_WIDTH_PT || top! > A4_HEIGHT_PT
+    })
+    expect(strays).toEqual([])
   })
 })
 
