@@ -6,9 +6,7 @@
     "CV_SESSION_SIGNING_KEY": "<random-secret-at-least-32-chars>",
     "CV_PROFILE_SLUG": "john-doe",
     "CV_PROFILE_STORAGE_CONNECTION_STRING": "<azure-storage-connection-string>",
-    "CV_PROFILE_CONTAINER": "profiles",
-
-    "CV_ALLOWED_ORIGINS": "http://localhost:4280"
+    "CV_PROFILE_CONTAINER": "profiles"
   }
 }
 

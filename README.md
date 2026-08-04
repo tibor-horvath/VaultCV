@@ -35,26 +35,22 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 Node.js **20.19+** is required locally (Node.js 22 is recommended and used in CI).
 
 ```bash
-# from repo root
-npm ci
-cd web && npm ci
-cd ../api && npm ci
+npm run setup
 ```
 
+Run from the repo root. It installs `web/` and `api/` dependencies and creates the gitignored local config files (`web/.env.local`, `api/local.settings.json`) from their committed templates, generating a random signing key for you. Safe to re-run.
+
 ```bash
-# run web UI (mock mode optional)
-cd web
-cp .env.local.example .env.local
 npm run dev
 ```
 
+The site is then at http://localhost:5173 with a fully populated mock CV — no Azure account or secrets needed. Set `VITE_USE_MOCK_CV=0` in `web/.env.local` and run `npm run dev:api` in a second terminal when you want the real API; the dev server proxies `/api` to the Functions host.
+
 ```bash
-# tests
-npm test            # from repo root (web + api)
-cd web && npm run lint
+npm test
 ```
 
-For UI-only work without Azure/Functions, set `VITE_USE_MOCK_CV=1` in `web/.env.local`.
+Runs the `web/` and `api/` suites; `npm run lint` lints the frontend. See [docs/local-development.md](docs/local-development.md) for the full list of scripts.
 
 ## Customize branding (optional)
 

@@ -10,34 +10,25 @@ Thanks for contributing.
 
 ## Local setup
 
-Install dependencies with lockfile-based installs:
+From the repo root:
 
 ```bash
-npm ci
-cd web && npm ci
-cd ../api && npm ci
+npm run setup
 ```
 
-Common commands:
+This installs `web/` and `api/` dependencies from their lockfiles and creates the gitignored local config files (`web/.env.local`, `api/local.settings.json`) from their committed templates. It never overwrites existing files, so re-run it after pulling.
+
+Common commands, all from the repo root:
 
 ```bash
-# web
-cd web && npm run dev
-cd web && npm run lint
-cd web && npm run test
-
-# api
-cd api && npm run build
-cd api && npm run test
-
-# all tests from root
-npm test
+npm run dev       # web dev server (localhost:5173)
+npm run dev:api   # Azure Functions host (localhost:7071)
+npm run lint      # eslint over web/
+npm test          # web + api test suites
+npm run build     # production build of web/ and api/
 ```
 
-For UI-only work, enable mock mode:
-
-- Copy `web/.env.local.example` to `web/.env.local`
-- Keep `VITE_USE_MOCK_CV=1`
+`npm run setup` enables mock mode by default (`VITE_USE_MOCK_CV=1` in `web/.env.local`), so the UI runs with sample data and no backend. Set it to `0` when you want the real API — the dev server proxies `/api` to the Functions host. See [docs/local-development.md](docs/local-development.md).
 
 ## Quality expectations
 
