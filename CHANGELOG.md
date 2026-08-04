@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/tibor-horvath/VaultCV/compare/v1.2.1...v1.3.0) (2026-08-04)
+
+
+### Features
+
+* refactor pdf generation ([#51](https://github.com/tibor-horvath/VaultCV/issues/51)) ([f6af6cf](https://github.com/tibor-horvath/VaultCV/commit/f6af6cf3e427713b9a0f09364a2916230fe90118))
+
 ## [1.2.1](https://github.com/tibor-horvath/VaultCV/compare/v1.2.0...v1.2.1) (2026-07-19)
 
 
