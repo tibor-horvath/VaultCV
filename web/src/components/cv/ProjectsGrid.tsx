@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { BookOpenText, ExternalLink, FlaskConical, Globe, ScanSearch } from 'lucide-react'
 import { inferProjectLinkLabelKind } from '../../lib/cvPresentation'
 import type { CvProject } from '../../types/cv'
@@ -5,14 +6,42 @@ import { SiAppstoreIcon, SiGithubIcon, SiGitlabIcon, SiGoogleplayIcon, SiNpmIcon
 import { SkillsChips } from './SkillsChips'
 import { useI18n } from '../../lib/i18n'
 
+type ProjectLinkKind = ReturnType<typeof inferProjectLinkLabelKind>
+type ChipIcon = ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' }>
+
+/** `web` and `other` (custom labels) are absent on purpose: both fall back to the globe. */
+const PROJECT_LINK_ICONS: Partial<Record<ProjectLinkKind, ChipIcon>> = {
+  github: SiGithubIcon,
+  gitlab: SiGitlabIcon,
+  docs: BookOpenText,
+  video: SiYoutubeIcon,
+  demo: FlaskConical,
+  'case-study': ScanSearch,
+  npm: SiNpmIcon,
+  pypi: SiPypiIcon,
+  'app-store': SiAppstoreIcon,
+  'play-store': SiGoogleplayIcon,
+}
+
+const PROJECT_LINK_TEXT: Partial<Record<ProjectLinkKind, string>> = {
+  github: 'GitHub',
+  gitlab: 'GitLab',
+  docs: 'Docs',
+  video: 'Video',
+  demo: 'Demo',
+  'case-study': 'Case study',
+  npm: 'NPM',
+  pypi: 'PyPI',
+  'app-store': 'App Store',
+  'play-store': 'Play Store',
+}
+
 export function ProjectsGrid({ items }: { items: CvProject[] }) {
   const { t } = useI18n()
   return (
     <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60">
       {items.map((p) => {
         const links = p.links ?? []
-        const iconLinks = links.filter((l) => inferProjectLinkLabelKind(l) !== 'other')
-        const textLinks = links.filter((l) => inferProjectLinkLabelKind(l) === 'other')
 
         return (
           <article
@@ -21,55 +50,14 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
           >
             <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
               <div className="min-w-0 font-semibold text-slate-900 dark:text-slate-100">{p.name}</div>
-              {iconLinks.map((l) => {
+              {links.map((l) => {
                 const kind = inferProjectLinkLabelKind(l)
-                const Icon =
-                  kind === 'github'
-                    ? SiGithubIcon
-                    : kind === 'gitlab'
-                      ? SiGitlabIcon
-                    : kind === 'docs'
-                      ? BookOpenText
-                      : kind === 'video'
-                        ? SiYoutubeIcon
-                        : kind === 'demo'
-                          ? FlaskConical
-                          : kind === 'case-study'
-                            ? ScanSearch
-                            : kind === 'npm'
-                              ? SiNpmIcon
-                              : kind === 'pypi'
-                                ? SiPypiIcon
-                            : kind === 'app-store' || kind === 'play-store'
-                              ? kind === 'app-store'
-                                ? SiAppstoreIcon
-                                : SiGoogleplayIcon
-                              : Globe
-                const text =
-                  kind === 'github'
-                    ? 'GitHub'
-                    : kind === 'docs'
-                      ? 'Docs'
-                      : kind === 'video'
-                        ? 'Video'
-                        : kind === 'demo'
-                          ? 'Demo'
-                          : kind === 'case-study'
-                            ? 'Case study'
-                            : kind === 'npm'
-                              ? 'NPM'
-                              : kind === 'pypi'
-                                ? 'PyPI'
-                                : kind === 'app-store'
-                                  ? 'App Store'
-                                  : kind === 'play-store'
-                                    ? 'Play Store'
-                                    : kind === 'gitlab'
-                                      ? 'GitLab'
-                                      : t('web')
+                const Icon = PROJECT_LINK_ICONS[kind] ?? Globe
+                // A custom link carries its own label; presets use the fixed chip text.
+                const text = kind === 'other' ? (l.label ?? '').trim() || t('web') : PROJECT_LINK_TEXT[kind] ?? t('web')
                 return (
                   <a
-                    key={`${p.name}:${kind}:${l.url}`}
+                    key={`${p.name}:${kind}:${l.label}:${l.url}`}
                     className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus:ring-offset-slate-950"
                     href={l.url}
                     target="_blank"
@@ -89,26 +77,9 @@ export function ProjectsGrid({ items }: { items: CvProject[] }) {
                 <SkillsChips items={p.tags} />
               </div>
             ) : null}
-            {textLinks.length ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {textLinks.map((l) => (
-                  <a
-                    key={`${p.name}:${l.url}`}
-                    className="text-xs font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:text-slate-300 dark:hover:text-white dark:focus:ring-offset-slate-950"
-                    href={l.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${p.name}: ${l.label} (${t('opensInNewTab')})`}
-                  >
-                    {l.label}
-                  </a>
-                ))}
-              </div>
-            ) : null}
           </article>
         )
       })}
     </div>
   )
 }
-
