@@ -13,10 +13,11 @@ When new commits are found on the upstream `main` branch, the workflow:
 
 1. Recreates/reset the `sync/template` branch from upstream `origin/main` on each run. This branch is reused for the sync PR, but its previous unmerged state is **not** preserved; any manual commits on `sync/template` (for example, conflict fixes or local adjustments) will be overwritten unless they have been merged or saved elsewhere.
 2. Applies upstream changes as a squash-style sync using `-X theirs` (upstream wins on conflicts) and force-pushes with `--force-with-lease`.
-3. Restores this repository's `.github/workflows/` folder after merge so upstream changes do not overwrite your local workflow customizations. This also means upstream workflow changes and any newly added upstream workflow files under `.github/workflows/` are **not** synced automatically and must be reviewed and applied manually if you want them.
-4. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new upstream commits.
-5. Opens a pull request from `sync/template` to `main` (or updates the existing one) so you can review and merge at your own pace.
-6. Includes the upstream commit subjects since `LAST_TEMPLATE_SYNC` in the PR body for easier review.
+3. Deletes files that upstream removed since `LAST_TEMPLATE_SYNC`. A repo created from this template has an unrelated history, so the merge sees an empty base and treats every file you already have as newly added — deletions would otherwise never arrive, leaving stale modules that still compile and stale tests that still run against exports that no longer exist. Files upstream never had (your own additions) are untouched.
+4. Restores this repository's `.github/workflows/` folder after merge so upstream changes do not overwrite your local workflow customizations. This also means upstream workflow changes and any newly added upstream workflow files under `.github/workflows/` are **not** synced automatically and must be reviewed and applied manually if you want them.
+5. Records the last synced upstream commit in a repository variable (`LAST_TEMPLATE_SYNC`) so subsequent runs only look at new upstream commits.
+6. Opens a pull request from `sync/template` to `main` (or updates the existing one) so you can review and merge at your own pace.
+7. Includes the upstream commit subjects since `LAST_TEMPLATE_SYNC` in the PR body for easier review.
 
 If there are no new upstream commits the workflow exits early without touching anything.
 
@@ -108,6 +109,15 @@ The sync apply step uses `-X theirs`, meaning **upstream changes win on conflict
 Exception: `.github/workflows/` is intentionally restored from your repository after merge, so your local workflow behavior stays in place even if the upstream template modifies workflow files.
 
 Review the `sync/template` branch carefully before merging the PR. If you need to keep a local customization, resolve the conflict manually before merging.
+
+## Files deleted upstream
+
+Deletions are replayed from the `LAST_TEMPLATE_SYNC` commit, not inferred from the merge — a repo created from this template has no history in common with the template, so the merge sees an empty base and reads every file you already have as newly added. Without the replay, a module upstream deleted stays behind and keeps building, and its stale test file keeps running against exports that were removed; the first symptom is usually a red CI on the sync PR with `TypeError: … is not a function`.
+
+Two consequences worth knowing:
+
+- If `LAST_TEMPLATE_SYNC` is unset or points at a commit that is no longer reachable, the run logs `No usable LAST_TEMPLATE_SYNC; cannot replay upstream deletions this run.` and syncs additions only. Set the variable (see [Seed LAST_TEMPLATE_SYNC for a new downstream repo](#4-seed-last_template_sync-for-a-new-downstream-repo)) and re-run.
+- If you deliberately keep a file the template has deleted, the sync will remove it again on every run. Rename it, or move it somewhere upstream never had a file with that path.
 
 ## Disabling the workflow
 

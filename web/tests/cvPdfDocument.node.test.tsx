@@ -40,23 +40,32 @@ function render(locale: 'en' | 'hu') {
   )
 }
 
-/** Every FlateDecode stream, decoded, in document order. */
-function inflateStreams(pdf: Buffer): string[] {
+/** Every FlateDecode stream, decoded, paired with the object number that owns it. */
+function inflateStreamObjects(pdf: Buffer): Array<{ object: number; content: string }> {
   const latin = pdf.toString('latin1')
-  const re = /(^|[^d])stream(\r\n|\r|\n)/g
-  const out: string[] = []
-  let m: RegExpExecArray | null
-  while ((m = re.exec(latin))) {
-    const start = m.index + m[0].length
+  const out: Array<{ object: number; content: string }> = []
+  for (const m of latin.matchAll(/(\d+) 0 obj/g)) {
+    const header = m.index + m[0].length
+    const objectEnd = latin.indexOf('endobj', header)
+    const keyword = latin.indexOf('stream', header)
+    // Objects that carry no stream would otherwise pick up the next object's.
+    if (keyword < 0 || (objectEnd >= 0 && keyword > objectEnd)) continue
+    const eol = latin.startsWith('\r\n', keyword + 'stream'.length) ? 2 : 1
+    const start = keyword + 'stream'.length + eol
     const end = latin.indexOf('endstream', start)
     if (end < 0) continue
     try {
-      out.push(inflateSync(pdf.subarray(start, end)).toString('latin1'))
+      out.push({ object: Number(m[1]), content: inflateSync(pdf.subarray(start, end)).toString('latin1') })
     } catch {
       // Not zlib (or our boundary guess was off) — not a stream we need.
     }
   }
   return out
+}
+
+/** Every FlateDecode stream, decoded, in document order. */
+function inflateStreams(pdf: Buffer): string[] {
+  return inflateStreamObjects(pdf).map((s) => s.content)
 }
 
 /**
@@ -67,11 +76,10 @@ function inflateStreams(pdf: Buffer): string[] {
  */
 function buildFontMaps(pdf: Buffer): Map<string, Map<number, string>> {
   const latin = pdf.toString('latin1')
-  const streams = inflateStreams(pdf)
 
-  // ToUnicode CMaps, in the order their stream objects appear.
-  const cmaps: Array<Map<number, string>> = []
-  for (const stream of streams) {
+  // ToUnicode CMaps, keyed by the object that holds them.
+  const cmapByObject = new Map<number, Map<number, string>>()
+  for (const { object, content: stream } of inflateStreamObjects(pdf)) {
     if (!stream.includes('beginbfchar') && !stream.includes('beginbfrange')) continue
     const map = new Map<number, string>()
     const chars = /beginbfchar([\s\S]*?)endbfchar/g
@@ -97,17 +105,30 @@ function buildFontMaps(pdf: Buffer): Map<string, Map<number, string>> {
         }
       }
     }
-    cmaps.push(map)
+    cmapByObject.set(object, map)
   }
 
-  // Font dicts reference their CMap by object number; pair them up in declaration order.
+  /*
+   * Resource name -> font object -> CMap object. Joining on object numbers is what makes this
+   * stable; pairing the two lists by position is not.
+   *
+   * Emission order is not a property this file can lean on: rendering the same CV sixty times
+   * emits the ToUnicode CMap objects in two different orders, the minority one about 8% of the
+   * time. Positional pairing then handed the semibold font the regular font's CMap, every
+   * uppercase heading decoded to the wrong characters, and one `it.each` case out of five failed
+   * on a heading that was present and correct in the PDF.
+   */
+  const toUnicodeByFont = new Map<number, number>()
+  for (const m of latin.matchAll(/(\d+) 0 obj([\s\S]*?)endobj/g)) {
+    const toUnicode = m[2]!.match(/\/ToUnicode\s+(\d+)\s+0\s+R/)?.[1]
+    if (toUnicode) toUnicodeByFont.set(Number(m[1]), Number(toUnicode))
+  }
+
   const byResource = new Map<string, Map<number, string>>()
-  const fontDicts = [...latin.matchAll(/\/BaseFont\s*\/[^\s/]+[\s\S]{0,400}?\/ToUnicode\s+(\d+)\s+0\s+R/g)]
-  const resources = [...latin.matchAll(/\/(F\d+)\s+(\d+)\s+0\s+R/g)]
-  fontDicts.forEach((_, i) => {
-    const res = resources[i]?.[1]
-    if (res && cmaps[i]) byResource.set(res, cmaps[i]!)
-  })
+  for (const m of latin.matchAll(/\/(F\d+)\s+(\d+)\s+0\s+R/g)) {
+    const cmap = cmapByObject.get(toUnicodeByFont.get(Number(m[2])) ?? -1)
+    if (cmap) byResource.set(m[1]!, cmap)
+  }
   return byResource
 }
 
