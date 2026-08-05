@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/tibor-horvath/VaultCV/compare/v1.3.1...v1.3.2) (2026-08-05)
+
+
+### Bug Fixes
+
+* update Content Security Policy to allow WebAssembly for PDF generation and add corresponding tests ([#56](https://github.com/tibor-horvath/VaultCV/issues/56)) ([3dceed0](https://github.com/tibor-horvath/VaultCV/commit/3dceed07342781336a57e950752e09fe5045a566))
+
 ## [1.3.1](https://github.com/tibor-horvath/VaultCV/compare/v1.3.0...v1.3.1) (2026-08-05)
 
 
