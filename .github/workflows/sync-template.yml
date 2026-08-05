@@ -114,6 +114,26 @@ jobs:
             done < "$CONFLICT_FILE"
           fi
 
+          # `--allow-unrelated-histories` hands the merge an empty base, so every file the child
+          # already has reads as "added by us" and files *deleted* upstream are silently kept.
+          # Stale modules then keep compiling and their stale tests keep running against exports
+          # that no longer exist. The recorded sync point is the only place the deletions are
+          # visible, so replay them explicitly.
+          LAST_SHA="${{ steps.diff.outputs.last_sha }}"
+          if [ -n "$LAST_SHA" ] && git rev-parse --verify "${LAST_SHA}^{commit}" >/dev/null 2>&1; then
+            DELETED_FILE=$(mktemp)
+            git diff --diff-filter=D --name-only "$LAST_SHA" upstream/main > "$DELETED_FILE"
+
+            while IFS= read -r path; do
+              [ -n "$path" ] || continue
+              [ -e "$path" ] || continue
+              echo "Removing file deleted upstream: $path"
+              run_git git rm -f --ignore-unmatch -- "$path"
+            done < "$DELETED_FILE"
+          else
+            echo "No usable LAST_TEMPLATE_SYNC; cannot replay upstream deletions this run."
+          fi
+
           if ! git diff --cached --quiet; then
             run_git git commit -m "$MERGE_MSG"
           else
