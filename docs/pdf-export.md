@@ -46,6 +46,8 @@ react-pdf paginates content itself — there is no manual slicing. Two rules mat
 
 This is deliberate: letting react-pdf's `<Image>` fetch the URL itself would abort the *entire* render on any CORS or network failure, and would embed the full-resolution original. Pre-resolving degrades to the built-in fallback avatar instead of losing the PDF. That fetch needs **CSP `connect-src`** for `https://*.blob.core.windows.net` (in `staticwebapp.config.json`) and correct blob CORS. See [deployment-azure.md](deployment-azure.md).
 
+**Same-origin photos** — the usual case, where `/api/cv` returns `photoUrl: '/api/private-profile/image'` — are fetched with `credentials: 'same-origin'` so the HttpOnly `cv_session` cookie is sent. Without it the endpoint answers `401` and the photo silently degrades to the fallback avatar. Cross-origin blob URLs stay uncredentialed, since a credentialed request is rejected against `Access-Control-Allow-Origin: *`.
+
 The fallback avatar is drawn as native vector art (`PdfFallbackAvatar`), because the web fallback is an SVG data URL and react-pdf's `<Image>` decodes only JPEG and PNG.
 
 ## Bundle impact
