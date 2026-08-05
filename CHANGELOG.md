@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/tibor-horvath/VaultCV/compare/v1.3.0...v1.3.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* enhance image fetching logic for same-origin and cross-origin scenarios with tests ([#54](https://github.com/tibor-horvath/VaultCV/issues/54)) ([be7cf18](https://github.com/tibor-horvath/VaultCV/commit/be7cf18d584047c61609aea088d4a624908b588c))
+
 ## [1.3.0](https://github.com/tibor-horvath/VaultCV/compare/v1.2.1...v1.3.0) (2026-08-04)
 
 
