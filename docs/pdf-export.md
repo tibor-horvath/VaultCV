@@ -40,6 +40,12 @@ react-pdf paginates content itself — there is no manual slicing. Two rules mat
 
 `tests/cvPdfDocument.node.test.tsx` guards this by decoding the text of each rendered page and asserting headings sit on the same page as their first entry.
 
+## Content Security Policy
+
+`script-src` must include **`'wasm-unsafe-eval'`** (in `staticwebapp.config.json`). react-pdf's layout engine is `yoga-layout` v3, which instantiates a WebAssembly module at render time; a strict `script-src` makes the browser refuse to compile it, emscripten aborts inside an async callback, and `pdf().toBlob()` **never settles** — the Download PDF button stays on "Generating…" with no error and no timeout short enough to notice.
+
+This only ever breaks in production: the Vite dev server sends no CSP, so local development cannot reproduce it. `tests/staticwebappCsp.node.test.ts` guards the directive. Use `'wasm-unsafe-eval'`, never `'unsafe-eval'` — the narrow keyword permits WebAssembly without re-enabling `eval()`.
+
 ## Profile photos
 
 **Remotely hosted photos** (for example Azure Blob Storage) must be served with **CORS** allowing your site's origin. The app **fetches** the image and inlines it as a downscaled JPEG data URL before rendering.
