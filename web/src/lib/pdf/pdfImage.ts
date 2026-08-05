@@ -15,13 +15,26 @@ function readBlobAsDataUrl(blob: Blob): Promise<string> {
   })
 }
 
+function isSameOrigin(absolute: string) {
+  try {
+    return new URL(absolute).origin === window.location.origin
+  } catch {
+    return false
+  }
+}
+
 async function fetchImageAsDataUrl(absolute: string): Promise<string | null> {
   const controller = typeof AbortController === 'function' ? new AbortController() : undefined
   const timer = setTimeout(() => controller?.abort(), IMAGE_FETCH_TIMEOUT_MS)
+  // `/api/private-profile/image` authenticates with the HttpOnly `cv_session` cookie, so the
+  // same-origin fetch has to carry credentials or it comes back 401 and the photo silently
+  // degrades to the fallback avatar. Cross-origin blob URLs are public and stay uncredentialed —
+  // a credentialed request is rejected against `Access-Control-Allow-Origin: *`.
+  const sameOrigin = isSameOrigin(absolute)
   try {
     const res = await fetch(absolute, {
-      mode: 'cors',
-      credentials: 'omit',
+      mode: sameOrigin ? 'same-origin' : 'cors',
+      credentials: sameOrigin ? 'same-origin' : 'omit',
       ...(controller ? { signal: controller.signal } : {}),
     })
     if (!res.ok) return null
