@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/tibor-horvath/VaultCV/compare/v1.3.2...v1.4.0) (2026-08-16)
+
+
+### Features
+
+* implement LoadingSpinner component and replace loading indicators in routes ([#58](https://github.com/tibor-horvath/VaultCV/issues/58)) ([321e4fa](https://github.com/tibor-horvath/VaultCV/commit/321e4fa31efed989cae4c90df295530546cc3c38))
+
 ## [1.3.2](https://github.com/tibor-horvath/VaultCV/compare/v1.3.1...v1.3.2) (2026-08-05)
 
 
