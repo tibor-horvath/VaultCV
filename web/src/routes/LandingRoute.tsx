@@ -15,6 +15,7 @@ import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
 import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
+import { LoadingSpinner } from '../components/LoadingSpinner'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
 import { fetchCv } from '../lib/api'
@@ -190,21 +191,7 @@ export function LandingRoute() {
   }, [locale, openCv, tokenInput])
 
   if (urlTokenValidating || sessionProbePending) {
-    return (
-      <div
-        className="mx-auto flex w-full flex-1 flex-col items-center justify-center gap-4 py-24"
-        aria-busy="true"
-        role="status"
-      >
-        <div
-          className="h-9 w-9 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-600 dark:border-t-slate-200"
-          aria-hidden
-        />
-        <p className="text-center text-sm text-slate-600 dark:text-slate-400">
-          {urlTokenValidating ? t('loadingCv') : t('checkingAccess')}
-        </p>
-      </div>
-    )
+    return <LoadingSpinner label={urlTokenValidating ? t('loadingCv') : t('checkingAccess')} />
   }
 
   const basics = sanitizePublicBasicsForLanding(publicCv.basics)

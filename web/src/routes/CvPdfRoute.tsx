@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, CircleAlert, FileDown, Hourglass, Lock } from 'lucide-react'
+import { ArrowLeft, CircleAlert, FileDown, Lock } from 'lucide-react'
 import { PDFViewer } from '@react-pdf/renderer'
 import { CvPdfDocument } from '../components/cv/pdf/document/CvPdfDocument'
 import { Section } from '../components/cv/Section'
+import { LoadingSpinner } from '../components/LoadingSpinner'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
 import { buildPhotoSrc } from '../lib/cvPresentation'
 import { registerPdfFonts } from '../lib/pdf/fonts'
@@ -123,11 +124,7 @@ export default function CvPdfRoute() {
         </Section>
       ) : null}
 
-      {!pdfDevPreview && state.kind === 'loading' ? (
-        <Section title={t('loading')} icon={<Hourglass className="h-4 w-4" />}>
-          <div className="text-sm text-slate-700 dark:text-slate-300">{t('loadingCv')}</div>
-        </Section>
-      ) : null}
+      {!pdfDevPreview && state.kind === 'loading' ? <LoadingSpinner label={t('loadingCv')} /> : null}
 
       {!pdfDevPreview && state.kind === 'error' ? (
         <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>

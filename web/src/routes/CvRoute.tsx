@@ -5,7 +5,6 @@ import {
   CircleAlert,
   FileDown,
   GraduationCap,
-  Hourglass,
   Languages,
   LayoutGrid,
   LibraryBig,
@@ -32,6 +31,7 @@ import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
 import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
+import { LoadingSpinner } from '../components/LoadingSpinner'
 import type { MessageKey } from '../i18n/messages'
 import { useTheme } from '../lib/themeContext'
 import {
@@ -308,11 +308,7 @@ export function CvRoute() {
         </Section>
       ) : null}
 
-      {state.kind === 'loading' ? (
-        <Section title={t('loading')} icon={<Hourglass className="h-4 w-4" />}>
-          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{t('loadingCv')}</div>
-        </Section>
-      ) : null}
+      {state.kind === 'loading' ? <LoadingSpinner label={t('loadingCv')} /> : null}
 
       {state.kind === 'error' ? (
         <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>
