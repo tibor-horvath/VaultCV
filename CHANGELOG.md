@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/tibor-horvath/VaultCV/compare/v1.4.0...v1.5.0) (2026-08-25)
+
+
+### Features
+
+* add loading indicators and improve user experience during data fetching ([#60](https://github.com/tibor-horvath/VaultCV/issues/60)) ([fac140a](https://github.com/tibor-horvath/VaultCV/commit/fac140af385d1fa9766566a103ba3647f9fc55bd))
+
 ## [1.4.0](https://github.com/tibor-horvath/VaultCV/compare/v1.3.2...v1.4.0) (2026-08-16)
 
 
