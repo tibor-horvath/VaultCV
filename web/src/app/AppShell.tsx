@@ -1,11 +1,13 @@
 import { SiGithubIcon, SiLinkedinIcon } from '../components/icons/SimpleBrandIcons'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
 import { useAppView } from '../lib/appView'
+import { useIsPageLoading } from '../lib/pageLoading'
 import { getBrand } from '../lib/brand'
 import { useI18n } from '../lib/i18n'
 
 export function AppShell() {
   const { view } = useAppView()
+  const isPageLoading = useIsPageLoading()
   const { t } = useI18n()
   const { pathname } = useLocation()
   const isPdfExport = pathname === '/cv/pdf'
@@ -33,7 +35,7 @@ export function AppShell() {
         <Outlet />
       </main>
 
-      {isPdfExport ? null : (
+      {isPdfExport || isPageLoading ? null : (
       <footer className={`relative mx-auto w-full px-4 pb-6 sm:px-6 lg:px-8 ${contentMaxClass}`}>
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-4 text-center text-sm text-slate-600 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 dark:text-slate-300">
           <div className="flex flex-wrap items-center justify-center gap-2">

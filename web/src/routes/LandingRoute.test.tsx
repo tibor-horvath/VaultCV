@@ -10,7 +10,9 @@ import { LocaleProvider } from '../lib/i18n'
 import { ThemeProvider } from '../lib/themeContext'
 import { LandingRoute } from './LandingRoute'
 
-vi.mock('../lib/favicon', () => ({
+// Only the DOM side effect is stubbed; `initialsFromName` stays real because `getBrandInitials` uses it.
+vi.mock('../lib/favicon', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/favicon')>()),
   useDocumentFavicon: vi.fn(),
 }))
 
@@ -98,7 +100,23 @@ afterEach(() => {
 })
 
 describe('LandingRoute', () => {
-  it('shows a skeleton with pulse placeholders while the public profile is still loading', async () => {
+  it('renders nothing during the anti-flash delay instead of flashing the landing page', async () => {
+    // Session probe still in flight: neither the loader nor the page behind it may be on screen.
+    vi.mocked(fetchCv).mockImplementation(() => new Promise(() => {}))
+    vi.mocked(fetchPublicCvProfile).mockResolvedValue({
+      basics: { name: 'Test User', headline: 'Engineer' },
+      sectionOrder: [],
+    })
+
+    renderLanding('/')
+    await flushMicrotasks()
+
+    expect(document.body.textContent).not.toContain(enMessages.accessCodeHint)
+    expect(document.body.textContent).not.toContain('Test User')
+    expect(document.querySelector('[role="status"]')).toBeNull()
+  })
+
+  it('shows a shimmering skeleton while the public profile is still loading', async () => {
     vi.mocked(fetchPublicCvProfile).mockImplementation(
       () => new Promise(() => {}),
     )
@@ -108,10 +126,10 @@ describe('LandingRoute', () => {
     await flushUntil(
       () =>
         Boolean(document.body.textContent?.includes(enMessages.loadingPublicPreview)) &&
-        document.querySelector('.animate-pulse') !== null,
+        document.querySelector('[class~="motion-safe:animate-shimmer"]') !== null,
     )
 
-    expect(document.querySelector('.animate-pulse')).not.toBeNull()
+    expect(document.querySelector('[class~="motion-safe:animate-shimmer"]')).not.toBeNull()
     expect(document.body.textContent).toContain(enMessages.loadingPublicPreview)
     const statusRegions = document.querySelectorAll('[role="status"]')
     expect(statusRegions.length).toBeGreaterThan(0)

@@ -13,3 +13,13 @@ If you also want example public/branding values in local development, copy `web/
 While mock mode is on, the dev server's `/api` proxy is disabled — the UI never calls the backend, so there is nothing to forward. Set `VITE_USE_MOCK_CV=0` to switch to the real API.
 
 The mock data is defined in the web source and is only active when `VITE_USE_MOCK_CV=1` is set — it is never used in production.
+
+## Seeing loading states
+
+The mock responds instantly, so loading states (the CV skeleton, the admin session spinner) are gone before you can look at them. Add an artificial delay to `web/.env.local`:
+
+```
+VITE_MOCK_LATENCY_MS=1500
+```
+
+Every mock API call then waits that many milliseconds, which holds the loading screens on-screen. Remove it (or set `0`) to go back to instant responses. This affects mock mode only.

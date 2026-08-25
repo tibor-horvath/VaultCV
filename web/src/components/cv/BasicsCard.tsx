@@ -28,6 +28,9 @@ export function BasicsCard({
   const { role, chip } = parseBasicsHeadline(basics.headline)
   const photoSrc = profilePhotoSrc ?? buildPhotoSrc(basics)
   const [isPhoneVisible, setIsPhoneVisible] = useState(false)
+  // The photo is the largest element and decodes last, so it would otherwise pop in a beat after
+  // the rest of the card has already faded up.
+  const [isPhotoLoaded, setIsPhotoLoaded] = useState(false)
   const hasMobile = Boolean(basics.mobile?.trim())
 
   return (
@@ -39,9 +42,20 @@ export function BasicsCard({
             <img
               src={photoSrc}
               alt={basics.photoAlt ?? `${basics.name} profile photo`}
-              className="h-48 w-48 rounded-full object-cover shadow-none ring-0 sm:h-56 sm:w-56"
+              className={`h-48 w-48 rounded-full object-cover shadow-none ring-0 transition-opacity duration-500 motion-reduce:transition-none sm:h-56 sm:w-56 ${
+                isPhotoLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
               loading="lazy"
               decoding="async"
+              // A cached image can finish before React attaches `onLoad`, which would leave it at
+              // opacity 0 forever.
+              ref={(node) => {
+                if (node?.complete) setIsPhotoLoaded(true)
+              }}
+              onLoad={() => setIsPhotoLoaded(true)}
+              // Reveal on failure too, otherwise a broken or blocked image would sit at opacity 0
+              // forever instead of showing the browser's own missing-image affordance.
+              onError={() => setIsPhotoLoaded(true)}
             />
           </div>
         ) : null}

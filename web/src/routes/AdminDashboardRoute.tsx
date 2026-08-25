@@ -2,6 +2,8 @@ import { ArrowRight, ExternalLink, KeyRound, Link2, Shield, SquarePen } from 'lu
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { LanguageSelector } from '../components/LanguageSelector'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+import { useLoadingIndicator } from '../lib/loadingIndicator'
 import { fetchAuthMe, extractEmailFromPrincipal, type ClientPrincipal } from '../lib/adminAuth'
 import { useI18n } from '../lib/i18n'
 import { AdminPageHeader } from './AdminPageHeader'
@@ -25,12 +27,12 @@ export function AdminDashboardRoute() {
     }
   }, [])
 
+  const showSessionLoader = useLoadingIndicator(meLoading)
+
   if (meLoading) {
-    return (
-      <div className="w-full space-y-4 py-10">
-        <div className="text-sm text-slate-600 dark:text-slate-300">{t('adminSessionChecking')}</div>
-      </div>
-    )
+    // Render nothing until the loader is due, so a warm session never flashes a spinner. Falling
+    // through here would flash the signed-out page instead.
+    return showSessionLoader ? <LoadingSpinner label={t('adminSessionChecking')} className="py-10" /> : null
   }
 
   if (!me) {

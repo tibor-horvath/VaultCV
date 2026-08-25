@@ -15,7 +15,9 @@ import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
 import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
+import { CvLoadingScreen } from '../components/CvLoadingScreen'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import { useLoadingIndicator } from '../lib/loadingIndicator'
 import { useTheme } from '../lib/themeContext'
 import { setStoredAccessCode } from '../lib/accessSession'
 import { fetchCv } from '../lib/api'
@@ -38,45 +40,6 @@ function sanitizePublicBasicsForLanding(input: CvData['basics'] | undefined): Cv
     email: undefined,
     mobile: undefined,
   }
-}
-
-const skeletonBar =
-  'animate-pulse bg-slate-200/90 dark:bg-slate-700/50'
-
-function LandingPublicPreviewSkeleton({ loadingLabel }: { loadingLabel: string }) {
-  return (
-    <div className="space-y-6" aria-busy="true" role="status">
-      <span className="sr-only">{loadingLabel}</span>
-      <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div className="mx-auto flex-shrink-0 sm:mx-0">
-            <div className={`h-48 w-48 rounded-full sm:h-56 sm:w-56 ${skeletonBar}`} />
-          </div>
-          <div className="min-w-0 flex-1 space-y-3">
-            <div className={`h-8 max-w-sm rounded-md ${skeletonBar} w-3/4`} />
-            <div className={`h-4 max-w-xs rounded-md ${skeletonBar} w-1/2`} />
-            <div className={`h-4 max-w-sm rounded-md ${skeletonBar} w-2/3`} />
-          </div>
-        </div>
-      </div>
-      <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-        <div className={`h-5 w-36 rounded-md ${skeletonBar}`} />
-        <div className="mt-4 space-y-2">
-          <div className={`h-4 w-full rounded-md ${skeletonBar}`} />
-          <div className={`h-4 w-[92%] rounded-md ${skeletonBar}`} />
-          <div className={`h-4 w-4/5 rounded-md ${skeletonBar}`} />
-        </div>
-      </div>
-      <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-        <div className={`h-5 w-44 rounded-md ${skeletonBar}`} />
-        <div className="mt-4 flex flex-wrap gap-2">
-          <div className={`h-6 w-16 rounded-md ${skeletonBar}`} />
-          <div className={`h-6 w-20 rounded-md ${skeletonBar}`} />
-          <div className={`h-6 w-[4.5rem] rounded-md ${skeletonBar}`} />
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export function LandingRoute() {
@@ -190,8 +153,21 @@ export function LandingRoute() {
     }
   }, [locale, openCv, tokenInput])
 
+  // A warm session resolves in a few ms; without this the probe would flash a loader every visit.
+  const showAccessLoader = useLoadingIndicator(urlTokenValidating || sessionProbePending)
+
   if (urlTokenValidating || sessionProbePending) {
-    return <LoadingSpinner label={urlTokenValidating ? t('loadingCv') : t('checkingAccess')} />
+    // Render nothing until the loader is due. Gating this branch on `showAccessLoader` instead
+    // would fall through and flash the whole landing page for the length of the delay.
+    if (!showAccessLoader) return null
+
+    // A share link is about to open the full CV, so preview its shape. The session probe is a
+    // short check that would only flash a skeleton, so it keeps the bare spinner.
+    return urlTokenValidating ? (
+      <CvLoadingScreen label={t('loadingCv')} />
+    ) : (
+      <LoadingSpinner label={t('checkingAccess')} />
+    )
   }
 
   const basics = sanitizePublicBasicsForLanding(publicCv.basics)
@@ -316,7 +292,7 @@ export function LandingRoute() {
             })}
           </div>
         ) : (
-          <LandingPublicPreviewSkeleton loadingLabel={t('loadingPublicPreview')} />
+          <CvLoadingScreen label={t('loadingPublicPreview')} fullPage={false} />
         )}
           </div>
 

@@ -31,7 +31,8 @@ import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
 import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
-import { LoadingSpinner } from '../components/LoadingSpinner'
+import { CvLoadingScreen } from '../components/CvLoadingScreen'
+import { useLoadingIndicator } from '../lib/loadingIndicator'
 import type { MessageKey } from '../i18n/messages'
 import { useTheme } from '../lib/themeContext'
 import {
@@ -274,6 +275,10 @@ export function CvRoute() {
   )
   const profilePhotoSrc = state.kind === 'ready' ? buildPhotoSrc(state.cv.basics) : undefined
 
+  // Skips the loader entirely on fast loads, and holds it briefly once shown so it cannot strobe.
+  // Everything the loader replaces has to wait on `showLoader`, or the two would overlap.
+  const showLoader = useLoadingIndicator(state.kind === 'loading')
+
   const unlockedStatus =
     unlockedCountdown ? (
       <SessionStatusBadge
@@ -308,9 +313,9 @@ export function CvRoute() {
         </Section>
       ) : null}
 
-      {state.kind === 'loading' ? <LoadingSpinner label={t('loadingCv')} /> : null}
+      {showLoader ? <CvLoadingScreen label={t('loadingCv')} /> : null}
 
-      {state.kind === 'error' ? (
+      {state.kind === 'error' && !showLoader ? (
         <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>
           <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             {t(state.messageKey)}
@@ -323,8 +328,8 @@ export function CvRoute() {
         </Section>
       ) : null}
 
-      {state.kind === 'ready' ? (
-        <div className="space-y-6">
+      {state.kind === 'ready' && !showLoader ? (
+        <div className="space-y-6 motion-safe:animate-fade-in">
           <div ref={basicsSentinelRef}>
             <BasicsCard
               basics={state.cv.basics}
