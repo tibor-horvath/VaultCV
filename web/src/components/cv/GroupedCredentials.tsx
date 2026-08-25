@@ -32,8 +32,8 @@ function formatCredentialIssuerLabel(issuer: string, t: (key: MessageKey) => str
 
 function credentialTitleClassName(withLink: boolean) {
   return withLink
-    ? 'font-semibold text-slate-900 underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500 dark:text-slate-100 dark:decoration-slate-700 dark:hover:decoration-slate-500'
-    : 'font-semibold text-slate-900 dark:text-slate-100'
+    ? 'vc-focusable inline-block rounded-sm text-sm font-semibold text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink-subtle'
+    : 'text-sm font-semibold text-ink'
 }
 
 export function GroupedCredentials(props: {
@@ -51,55 +51,53 @@ export function GroupedCredentials(props: {
   ]
 
   return (
-    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+    <div className="space-y-5 lg:grid lg:grid-cols-2 lg:gap-x-8 lg:gap-y-5 lg:space-y-0">
       {issuerKeys
         .map((issuer) => {
           const items = credentials?.filter((c) => normalizeIssuer(c.issuer) === issuer) ?? []
           if (!items.length) return null
           return (
             <div key={issuer}>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+              <h3 className="vc-eyebrow flex items-center gap-2">
                 <CredentialIssuerIcon issuer={toKnownIssuer(issuer)} />
                 {formatCredentialIssuerLabel(issuer, t)}
-              </div>
-              <div className="mt-2 divide-y divide-slate-200/60 dark:divide-slate-800/60">
+              </h3>
+              {/* Spacing, not rules: a divider inside one column of the grid stops mid-row and reads as a
+                  stray line rather than a separator. */}
+              <div className="mt-2 space-y-3">
                 {items.map((c) => {
                   const url = String(c.url ?? '').trim()
                   const hasLink = Boolean(url)
                   return (
-                    <article key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`} className="py-3.5">
-                      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-                        <div className="min-w-0">
-                          {hasLink ? (
-                            <a
-                              className={credentialTitleClassName(true)}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {c.label}
-                            </a>
-                          ) : (
-                            <div className={credentialTitleClassName(false)}>{c.label}</div>
-                          )}
-                          {showDates && (c.dateEarned || c.dateExpires) ? (
-                            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-                              {c.dateEarned ? (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                  {t('earned')} {c.dateEarned}
-                                </span>
-                              ) : null}
-                              {c.dateExpires ? (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <Calendar className="h-3.5 w-3.5 opacity-80" />
-                                  {t('expires')} {c.dateExpires}
-                                </span>
-                              ) : null}
-                            </div>
+                    <article key={`${c.issuer}:${c.label}:${c.url}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}`}>
+                      {hasLink ? (
+                        <a
+                          className={credentialTitleClassName(true)}
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {c.label}
+                        </a>
+                      ) : (
+                        <p className={credentialTitleClassName(false)}>{c.label}</p>
+                      )}
+                      {showDates && (c.dateEarned || c.dateExpires) ? (
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-ink-subtle">
+                          {c.dateEarned ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              {t('earned')} {c.dateEarned}
+                            </span>
+                          ) : null}
+                          {c.dateExpires ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              {t('expires')} {c.dateExpires}
+                            </span>
                           ) : null}
                         </div>
-                      </div>
+                      ) : null}
                     </article>
                   )
                 })}

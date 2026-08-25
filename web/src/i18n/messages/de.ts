@@ -62,6 +62,8 @@ export const deMessages: Partial<MessageCatalog> = {
   cvDataNotConfigured: 'CV-Daten sind nicht konfiguriert.',
   cvDataInvalidJson: 'CV-Daten enthalten ungültiges JSON.',
   invalidCvPayload: 'Ungültiger CV-Payload empfangen.',
+  clearStoredAccess: 'Gespeicherten Zugriff löschen',
+  skipToContent: 'Zum Inhalt springen',
   footerRights: 'Alle Rechte vorbehalten.',
   cookieDisclosure:
     'Diese Website verwendet ein technisch notwendiges sicheres Session-Cookie (cv_session), um den CV-Zugriff nach dem Entsperren aktiv zu halten. Es werden keine Analyse- oder Marketing-Cookies verwendet.',

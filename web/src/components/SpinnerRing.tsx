@@ -18,7 +18,7 @@ export function SpinnerRing({
       fill="none"
       aria-hidden="true"
     >
-      <circle cx="28" cy="28" r="25" strokeWidth={strokeWidth} className="stroke-slate-200 dark:stroke-slate-700" />
+      <circle cx="28" cy="28" r="25" strokeWidth={strokeWidth} className="stroke-line" />
       <circle
         cx="28"
         cy="28"
@@ -27,7 +27,7 @@ export function SpinnerRing({
         strokeLinecap="round"
         /* One dash longer than the 156.07 circumference draws a single ~92° arc with no seam. */
         strokeDasharray="40 118"
-        className="stroke-slate-900 dark:stroke-slate-100"
+        className="stroke-accent"
       />
     </svg>
   )

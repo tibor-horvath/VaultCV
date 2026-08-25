@@ -152,10 +152,10 @@ export function LanguageSelector({ allowedLocales }: { allowedLocales?: readonly
         aria-label={t('languageSelectorLabel')}
         aria-controls={listId}
         onClick={() => setIsOpen((current) => !current)}
-        className="inline-flex min-w-40 items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
+        className="vc-focusable inline-flex h-9 items-center gap-2 rounded-field border border-line bg-surface px-2.5 text-xs font-semibold text-ink-muted shadow-card hover:border-line-strong hover:bg-surface-muted hover:text-ink"
       >
         <LocaleRow option={selectedOption} selected={false} />
-        <ChevronDown className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-ink-subtle" aria-hidden="true" />
       </button>
 
       {isOpen ? (
@@ -164,7 +164,7 @@ export function LanguageSelector({ allowedLocales }: { allowedLocales?: readonly
           role="menu"
           aria-label={t('languageSelectorLabel')}
           onKeyDown={onMenuKeyDown}
-          className="absolute right-0 z-50 mt-2 min-w-52 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-1 shadow-lg dark:border-slate-700/80 dark:bg-slate-900"
+          className="absolute right-0 z-50 mt-2 min-w-52 origin-top-right overflow-hidden rounded-card border border-line bg-surface p-1 shadow-overlay motion-safe:animate-slide-down"
         >
           {visibleOptions.map((option, index) => {
             const selected = option.code === selectedOption.code
@@ -181,7 +181,7 @@ export function LanguageSelector({ allowedLocales }: { allowedLocales?: readonly
                 tabIndex={index === activeIndex ? 0 : -1}
                 onFocus={() => setActiveIndex(index)}
                 onClick={() => selectAt(index)}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="vc-focusable flex w-full items-center gap-2 rounded-field px-2.5 py-2 text-left text-xs text-ink-muted hover:bg-surface-muted hover:text-ink"
               >
                 <LocaleRow option={option} selected={selected} />
               </button>

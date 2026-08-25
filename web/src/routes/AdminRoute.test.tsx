@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AdminDashboardRoute } from './AdminDashboardRoute'
 import { LocaleProvider } from '../lib/i18n'
+import { ThemeProvider } from '../lib/themeContext'
 import { enMessages } from '../i18n/messages'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -41,7 +42,9 @@ function renderRoute() {
     mountedRoot!.render(
       <MemoryRouter>
         <LocaleProvider>
-          <AdminDashboardRoute />
+          <ThemeProvider>
+            <AdminDashboardRoute />
+          </ThemeProvider>
         </LocaleProvider>
       </MemoryRouter>,
     )

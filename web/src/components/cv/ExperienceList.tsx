@@ -1,16 +1,11 @@
 import type { CvExperience } from '../../types/cv'
 import { highlightChildKey, stableExperienceKey } from '../../lib/cvKeys'
-import { AtSign, Calendar, ExternalLink, Globe, MapPin } from 'lucide-react'
+import { Calendar, ExternalLink, Globe, MapPin } from 'lucide-react'
 import { SiLinkedinIcon } from '../icons/SimpleBrandIcons'
+import { LinkPill } from './LinkPill'
 import { SkillsChips } from './SkillsChips'
 import { useI18n } from '../../lib/i18n'
 import { inferLinkKind } from '../../lib/cvPresentation'
-
-const linkPillClassName =
-  'group inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:border-slate-700/70 dark:bg-slate-950/80 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus:ring-offset-slate-950'
-
-const calendarIconClass = 'h-3.5 w-3.5 shrink-0 opacity-80'
-const mapPinIconClass = 'h-3.5 w-3.5 shrink-0 opacity-80'
 
 function ExperienceLinkPills({ x }: { x: CvExperience }) {
   const links = (x.links ?? []).filter((link) => (link.label ?? '').trim() && (link.url ?? '').trim())
@@ -20,124 +15,71 @@ function ExperienceLinkPills({ x }: { x: CvExperience }) {
         const kind = inferLinkKind(link)
         const Icon = kind === 'linkedin' ? SiLinkedinIcon : kind === 'web' ? Globe : ExternalLink
         return (
-        <a
-          key={`${x.company}:${x.role}:${link.label}:${link.url}`}
-          className={linkPillClassName}
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`${x.company} ${link.label}`}
-        >
-          <Icon
-            className="h-3.5 w-3.5 shrink-0 opacity-80 transition-opacity group-hover:opacity-100"
-            aria-hidden="true"
+          <LinkPill
+            key={`${x.company}:${x.role}:${link.label}:${link.url}`}
+            href={link.url}
+            icon={Icon}
+            label={link.label}
+            ariaLabel={`${x.company} ${link.label}`}
           />
-          <span>{link.label}</span>
-          <ExternalLink
-            className="h-3.5 w-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
-            aria-hidden="true"
-          />
-        </a>
         )
       })}
     </>
   )
 }
 
-function ExperienceDateRange({ x }: { x: CvExperience }) {
-  const { t } = useI18n()
-  return (
-    <>
-      <Calendar className={calendarIconClass} aria-hidden="true" />
-      {x.start} – {x.end ?? t('present')}
-    </>
-  )
-}
-
-function ExperienceLocation({ location }: { location: string }) {
-  return (
-    <>
-      <MapPin className={mapPinIconClass} aria-hidden="true" />
-      {location}
-    </>
-  )
-}
-
-function ExperienceHeadline({ x, variant }: { x: CvExperience; variant: 'mobile' | 'desktop' }) {
-  if (variant === 'mobile') {
-    return (
-      <>
-        <div className="font-semibold text-slate-900 dark:text-slate-100">{x.role}</div>
-        <div className="inline-flex flex-wrap items-center gap-x-1.5 text-sm text-slate-700 dark:text-slate-300">
-          <AtSign className="h-3.5 w-3.5 shrink-0 self-center opacity-80" aria-hidden="true" />
-          <span className="font-semibold text-slate-900 dark:text-slate-100">{x.company}</span>
-        </div>
-      </>
-    )
-  }
-  return (
-    <div className="inline-flex flex-wrap items-baseline gap-x-1.5 font-semibold text-slate-900 dark:text-slate-100">
-      <span>{x.role}</span>
-      <AtSign className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
-      <span>{x.company}</span>
-    </div>
-  )
-}
-
+/**
+ * One role: title line, then a metadata row of dates, location and company links, then the
+ * highlights. A single responsive layout, where this used to be two full copies of the markup
+ * behind `sm:hidden` / `hidden sm:flex`.
+ */
 function ExperienceItem({ x }: { x: CvExperience }) {
   const { t } = useI18n()
   const rowKey = stableExperienceKey(x)
   const hasCompanyLinks = Boolean((x.links ?? []).some((link) => (link.label ?? '').trim() && (link.url ?? '').trim()))
 
   return (
-    <article className="py-3.5">
-      <div className="flex flex-col gap-1 sm:hidden">
-        <ExperienceHeadline x={x} variant="mobile" />
-        <div className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
-          <ExperienceDateRange x={x} />
-        </div>
+    <article className="py-4 first:pt-0 last:pb-0">
+      <h3 className="text-sm font-semibold text-ink">
+        {x.role}
+        <span className="text-ink-subtle"> · </span>
+        <span className="font-medium text-ink-muted">{x.company}</span>
+      </h3>
+
+      {/*
+        Dates sit with the other metadata rather than floated to the opposite edge: on a wide
+        column a right-aligned date ends up a long way from the role it belongs to.
+      */}
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="inline-flex items-center gap-1.5 text-xs tabular-nums text-ink-subtle">
+          <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {x.start} – {x.end ?? t('present')}
+        </span>
         {x.location ? (
-          <div className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
-            <ExperienceLocation location={x.location} />
-          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs text-ink-subtle">
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {x.location}
+          </span>
         ) : null}
-        {hasCompanyLinks ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <ExperienceLinkPills x={x} />
-          </div>
-        ) : null}
+        {hasCompanyLinks ? <ExperienceLinkPills x={x} /> : null}
       </div>
 
-      <div className="hidden flex-col gap-1 sm:flex">
-        <ExperienceHeadline x={x} variant="desktop" />
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-          <span className="inline-flex items-center gap-1.5">
-            <ExperienceDateRange x={x} />
-          </span>
-          {x.location ? (
-            <span className="inline-flex items-center gap-1.5">
-              <ExperienceLocation location={x.location} />
-            </span>
-          ) : null}
-          {hasCompanyLinks ? (
-            <span className="inline-flex flex-wrap items-center gap-2">
-              <ExperienceLinkPills x={x} />
-            </span>
-          ) : null}
-        </div>
-      </div>
       {x.highlights?.length ? (
-        <ul className="mt-3 list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-ink-muted">
           {x.highlights.map((h, i) => (
-            <li key={highlightChildKey(rowKey, i)}>{h}</li>
+            <li key={highlightChildKey(rowKey, i)} className="relative pl-4">
+              {/* A small dot rather than a list marker: it aligns with the text baseline and
+                  survives the wrap of a long highlight. */}
+              <span className="absolute left-0 top-[0.5625rem] h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
+              {h}
+            </li>
           ))}
         </ul>
       ) : null}
+
       {x.skills?.length ? (
         <div className="mt-3">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-            {t('skills')}
-          </div>
+          <p className="vc-eyebrow mb-2">{t('skills')}</p>
           <SkillsChips items={x.skills} />
         </div>
       ) : null}
@@ -147,7 +89,7 @@ function ExperienceItem({ x }: { x: CvExperience }) {
 
 export function ExperienceList({ items }: { items: CvExperience[] }) {
   return (
-    <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60">
+    <div className="divide-y divide-line">
       {items.map((x) => (
         <ExperienceItem key={stableExperienceKey(x)} x={x} />
       ))}

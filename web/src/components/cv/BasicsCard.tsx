@@ -1,9 +1,15 @@
 import type { CvBasics, CvLink } from '../../types/cv'
 import { useState, type ReactNode } from 'react'
-import { Mail, MapPin, Phone, Sparkles } from 'lucide-react'
+import { Mail, MapPin, Phone } from 'lucide-react'
 import { buildPhotoSrc, parseBasicsHeadline } from '../../lib/cvPresentation'
 import { BasicsLinksRow } from './BasicsLinksRow'
 import { useI18n } from '../../lib/i18n'
+import { Card } from '../ui/Card'
+import { cn } from '../ui/cn'
+
+/** Location / email / phone share one dense meta row instead of three stacked lines. */
+const metaItemClass = 'inline-flex items-center gap-1.5 text-sm text-ink-muted'
+const metaLinkClass = `vc-focusable rounded-sm ${metaItemClass} hover:text-ink`
 
 export function BasicsCard({
   basics,
@@ -32,104 +38,100 @@ export function BasicsCard({
   // the rest of the card has already faded up.
   const [isPhotoLoaded, setIsPhotoLoaded] = useState(false)
   const hasMobile = Boolean(basics.mobile?.trim())
+  const hasMeta = Boolean(basics.location || basics.email || hasMobile)
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6">
-      {topStatus ? <div className="mb-3 flex w-full justify-center">{topStatus}</div> : null}
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+    <Card>
+      {topStatus ? <div className="mb-4 flex w-full justify-center">{topStatus}</div> : null}
+
+      <div className="flex flex-col gap-5 sm:flex-row sm:gap-6">
         {showPhoto ? (
-          <div className="mx-auto flex-shrink-0 sm:mx-0">
-            <img
-              src={photoSrc}
-              alt={basics.photoAlt ?? `${basics.name} profile photo`}
-              className={`h-48 w-48 rounded-full object-cover shadow-none ring-0 transition-opacity duration-500 motion-reduce:transition-none sm:h-56 sm:w-56 ${
-                isPhotoLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              loading="lazy"
-              decoding="async"
-              // A cached image can finish before React attaches `onLoad`, which would leave it at
-              // opacity 0 forever.
-              ref={(node) => {
-                if (node?.complete) setIsPhotoLoaded(true)
-              }}
-              onLoad={() => setIsPhotoLoaded(true)}
-              // Reveal on failure too, otherwise a broken or blocked image would sit at opacity 0
-              // forever instead of showing the browser's own missing-image affordance.
-              onError={() => setIsPhotoLoaded(true)}
-            />
+          <div className="mx-auto shrink-0 sm:mx-0">
+            {/*
+              Reserved box at the final size: the placeholder holds the layout while the photo
+              decodes, so the name and summary never jump when it lands.
+            */}
+            <div className="h-40 w-40 overflow-hidden rounded-full bg-surface-muted ring-1 ring-line sm:h-48 sm:w-48">
+              <img
+                src={photoSrc}
+                alt={basics.photoAlt ?? `${basics.name} profile photo`}
+                className={cn(
+                  'h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none',
+                  isPhotoLoaded ? 'opacity-100' : 'opacity-0',
+                )}
+                loading="lazy"
+                decoding="async"
+                // A cached image can finish before React attaches `onLoad`, which would leave it at
+                // opacity 0 forever.
+                ref={(node) => {
+                  if (node?.complete) setIsPhotoLoaded(true)
+                }}
+                onLoad={() => setIsPhotoLoaded(true)}
+                // Reveal on failure too, otherwise a broken or blocked image would sit at opacity 0
+                // forever instead of showing the browser's own missing-image affordance.
+                onError={() => setIsPhotoLoaded(true)}
+              />
+            </div>
           </div>
         ) : null}
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
-                {basics.name}
-              </h1>
-              {role ? (
-                <div className="mt-1 text-sm font-medium text-slate-600 dark:text-slate-300">{role}</div>
-              ) : null}
+              <h1 className="text-2xl font-semibold text-ink sm:text-3xl">{basics.name}</h1>
+              {role ? <p className="mt-1 text-base font-medium text-ink-muted">{role}</p> : null}
               {chip ? (
-                <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/75 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-300">
-                  <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {chip}
-                </div>
+                <p className="vc-eyebrow mt-2 text-ink-subtle">{chip}</p>
               ) : null}
             </div>
 
-            {headerRight ? <div className="pt-1">{headerRight}</div> : null}
+            {headerRight ? <div className="shrink-0">{headerRight}</div> : null}
           </div>
 
-          {basics.location ? (
-            <div className="mt-2 flex items-center gap-2 text-sm leading-none text-slate-600 dark:text-slate-400">
-              <MapPin className="h-[1em] w-[1em] shrink-0 translate-y-[0.08em]" aria-hidden="true" />
-              <span>{basics.location}</span>
+          {hasMeta ? (
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              {basics.location ? (
+                <span className={metaItemClass}>
+                  <MapPin className="h-4 w-4 shrink-0 text-ink-subtle" aria-hidden="true" />
+                  {basics.location}
+                </span>
+              ) : null}
+
+              {basics.email ? (
+                <a href={`mailto:${basics.email}`} className={metaLinkClass}>
+                  <Mail className="h-4 w-4 shrink-0 text-ink-subtle" aria-hidden="true" />
+                  {basics.email}
+                </a>
+              ) : null}
+
+              {hasMobile ? (
+                isPhoneVisible ? (
+                  <a href={`tel:${String(basics.mobile).trim()}`} className={metaLinkClass}>
+                    <Phone className="h-4 w-4 shrink-0 text-ink-subtle" aria-hidden="true" />
+                    {String(basics.mobile).trim()}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsPhoneVisible(true)}
+                    className={cn(metaLinkClass, 'underline decoration-line-strong underline-offset-4')}
+                  >
+                    <Phone className="h-4 w-4 shrink-0 text-ink-subtle" aria-hidden="true" />
+                    {t('revealPhone')}
+                  </button>
+                )
+              ) : null}
             </div>
-          ) : null}
-
-          {basics.email ? (
-            <a
-              href={`mailto:${basics.email}`}
-              className="mt-2 flex w-fit items-center gap-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-            >
-              <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {basics.email}
-            </a>
-          ) : null}
-
-          {hasMobile ? (
-            isPhoneVisible ? (
-              <a
-                href={`tel:${String(basics.mobile).trim()}`}
-                className="mt-2 flex w-fit items-center gap-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-              >
-                <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {String(basics.mobile).trim()}
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsPhoneVisible(true)}
-                className="mt-2 inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900"
-                aria-label={t('revealPhone')}
-              >
-                <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {t('revealPhone')}
-              </button>
-            )
           ) : null}
 
           {basics.summary ? (
-            <p className="mt-4 max-w-3xl text-pretty text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              {basics.summary}
-            </p>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-muted">{basics.summary}</p>
           ) : null}
 
-          <BasicsLinksRow links={links} />
-          {belowLinks ? <div className="mt-3 sm:hidden">{belowLinks}</div> : null}
+          <BasicsLinksRow links={links} className="mt-5 flex flex-wrap gap-2" />
+          {belowLinks ? <div className="mt-4 sm:hidden">{belowLinks}</div> : null}
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
-

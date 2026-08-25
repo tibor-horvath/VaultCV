@@ -88,11 +88,11 @@ export function IconSelect(props: {
             setActiveIndex(options.length - 1)
           }
         }}
-        className="flex w-full items-center justify-between rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+        className="flex w-full items-center justify-between vc-field"
       >
         <span className="inline-flex items-center gap-2 truncate">
           {selected?.icon ? <span className="shrink-0">{selected.icon}</span> : null}
-          <span className={selected ? '' : 'text-slate-400 dark:text-slate-500'}>{selected?.label ?? placeholder}</span>
+          <span className={selected ? '' : 'text-ink-subtle'}>{selected?.label ?? placeholder}</span>
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
       </button>
@@ -103,7 +103,7 @@ export function IconSelect(props: {
           role="listbox"
           aria-label={ariaLabel}
           aria-activedescendant={open ? `${listboxId}-option-${activeIndex}` : undefined}
-          className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-950"
+          className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-field border border-line bg-surface p-1 shadow-overlay"
         >
           {options.map((option, index) => (
             <button
@@ -148,8 +148,8 @@ export function IconSelect(props: {
               }}
               className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${
                 option.value === value
-                  ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-                  : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900/70'
+                  ? 'bg-surface-muted text-ink'
+                  : 'text-ink-muted hover:bg-surface-muted'
               }`}
             >
               {option.icon ? <span className="shrink-0">{option.icon}</span> : null}

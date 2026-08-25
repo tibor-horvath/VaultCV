@@ -50,7 +50,7 @@ export function ConfirmButton(props: {
 
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[1px]"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[1px]"
           onMouseDown={(event) => {
             if (event.target !== event.currentTarget) return
             setOpen(false)
@@ -88,16 +88,16 @@ export function ConfirmButton(props: {
                 first.focus()
               }
             }}
-            className="relative w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-950"
+            className="relative w-full max-w-sm rounded-card border border-line bg-surface p-5 shadow-overlay"
           >
-            <div id={titleId} className="text-sm font-semibold text-slate-900 dark:text-white">
+            <div id={titleId} className="text-sm font-semibold text-ink">
               <span className="inline-flex items-center gap-2">
-                <TriangleAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
+                <TriangleAlert className="h-4 w-4 shrink-0 text-caution" />
                 {confirmTitle}
               </span>
             </div>
             {confirmDescription ? (
-              <div id={descriptionId} className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              <div id={descriptionId} className="mt-2 text-sm text-ink-muted">
                 {confirmDescription}
               </div>
             ) : null}
@@ -110,7 +110,7 @@ export function ConfirmButton(props: {
                   triggerRef.current?.focus()
                 }}
                 ref={cancelButtonRef}
-                className="rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/60"
+                className="rounded-field border border-line px-3 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-muted"
               >
                 {resolvedCancelLabel}
               </button>
@@ -124,7 +124,7 @@ export function ConfirmButton(props: {
                 }}
                 className={
                   confirmClassName ??
-                  'rounded-lg border border-red-300/70 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-200 dark:hover:bg-red-950/40'
+                  'rounded-field border border-red-300/70 px-3 py-1.5 text-xs font-semibold text-critical-soft-ink hover:bg-critical-soft'
                 }
               >
                 {resolvedConfirmLabel}

@@ -5,6 +5,9 @@ import { useIsPageLoading } from '../lib/pageLoading'
 import { getBrand } from '../lib/brand'
 import { useI18n } from '../lib/i18n'
 
+/** Anchor the skip link jumps to, and the landmark screen readers land in. */
+const MAIN_ID = 'main-content'
+
 export function AppShell() {
   const { view } = useAppView()
   const isPageLoading = useIsPageLoading()
@@ -23,51 +26,75 @@ export function AppShell() {
         ? 'max-w-6xl'
         : view === 'landing'
           ? 'max-w-3xl'
-          : 'max-w-6xl'
+          : 'max-w-5xl'
   const currentYear = new Date().getFullYear()
   const brand = getBrand()
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[radial-gradient(90rem_55rem_at_15%_-10%,rgba(56,189,248,0.12),transparent),radial-gradient(70rem_42rem_at_95%_5%,rgba(139,92,246,0.14),transparent),linear-gradient(to_bottom_right,#f8fbff,#f2f6fd_45%,#eef3ff)] dark:bg-[radial-gradient(80rem_48rem_at_10%_-5%,rgba(56,189,248,0.08),transparent),radial-gradient(70rem_44rem_at_100%_0%,rgba(139,92,246,0.09),transparent),linear-gradient(to_bottom_right,#020617,#060b16_45%,#090f1f)]">
+    <div className="relative flex min-h-dvh flex-col bg-canvas">
+      {/*
+        Backdrop wash. One accent hue at low opacity instead of the previous cyan + violet pair —
+        it reads as depth rather than decoration, and never competes with content for attention.
+        Fixed and non-scrolling so long CV pages do not drag a gradient past the reader.
+      */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(60rem_32rem_at_50%_-8rem,rgb(var(--vc-accent)/0.10),transparent_70%)]"
+      />
+
+      {/*
+        Parked just off the top edge and slid in on focus, rather than toggling `sr-only`: the
+        toggle relies on two same-weight utilities winning a specificity race, and it loses
+        silently when it does not. This is always in the tab order and always styled.
+      */}
+      <a
+        href={`#${MAIN_ID}`}
+        className="vc-focusable fixed left-4 top-4 z-50 inline-flex h-9 -translate-y-20 items-center rounded-field border border-line bg-surface px-4 text-sm font-semibold text-ink shadow-raised focus:translate-y-0"
+      >
+        {t('skipToContent')}
+      </a>
+
       <main
-        className={`relative mx-auto flex w-full flex-1 flex-col px-4 pb-14 pt-6 sm:px-6 lg:px-8 ${contentMaxClass}`}
+        id={MAIN_ID}
+        className={`relative mx-auto flex w-full flex-1 flex-col px-4 pb-12 pt-5 sm:px-6 sm:pt-6 lg:px-8 ${contentMaxClass}`}
       >
         <Outlet />
       </main>
 
       {isPdfExport || isPageLoading ? null : (
-      <footer className={`relative mx-auto w-full px-4 pb-6 sm:px-6 lg:px-8 ${contentMaxClass}`}>
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-4 text-center text-sm text-slate-600 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 dark:text-slate-300">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <a
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"
-              href={brand.repoUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <SiGithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{brand.displayName}</span>
-            </a>
-            <a
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/80 dark:bg-slate-950/75 dark:text-slate-200 dark:hover:bg-slate-900"
-              href={brand.linkedInUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <SiLinkedinIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>LinkedIn</span>
-            </a>
+        <footer className={`relative mx-auto w-full px-4 pb-6 sm:px-6 lg:px-8 ${contentMaxClass}`}>
+          <div className="flex flex-col items-center gap-3 pt-6 text-center">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <a
+                className="vc-focusable inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink"
+                href={brand.repoUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <SiGithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{brand.displayName}</span>
+              </a>
+              <span className="h-3 w-px bg-line" aria-hidden="true" />
+              <a
+                className="vc-focusable inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink"
+                href={brand.linkedInUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <SiLinkedinIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>LinkedIn</span>
+              </a>
+              <span className="h-3 w-px bg-line" aria-hidden="true" />
+              <p className="text-xs text-ink-subtle">
+                &copy; {currentYear} {brand.copyrightName}. {t('footerRights')}
+              </p>
+            </div>
+            <p className="max-w-2xl text-2xs leading-relaxed text-ink-subtle">{t('cookieDisclosure')}</p>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            &copy; {currentYear} {brand.copyrightName}. {t('footerRights')}
-          </p>
-          <p className="max-w-3xl text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{t('cookieDisclosure')}</p>
-        </div>
-      </footer>
+        </footer>
       )}
 
       <ScrollRestoration />
     </div>
   )
 }
-

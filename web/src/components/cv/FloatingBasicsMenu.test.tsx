@@ -21,15 +21,13 @@ const links = [
   { label: 'LinkedIn', url: 'https://linkedin.com/in/jane' },
 ]
 
-function renderMenu(visible: boolean) {
+function renderMenu(visible: boolean, wrap: (node: React.ReactNode) => React.ReactNode = (node) => node) {
   mountedContainer = document.createElement('div')
   document.body.appendChild(mountedContainer)
   mountedRoot = createRoot(mountedContainer)
   act(() => {
     mountedRoot!.render(
-      <LocaleProvider>
-        <FloatingBasicsMenu basics={basics} links={links} visible={visible} />
-      </LocaleProvider>,
+      <LocaleProvider>{wrap(<FloatingBasicsMenu basics={basics} links={links} visible={visible} />)}</LocaleProvider>,
     )
   })
 }
@@ -66,5 +64,16 @@ describe('FloatingBasicsMenu', () => {
     const anchors = Array.from(root.querySelectorAll('a'))
     expect(anchors.length).toBeGreaterThan(0)
     expect(anchors.every((anchor) => anchor.tabIndex === 0)).toBe(true)
+  })
+
+  it('mounts on <body>, not inside the route tree', () => {
+    // `position: fixed` resolves against the nearest ancestor with a transform/filter/contain, so
+    // a bar rendered inside the CV's animated wrapper was being laid out against the content
+    // column instead of the viewport. The portal is what keeps it pinned to the window.
+    renderMenu(true, (node) => <div className="motion-safe:animate-fade-in">{node}</div>)
+
+    const root = document.querySelector('[data-testid="floating-basics-menu"]') as HTMLDivElement
+    expect(root.parentElement).toBe(document.body)
+    expect(mountedContainer!.contains(root)).toBe(false)
   })
 })

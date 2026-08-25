@@ -30,9 +30,9 @@ export function LoadingSpinner({ label, labelHidden = false, className = 'py-24'
     >
       <span className="relative inline-flex h-14 w-14 items-center justify-center">
         <SpinnerRing className="absolute inset-0 h-full w-full" />
-        <FileText className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
+        <FileText className="h-5 w-5 text-ink-subtle" aria-hidden="true" />
       </span>
-      <p className={`text-center text-sm text-slate-600 dark:text-slate-400${labelHidden ? ' sr-only' : ''}`}>
+      <p className={`text-center text-sm text-ink-muted${labelHidden ? ' sr-only' : ''}`}>
         {label}
       </p>
     </div>

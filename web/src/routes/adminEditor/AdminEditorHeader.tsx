@@ -44,21 +44,21 @@ export function AdminEditorHeader(props: {
           <Link
             to="/admin"
             onClick={(event) => confirmIfDirty(event)}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="vc-focusable inline-flex h-8 items-center gap-1.5 rounded-field border border-line bg-surface px-2.5 text-xs font-semibold text-ink-muted shadow-card hover:border-line-strong hover:bg-surface-muted hover:text-ink"
           >
             <Shield className="h-3.5 w-3.5 shrink-0" /> {t('adminDashboard')}
           </Link>
           <Link
             to="/admin/share"
             onClick={(event) => confirmIfDirty(event)}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="vc-focusable inline-flex h-8 items-center gap-1.5 rounded-field border border-line bg-surface px-2.5 text-xs font-semibold text-ink-muted shadow-card hover:border-line-strong hover:bg-surface-muted hover:text-ink"
           >
             <Link2 className="h-3.5 w-3.5 shrink-0" /> {t('adminShareCv')}
           </Link>
           <LanguageSelector />
           <label
             htmlFor={localeSelectId}
-            className="flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300"
+            className="flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-field border border-line px-3 py-1.5 text-xs font-medium text-ink-muted"
           >
             <span className="inline-flex min-w-0 items-center gap-1">
               <Languages className="h-3.5 w-3.5 shrink-0" /> {t('adminCvLocale')}
@@ -67,7 +67,7 @@ export function AdminEditorHeader(props: {
               id={localeSelectId}
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
-              className="rounded-lg border border-slate-300/70 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className="rounded-field border border-line bg-surface px-2 py-1.5 text-xs font-semibold text-ink-muted"
             >
               {locales.map((l) => (
                 <option key={l.locale} value={l.locale}>
@@ -85,13 +85,13 @@ export function AdminEditorHeader(props: {
             unpressedLabel={t('adminDisabled')}
           />
           {addableLocales.length ? (
-            <div className="flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">
+            <div className="flex items-center gap-2 rounded-field border border-line px-3 py-1.5 text-xs font-medium text-ink-muted">
               <label htmlFor={addLocaleSelectId}>{t('adminAddLanguage')}</label>
               <select
                 id={addLocaleSelectId}
                 value={newLocale}
                 onChange={(e) => setNewLocale(e.target.value)}
-                className="rounded-lg border border-slate-300/70 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                className="rounded-field border border-line bg-surface px-2 py-1.5 text-xs font-semibold text-ink-muted"
               >
                 <option value="">{t('adminAuto')}</option>
                 {addableLocales.map((l) => (
@@ -108,7 +108,7 @@ export function AdminEditorHeader(props: {
                   onAddLocale(newLocale)
                   setNewLocale('')
                 }}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-300/70 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+                className="vc-focusable inline-flex h-7 items-center gap-1 rounded-field border border-line bg-surface px-2 text-xs font-semibold text-ink-muted shadow-card hover:border-line-strong hover:bg-surface-muted hover:text-ink disabled:pointer-events-none disabled:opacity-55"
               >
                 {t('adminAdd')}
               </button>
@@ -118,7 +118,7 @@ export function AdminEditorHeader(props: {
             <button
               type="button"
               onClick={onOpenReorderSheet}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300/70 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 lg:hidden dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-900/90"
+              className="inline-flex items-center gap-2 rounded-field border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted shadow-card transition hover:bg-surface-muted lg:hidden"
             >
               <GripVertical className="h-3.5 w-3.5 shrink-0" /> {t('adminReorderSections')}
             </button>
@@ -127,13 +127,13 @@ export function AdminEditorHeader(props: {
             type="button"
             disabled={loading || saving}
             onClick={onSave}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="vc-focusable inline-flex h-8 items-center gap-1.5 rounded-field border border-line bg-surface px-2.5 text-xs font-semibold text-ink-muted shadow-card hover:border-line-strong hover:bg-surface-muted hover:text-ink disabled:opacity-55"
           >
             {saving ? <LoaderCircle className="h-4 w-4 shrink-0 motion-safe:animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}{' '}
             {saving ? t('adminSaving') : t('adminSave')}
           </button>
           <a
-            className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 underline dark:text-slate-300"
+            className="inline-flex items-center gap-1 text-xs font-medium text-ink-muted underline"
             href="/.auth/logout"
             onClick={(event) => confirmIfDirty(event)}
           >

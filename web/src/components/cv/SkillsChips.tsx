@@ -1,15 +1,13 @@
+import { Chip } from '../ui/Badge'
+
 export function SkillsChips({ items }: { items: string[] }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {items.map((s) => (
-        <span
-          key={s}
-          className="inline-flex items-center justify-center rounded-md border border-slate-200/80 bg-slate-100/90 px-3 py-1 text-xs font-medium leading-none text-slate-700 transition-colors hover:bg-slate-200/70 dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200 dark:hover:bg-slate-800/85"
-        >
+        <Chip key={s} className="px-2.5 py-1.5">
           {s}
-        </span>
+        </Chip>
       ))}
     </div>
   )
 }
-

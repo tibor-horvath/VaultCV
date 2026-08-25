@@ -309,20 +309,20 @@ export function AdminEditorPage(props: {
   if (!me) {
     return (
       <div className="w-full space-y-6 py-10">
-        <div className="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+        <div className="rounded-card border border-line bg-surface p-6 shadow-card">
+          <div className="flex items-center gap-2 text-ink">
             <Shield className="h-5 w-5" />
             <div className="text-lg font-semibold">{t('adminEditor')}</div>
           </div>
-          <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">{t('adminEditorSignInHint')}</div>
+          <div className="mt-2 text-sm text-ink-muted">{t('adminEditorSignInHint')}</div>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <a
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="vc-focusable inline-flex h-11 items-center justify-center gap-2 rounded-field bg-accent px-5 text-sm font-semibold text-accent-ink shadow-card hover:bg-accent-hover active:translate-y-px"
               href="/.auth/login/aad"
             >
               <KeyRound className="h-4 w-4" /> {t('adminSignIn')} <ExternalLink className="h-4 w-4 opacity-80" />
             </a>
-            <Link className="text-xs font-medium text-slate-600 underline underline-offset-4 dark:text-slate-300" to="/">
+            <Link className="text-xs font-medium text-ink-muted underline underline-offset-4" to="/">
               {t('adminBackToSite')}
             </Link>
           </div>
@@ -334,20 +334,20 @@ export function AdminEditorPage(props: {
   if (!isAdmin) {
     return (
       <div className="w-full space-y-6 py-10">
-        <div className="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+        <div className="rounded-card border border-line bg-surface p-6 shadow-card">
+          <div className="flex items-center gap-2 text-ink">
             <Shield className="h-5 w-5" />
             <div className="text-lg font-semibold">{t('adminEditor')}</div>
           </div>
-          <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+          <div className="mt-2 text-sm text-ink-muted">
             {t('adminNoRole').replace('{email}', me.userDetails ?? t('adminUnknownUser'))}
           </div>
-          <div className="mt-4 rounded-2xl border border-slate-200/70 bg-white/70 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/20 dark:text-slate-300">
+          <div className="vc-card-muted mt-4 p-4 text-xs text-ink-muted">
             {t('adminRoleAssignmentHint')}
           </div>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <a
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="vc-focusable inline-flex h-11 items-center justify-center gap-2 rounded-field bg-accent px-5 text-sm font-semibold text-accent-ink shadow-card hover:bg-accent-hover active:translate-y-px"
               href="/.auth/me"
               target="_blank"
               rel="noreferrer"
@@ -359,7 +359,7 @@ export function AdminEditorPage(props: {
               onClick={() => {
                 window.location.href = '/.auth/logout'
               }}
-              className="text-xs font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+              className="text-xs font-medium text-ink-muted underline underline-offset-4 hover:text-ink"
             >
               {t('adminSignOut')}
             </button>
@@ -393,7 +393,7 @@ export function AdminEditorPage(props: {
           tabIndex={-1}
           role="alert"
           aria-live="assertive"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 outline-none dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
+          className="rounded-field border border-critical/25 bg-critical-soft px-4 py-3 text-sm text-critical-soft-ink outline-none"
         >
           {error}
         </div>
@@ -402,7 +402,7 @@ export function AdminEditorPage(props: {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
+          className="rounded-field border border-positive/25 bg-positive-soft px-4 py-3 text-sm text-positive-soft-ink"
         >
           {status}
         </div>
@@ -411,7 +411,7 @@ export function AdminEditorPage(props: {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+          className="rounded-field border border-line bg-surface px-4 py-3 text-sm text-ink-muted"
         >
           <span className="inline-flex items-center gap-2">
             <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" /> {t('adminSavingProfile')}
@@ -422,7 +422,7 @@ export function AdminEditorPage(props: {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+          className="rounded-field border border-line bg-surface px-4 py-3 text-sm text-ink-muted"
         >
           <span className="inline-flex items-center gap-2">
             <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" /> {t('adminLoadingProfileEditor')}
@@ -471,19 +471,19 @@ export function AdminEditorPage(props: {
               type="button"
               disabled={loading || saving}
               onClick={onSave}
-              className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(15,23,42,0.55)] ring-1 ring-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:ring-white/20"
+              className="inline-flex items-center gap-2 rounded-card bg-accent px-4 py-3 text-sm font-semibold text-accent-ink shadow-raised ring-1 ring-line/10 transition hover:bg-accent-hover disabled:opacity-55"
             >
               {saving ? <LoaderCircle className="h-4 w-4 shrink-0 motion-safe:animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
               {saving ? t('adminSaving') : t('adminSave')}
             </button>
           </div>
 
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 md:hidden">
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
             <button
               type="button"
               disabled={loading || saving}
               onClick={onSave}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="vc-focusable inline-flex h-11 w-full items-center justify-center gap-2 rounded-field bg-accent px-4 text-sm font-semibold text-accent-ink shadow-card hover:bg-accent-hover active:translate-y-px disabled:pointer-events-none disabled:opacity-55"
             >
               {saving ? <LoaderCircle className="h-4 w-4 shrink-0 motion-safe:animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
               {saving ? t('adminSaving') : t('adminSave')}

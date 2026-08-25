@@ -22,7 +22,7 @@ export function DragHandle({ label, className }: { label?: string; className?: s
       {...ctx?.attributes}
       {...ctx?.listeners}
       className={[
-        'flex h-6 w-6 shrink-0 cursor-grab items-center justify-center rounded text-slate-400 opacity-0 touch-none transition-opacity hover:text-slate-600 focus:opacity-100 focus:outline-none group-hover:opacity-100 active:cursor-grabbing dark:text-slate-500 dark:hover:text-slate-300',
+        'flex h-6 w-6 shrink-0 cursor-grab items-center justify-center rounded text-ink-subtle opacity-0 touch-none transition-opacity hover:text-ink-muted focus:opacity-100 group-hover:opacity-100 active:cursor-grabbing',
         className,
       ]
         .filter(Boolean)
