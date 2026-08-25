@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/tibor-horvath/VaultCV/compare/v1.5.0...v1.6.0) (2026-08-25)
+
+
+### Features
+
+* update styling and structure across admin editor components ([#62](https://github.com/tibor-horvath/VaultCV/issues/62)) ([fe16c4c](https://github.com/tibor-horvath/VaultCV/commit/fe16c4ce10b64126e0cf8d0ff0508056124add42))
+
 ## [1.5.0](https://github.com/tibor-horvath/VaultCV/compare/v1.4.0...v1.5.0) (2026-08-25)
 
 
