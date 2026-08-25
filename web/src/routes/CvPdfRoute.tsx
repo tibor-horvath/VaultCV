@@ -5,6 +5,7 @@ import { PDFViewer } from '@react-pdf/renderer'
 import { CvPdfDocument } from '../components/cv/pdf/document/CvPdfDocument'
 import { Section } from '../components/cv/Section'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import { useLoadingIndicator } from '../lib/loadingIndicator'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
 import { buildPhotoSrc } from '../lib/cvPresentation'
 import { registerPdfFonts } from '../lib/pdf/fonts'
@@ -33,6 +34,7 @@ export default function CvPdfRoute() {
   const previewCv = useMemo(() => (pdfDevPreview ? getMockCv(locale) : null), [pdfDevPreview, locale])
   const cvReady = pdfDevPreview ? Boolean(previewCv) : state.kind === 'ready'
   const cvData = pdfDevPreview && previewCv ? previewCv : state.kind === 'ready' ? state.cv : null
+  const showLoader = useLoadingIndicator(!pdfDevPreview && state.kind === 'loading')
 
   useEffect(() => {
     registerPdfFonts()
@@ -124,9 +126,9 @@ export default function CvPdfRoute() {
         </Section>
       ) : null}
 
-      {!pdfDevPreview && state.kind === 'loading' ? <LoadingSpinner label={t('loadingCv')} /> : null}
+      {showLoader ? <LoadingSpinner label={t('loadingCv')} /> : null}
 
-      {!pdfDevPreview && state.kind === 'error' ? (
+      {!pdfDevPreview && state.kind === 'error' && !showLoader ? (
         <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>
           <div className="text-sm text-slate-700 dark:text-slate-300">
             {t(state.messageKey)}

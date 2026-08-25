@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, Trash2, X, Check, ZoomIn, ZoomOut } from 'lucide-react'
+import { Camera, Check, LoaderCircle, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useI18n } from '../../lib/i18n'
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2 MB
@@ -455,11 +455,13 @@ export function ProfileImageUpload({ hasProfileImage, onChange }: ProfileImageUp
             </div>
           )}
           {isLoading ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
-              <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
+            <div
+              className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40"
+              role="status"
+              aria-live="polite"
+            >
+              <LoaderCircle className="h-4 w-4 text-white motion-safe:animate-spin" aria-hidden="true" />
+              <span className="sr-only">{t('adminWorking')}</span>
             </div>
           ) : null}
         </div>

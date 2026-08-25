@@ -129,7 +129,7 @@ export function AdminEditorHeader(props: {
             onClick={onSave}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
           >
-            {saving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}{' '}
+            {saving ? <LoaderCircle className="h-4 w-4 shrink-0 motion-safe:animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}{' '}
             {saving ? t('adminSaving') : t('adminSave')}
           </button>
           <a

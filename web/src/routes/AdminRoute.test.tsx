@@ -103,6 +103,31 @@ describe('AdminDashboardRoute', () => {
     expect(links).toContain('/admin/share')
   })
 
+  it('shows a spinner only once the session check outlasts the anti-flash delay', () => {
+    vi.useFakeTimers()
+    try {
+      vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+
+      renderRoute()
+
+      // A session check that resolves quickly must not flash a loader at all.
+      expect(document.querySelector('[role="status"]')).toBeNull()
+      // ...but nor may it fall through and flash the signed-out page.
+      expect(document.body.textContent).not.toContain(enMessages.adminSignIn)
+
+      act(() => {
+        vi.advanceTimersByTime(250)
+      })
+
+      const status = document.querySelector('[role="status"]')
+      expect(status?.getAttribute('aria-busy')).toBe('true')
+      expect(status?.textContent).toContain(enMessages.adminSessionChecking)
+      expect(status?.querySelector('[class~="motion-safe:animate-spin"]')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('does not render share-link table on dashboard', async () => {
     renderRoute()
     await flushEffects()

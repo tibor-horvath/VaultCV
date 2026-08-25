@@ -20,6 +20,8 @@ import {
   X,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+import { useLoadingIndicator } from '../lib/loadingIndicator'
 import { redirectToLogin } from '../lib/authRedirect'
 import { useI18n } from '../lib/i18n'
 import { fetchAuthMe, extractEmailFromPrincipal, readJsonOrNull, toErrorMessage, type ClientPrincipal } from '../lib/adminAuth'
@@ -251,14 +253,12 @@ export function AdminShareRoute() {
     }
   }
 
+  const showSessionLoader = useLoadingIndicator(meLoading)
+
   if (meLoading) {
-    return (
-      <div className="w-full space-y-4 py-10">
-        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-          <LoaderCircle className="h-4 w-4 animate-spin" /> {t('adminSessionChecking')}
-        </div>
-      </div>
-    )
+    // Render nothing until the loader is due, so a warm session never flashes a spinner. Falling
+    // through here would flash the signed-out page instead.
+    return showSessionLoader ? <LoadingSpinner label={t('adminSessionChecking')} className="py-10" /> : null
   }
 
   if (!me) {
@@ -517,8 +517,12 @@ export function AdminShareRoute() {
               disabled={loading}
               className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:translate-y-0 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
             >
-              {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-              {t('adminCreate')}
+              {loading ? (
+                <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
+              ) : (
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+              )}
+              {loading ? t('adminWorking') : t('adminCreate')}
             </button>
           </div>
         </form>
@@ -622,7 +626,7 @@ export function AdminShareRoute() {
             </button>
             {loading ? (
               <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> {t('adminWorking')}
+                <LoaderCircle className="h-3.5 w-3.5 motion-safe:animate-spin" /> {t('adminWorking')}
               </div>
             ) : null}
           </div>

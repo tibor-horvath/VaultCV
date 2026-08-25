@@ -40,9 +40,22 @@ describe('LoadingSpinner', () => {
     expect(status?.getAttribute('aria-busy')).toBe('true')
     expect(status?.textContent).toBe('Verifying access and loading CV...')
 
-    const spinner = status?.querySelector('.animate-spin')
-    expect(spinner).not.toBeNull()
-    expect(spinner?.getAttribute('aria-hidden')).toBe('true')
+    const ring = status?.querySelector('svg[class~="motion-safe:animate-spin"]')
+    expect(ring).not.toBeNull()
+    expect(ring?.getAttribute('aria-hidden')).toBe('true')
+    // A track circle plus one round-capped arc — no hard border seam.
+    const arc = ring?.querySelectorAll('circle')[1]
+    expect(arc?.getAttribute('stroke-linecap')).toBe('round')
+  })
+
+  it('centres a document glyph in the ring so the wait reads as a CV load', () => {
+    const container = render(<LoadingSpinner label="Verifying access and loading CV..." />)
+
+    const icon = container.querySelector('svg.lucide-file-text')
+    expect(icon).not.toBeNull()
+    expect(icon?.getAttribute('aria-hidden')).toBe('true')
+    // The glyph is decoration, so it must not leak into the announced text.
+    expect(container.querySelector('[role="status"]')?.textContent).toBe('Verifying access and loading CV...')
   })
 
   it('keeps the label available to screen readers when hidden', () => {

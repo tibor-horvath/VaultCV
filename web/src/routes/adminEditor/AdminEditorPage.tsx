@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { ExternalLink, KeyRound, LoaderCircle, Save, Shield } from 'lucide-react'
 import { useState } from 'react'
+import { LoadingSpinner } from '../../components/LoadingSpinner'
+import { useLoadingIndicator } from '../../lib/loadingIndicator'
 import { AdminEditorHeader } from './AdminEditorHeader'
 import { BasicsSection } from './BasicsSection'
 import { CredentialsSection } from './CredentialsSection'
@@ -296,14 +298,12 @@ export function AdminEditorPage(props: {
     }
   }
 
+  const showSessionLoader = useLoadingIndicator(meLoading)
+
   if (meLoading) {
-    return (
-      <div className="w-full space-y-4 py-10">
-        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-          <LoaderCircle className="h-4 w-4 animate-spin" /> {t('adminSessionChecking')}
-        </div>
-      </div>
-    )
+    // Render nothing until the loader is due, so a warm session never flashes a spinner. Falling
+    // through here would flash the signed-out page instead.
+    return showSessionLoader ? <LoadingSpinner label={t('adminSessionChecking')} className="py-10" /> : null
   }
 
   if (!me) {
@@ -414,7 +414,7 @@ export function AdminEditorPage(props: {
           className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
         >
           <span className="inline-flex items-center gap-2">
-            <LoaderCircle className="h-4 w-4 animate-spin" /> {t('adminSavingProfile')}
+            <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" /> {t('adminSavingProfile')}
           </span>
         </div>
       ) : null}
@@ -425,7 +425,7 @@ export function AdminEditorPage(props: {
           className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
         >
           <span className="inline-flex items-center gap-2">
-            <LoaderCircle className="h-4 w-4 animate-spin" /> {t('adminLoadingProfileEditor')}
+            <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" /> {t('adminLoadingProfileEditor')}
           </span>
         </div>
       ) : null}
@@ -473,7 +473,7 @@ export function AdminEditorPage(props: {
               onClick={onSave}
               className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(15,23,42,0.55)] ring-1 ring-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:ring-white/20"
             >
-              {saving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
+              {saving ? <LoaderCircle className="h-4 w-4 shrink-0 motion-safe:animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
               {saving ? t('adminSaving') : t('adminSave')}
             </button>
           </div>
@@ -485,7 +485,7 @@ export function AdminEditorPage(props: {
               onClick={onSave}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
             >
-              {saving ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
+              {saving ? <LoaderCircle className="h-4 w-4 shrink-0 motion-safe:animate-spin" /> : <Save className="h-4 w-4 shrink-0" />}
               {saving ? t('adminSaving') : t('adminSave')}
             </button>
           </div>

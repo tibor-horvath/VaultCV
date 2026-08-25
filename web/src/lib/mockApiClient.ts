@@ -4,6 +4,18 @@ import type { ApiClient, ApiResult } from './apiTypes'
 
 type MockSession = { token: string; expiresAtMs: number }
 
+/**
+ * Dev-only: the mock resolves instantly, so loading states (spinner, CV skeleton) flash past
+ * before they can be looked at. Set `VITE_MOCK_LATENCY_MS=1500` in `web/.env.local` to hold them
+ * on screen. Unset or `0` keeps the mock instant, which is what the tests rely on.
+ */
+const mockLatencyMs = Number((import.meta.env.VITE_MOCK_LATENCY_MS as string | undefined) ?? 0)
+
+function simulateLatency(): Promise<void> {
+  if (!Number.isFinite(mockLatencyMs) || mockLatencyMs <= 0) return Promise.resolve()
+  return new Promise((resolve) => setTimeout(resolve, mockLatencyMs))
+}
+
 export class MockApiClient implements ApiClient {
   private sessions = new Map<string, MockSession>()
   private counter = 0
@@ -29,11 +41,13 @@ export class MockApiClient implements ApiClient {
   }
 
   async exchangeAccessCode(code: string): Promise<ApiResult<{ accessToken: string }>> {
+    await simulateLatency()
     const session = this.createSession(code || 'mock')
     return { ok: true, data: { accessToken: session.token } }
   }
 
   async fetchCv(token: string, locale: string): Promise<ApiResult<LocalizedCvData>> {
+    await simulateLatency()
     const exp = this.getExpiresAtIso(token)
     if (!exp) return { ok: false, status: 401, code: 'unauthorized' }
     return { ok: true, data: getMockCv(locale), sessionExpiresAt: exp }

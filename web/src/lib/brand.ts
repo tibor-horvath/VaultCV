@@ -1,3 +1,5 @@
+import { initialsFromName } from './favicon'
+
 const DEFAULT_BRAND_NAME = 'VaultCV'
 const DEFAULT_BRAND_REPO_URL = 'https://github.com/tibor-horvath/VaultCV'
 const DEFAULT_BRAND_LINKEDIN_URL = 'https://www.linkedin.com/in/htibor/'
@@ -35,3 +37,11 @@ export function getBrand(): Brand {
   return { name, version, displayName, repoUrl, linkedInUrl, copyrightName }
 }
 
+/**
+ * Monogram for the loading state: the CV owner's initials, same derivation as the favicon so the
+ * two always agree. Falls back to `CV`, which is what the generic favicon shows.
+ */
+export function getBrandInitials(): string {
+  const publicName = (import.meta.env.VITE_PUBLIC_NAME as string | undefined)?.trim() ?? ''
+  return initialsFromName(publicName) || 'CV'
+}

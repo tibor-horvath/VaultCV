@@ -38,6 +38,18 @@
   }
 }
 
+/*
+ * Theme switching cross-fade (see `lib/themeTransition.ts`). Only the duration is customised —
+ * the default root transition is already a cross-fade of the old and new snapshots.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 260ms;
+    animation-timing-function: ease;
+  }
+}
+
 /* Hide built-in password reveal/clear icons (Edge/IE) */
 input[type='password']::-ms-reveal,
 input[type='password']::-ms-clear {
