@@ -25,7 +25,7 @@ export function SortableRow({ id, children, className }: { id: string; children:
         style={style}
         className={[
           'group relative',
-          isDragging ? 'opacity-60 shadow-lg' : '',
+          isDragging ? 'opacity-60 shadow-overlay' : '',
           className ?? '',
         ]
           .filter(Boolean)

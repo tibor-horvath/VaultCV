@@ -60,6 +60,8 @@ export const enMessages = {
   cvDataNotConfigured: 'CV data is not configured.',
   cvDataInvalidJson: 'CV data is invalid JSON.',
   invalidCvPayload: 'Invalid CV payload received.',
+  clearStoredAccess: 'Clear stored access',
+  skipToContent: 'Skip to content',
   footerRights: 'All rights reserved.',
   cookieDisclosure:
     'This site uses a strictly necessary secure session cookie (cv_session) to keep CV access active after unlock. No analytics or marketing cookies are used.',

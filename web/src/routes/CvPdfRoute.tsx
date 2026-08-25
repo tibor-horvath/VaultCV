@@ -70,14 +70,14 @@ export default function CvPdfRoute() {
   return (
     <div className="w-full pb-8">
       {pdfDevPreview ? (
-        <p className="mb-4 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100">
+        <p className="mb-4 rounded-field border border-caution/30 bg-caution-soft px-3 py-2 text-xs text-caution-soft-ink">
           {t('pdfDevPreviewBanner')}
         </p>
       ) : null}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
+          className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted shadow-card transition hover:bg-surface-muted"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t('backToCv')}
@@ -87,7 +87,7 @@ export default function CvPdfRoute() {
             type="button"
             onClick={() => void handleDownload()}
             disabled={busy}
-            className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="vc-focusable inline-flex h-9 items-center gap-2 rounded-field bg-accent px-4 text-xs font-semibold text-accent-ink shadow-card hover:bg-accent-hover active:translate-y-px disabled:pointer-events-none disabled:opacity-55"
           >
             <FileDown className="h-4 w-4" aria-hidden="true" />
             {busy ? t('generatingPdf') : t('downloadPdf')}
@@ -97,9 +97,9 @@ export default function CvPdfRoute() {
 
       {!pdfDevPreview && state.kind === 'locked' ? (
         <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
-          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+          <p className="text-sm leading-relaxed text-ink-muted">
             {t('lockedHintPrefix')}{' '}
-            <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+            <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs text-ink">
               /?s=SHARE_ID
               {locale !== 'en' ? `&lang=${locale}` : ''}
             </code>
@@ -107,7 +107,7 @@ export default function CvPdfRoute() {
           <button
             type="button"
             onClick={() => clearStoredAccessCode()}
-            className="mt-3 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+            className="mt-3 rounded-field border border-line px-3 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-muted"
           >
             Clear stored access
           </button>
@@ -116,10 +116,10 @@ export default function CvPdfRoute() {
 
       {!pdfDevPreview && state.kind === 'expired' ? (
         <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>
-          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{t('pdfSessionExpiredHint')}</p>
+          <p className="text-sm leading-relaxed text-ink-muted">{t('pdfSessionExpiredHint')}</p>
           <Link
             to="/"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-300/70 bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-900"
+            className="mt-4 inline-flex items-center gap-2 rounded-field border border-line bg-surface px-4 py-2 text-sm font-medium text-ink shadow-card transition hover:bg-surface-muted"
           >
             {t('openCv')}
           </Link>
@@ -130,7 +130,7 @@ export default function CvPdfRoute() {
 
       {!pdfDevPreview && state.kind === 'error' && !showLoader ? (
         <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>
-          <div className="text-sm text-slate-700 dark:text-slate-300">
+          <div className="text-sm text-ink-muted">
             {t(state.messageKey)}
             {state.messageKey === 'requestFailed' && state.status ? ` (${state.status})` : ''}
             {state.details ? ` ${state.details}` : ''}

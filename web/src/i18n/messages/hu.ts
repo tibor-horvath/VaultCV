@@ -62,6 +62,8 @@ export const huMessages: Partial<MessageCatalog> = {
   cvDataNotConfigured: 'Az önéletrajz adatai nincsenek beállítva.',
   cvDataInvalidJson: 'Az önéletrajz adatai érvénytelen JSON formátumban vannak.',
   invalidCvPayload: 'Érvénytelen önéletrajz adat érkezett.',
+  clearStoredAccess: 'Tárolt hozzáférés törlése',
+  skipToContent: 'Ugrás a tartalomra',
   footerRights: 'Minden jog fenntartva.',
   cookieDisclosure:
     'Ez az oldal egy szigorúan szükséges biztonságos munkamenet-sütit (cv_session) használ a hozzáférés fenntartásához. Analitikai vagy marketing sütiket nem használunk.',

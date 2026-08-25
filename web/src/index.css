@@ -2,39 +2,211 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens.
+ *
+ * Every colour in the app resolves to one of these, via the semantic names in
+ * `tailwind.config.js` (`bg-surface`, `text-ink-muted`, `border-line`, ...). Values are
+ * space-separated RGB channels so Tailwind's alpha modifier keeps working.
+ *
+ * Dark mode redefines only the variables; no component carries a `dark:` twin for colour.
+ */
 @layer base {
   :root {
     color-scheme: light;
+
+    --vc-canvas: 247 248 251;
+    --vc-surface: 255 255 255;
+    --vc-surface-muted: 244 246 250;
+    --vc-surface-sunken: 237 240 246;
+
+    --vc-line: 226 231 239;
+    --vc-line-strong: 203 211 224;
+
+    --vc-ink: 15 23 42;
+    --vc-ink-muted: 71 85 105;
+    /* Darkened from #6c7a8f, which measured 4.0–4.4:1 on the light surfaces — under AA. This
+       clears 4.5:1 on canvas, surface and surface-muted alike. */
+    --vc-ink-subtle: 91 107 128;
+    --vc-ink-inverted: 255 255 255;
+
+    --vc-accent: 79 70 229;
+    --vc-accent-hover: 67 56 202;
+    --vc-accent-soft: 238 240 255;
+    --vc-accent-soft-ink: 67 56 202;
+    --vc-accent-ink: 255 255 255;
+
+    --vc-positive: 5 150 105;
+    --vc-positive-soft: 236 253 245;
+    --vc-positive-soft-ink: 4 120 87;
+
+    --vc-caution: 217 119 6;
+    --vc-caution-soft: 255 251 235;
+    --vc-caution-soft-ink: 180 83 9;
+
+    --vc-critical: 225 29 72;
+    --vc-critical-soft: 255 241 242;
+    --vc-critical-soft-ink: 190 18 60;
+
+    --vc-shadow: 15 23 42;
+
+    /* Height reserved at the top of scrollable pages for the sticky CV bar. */
+    --vc-topbar-height: 3.25rem;
   }
 
   html.dark {
     color-scheme: dark;
-  }
 
-  html,
-  body,
-  #root {
-    height: 100%;
-    overflow-x: hidden;
+    --vc-canvas: 9 11 16;
+    --vc-surface: 18 21 29;
+    --vc-surface-muted: 24 28 37;
+    --vc-surface-sunken: 13 16 22;
+
+    --vc-line: 35 41 53;
+    --vc-line-strong: 55 63 79;
+
+    --vc-ink: 237 241 247;
+    --vc-ink-muted: 163 174 191;
+    --vc-ink-subtle: 125 137 156;
+    --vc-ink-inverted: 15 23 42;
+
+    --vc-accent: 129 140 248;
+    --vc-accent-hover: 165 180 252;
+    --vc-accent-soft: 30 33 56;
+    --vc-accent-soft-ink: 199 210 254;
+    --vc-accent-ink: 12 15 26;
+
+    --vc-positive: 52 211 153;
+    --vc-positive-soft: 8 40 33;
+    --vc-positive-soft-ink: 110 231 183;
+
+    --vc-caution: 251 191 36;
+    --vc-caution-soft: 48 34 8;
+    --vc-caution-soft-ink: 253 224 71;
+
+    --vc-critical: 251 113 133;
+    --vc-critical-soft: 52 15 24;
+    --vc-critical-soft-ink: 253 164 175;
+
+    --vc-shadow: 0 0 0;
+  }
+}
+
+@layer base {
+  /*
+   * The document is the scroll container.
+   *
+   * This used to be `html, body, #root { height: 100%; overflow-x: hidden }`, which turned `#root`
+   * into the scrollport: `window.scrollY` never moved, `ScrollRestoration` and `position: sticky`
+   * had nothing to hang off, mobile browsers could not collapse their URL bar, and anything
+   * measuring against the viewport (the CV top bar's scroll sentinel) saw a page that never
+   * scrolled. `overflow-x: clip` gives the same "no sideways scrollbar" guarantee without creating
+   * a scroll container.
+   */
+  html {
+    overflow-x: clip;
   }
 
   body {
     margin: 0;
-    @apply bg-white text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100;
+    min-height: 100dvh;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+    @apply bg-canvas text-ink antialiased;
     font-feature-settings:
       'cv11' 1,
       'ss01' 1;
     text-rendering: optimizeLegibility;
-    overflow-x: hidden;
-    overscroll-behavior-x: none;
+  }
+
+  #root {
+    min-height: 100dvh;
   }
 
   * {
-    @apply border-slate-200 dark:border-slate-800;
+    @apply border-line;
+  }
+
+  /*
+   * One focus treatment for the whole app. Components no longer spell out `focus:ring-*`, and the
+   * ring only appears for keyboard users, so pointer clicks stay quiet.
+   */
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent/70 ring-offset-2 ring-offset-canvas;
+    border-radius: inherit;
   }
 
   ::selection {
-    @apply bg-sky-200/70 text-slate-900 dark:bg-sky-400/35 dark:text-slate-50;
+    @apply bg-accent/25 text-ink;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Quiet scrollbars, so long CV pages do not get a heavy grey gutter. */
+  @supports selector(::-webkit-scrollbar) {
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      @apply rounded-full bg-line-strong;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      @apply bg-ink-subtle;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+  }
+}
+
+/*
+ * Recurring shapes. These are the redesign's building blocks; the React primitives in
+ * `components/ui` compose them, and one-off markup can use them directly instead of
+ * re-deriving a card or a pill from raw utilities.
+ */
+@layer components {
+  .vc-card {
+    @apply rounded-card border border-line bg-surface shadow-card;
+  }
+
+  .vc-card-muted {
+    @apply rounded-card border border-line bg-surface-muted;
+  }
+
+  /* Section label: small, uppercase, tracked — the CV's structural rhythm. */
+  .vc-eyebrow {
+    @apply text-2xs font-semibold uppercase tracking-[0.12em] text-ink-subtle;
+  }
+
+  .vc-focusable {
+    @apply outline-none transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-emphasis;
+  }
+
+  /* Inputs, selects and textareas share one field shape. */
+  .vc-field {
+    @apply w-full rounded-field border border-line bg-surface px-3 py-2 text-sm text-ink shadow-card
+      transition-[border-color,box-shadow] duration-150 ease-emphasis
+      placeholder:text-ink-subtle
+      hover:border-line-strong
+      focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 focus:ring-offset-0
+      disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle;
   }
 }
 

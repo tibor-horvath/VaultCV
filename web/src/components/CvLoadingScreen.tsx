@@ -3,18 +3,17 @@ import { getBrand } from '../lib/brand'
 import { usePageLoadingMarker } from '../lib/pageLoading'
 
 /** Card chrome shared with `BasicsCard` / `Section`, so the skeleton lines up with the real CV. */
-const cardClass =
-  'relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.55)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/35 sm:p-6'
+const cardClass = 'vc-card relative overflow-hidden p-4 sm:p-6'
 
 function Bar({ className }: { className: string }) {
-  return <div className={`rounded-md bg-slate-200/90 dark:bg-slate-700/50 ${className}`} />
+  return <div className={`rounded-md bg-surface-sunken ${className}`} />
 }
 
 /** Light sweeping across the placeholders — the motion cue that replaces a spinner. */
 function Shimmer() {
   return (
     <div
-      className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent motion-safe:animate-shimmer dark:via-slate-100/[0.10]"
+      className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-surface/80 to-transparent motion-safe:animate-shimmer"
       aria-hidden="true"
     />
   )
@@ -45,14 +44,14 @@ type CvLoadingScreenProps = {
  */
 export function CvLoadingScreen({ label, fullPage = true }: CvLoadingScreenProps) {
   return (
-    <div className="space-y-6" aria-busy="true" role="status">
+    <div className="space-y-5" aria-busy="true" role="status">
       {fullPage ? <FullPageHeading label={label} /> : <span className="sr-only">{label}</span>}
 
-      <div className="space-y-6" aria-hidden="true">
+      <div className="space-y-5" aria-hidden="true">
         <SkeletonCard>
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-5 sm:flex-row sm:gap-6">
             <div className="mx-auto flex-shrink-0 sm:mx-0">
-              <div className="h-48 w-48 rounded-full bg-slate-200/90 dark:bg-slate-700/50 sm:h-56 sm:w-56" />
+              <div className="h-40 w-40 rounded-full bg-surface-sunken sm:h-48 sm:w-48" />
             </div>
             <div className="min-w-0 flex-1 space-y-3">
               <Bar className="h-8 w-3/4 max-w-sm" />
@@ -95,10 +94,10 @@ function FullPageHeading({ label }: { label: string }) {
         {/* Small and inline: the skeleton already fills the page, so the ring only has to say
             "still working" — at 16px it needs a proportionally heavier stroke to stay visible. */}
         <SpinnerRing className="h-4 w-4" strokeWidth={7} />
-        <p className="text-center text-sm text-slate-600 dark:text-slate-400">{label}</p>
+        <p className="text-center text-sm text-ink-muted">{label}</p>
       </div>
       {/* The shell footer is hidden while loading, so the wordmark keeps the site identified. */}
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+      <p className="vc-eyebrow tracking-[0.18em]">
         {brand.name}
       </p>
     </div>

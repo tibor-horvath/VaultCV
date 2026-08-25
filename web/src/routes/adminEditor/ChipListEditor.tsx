@@ -25,9 +25,9 @@ function SortableChip({
       ref={setNodeRef}
       style={style}
       className={[
-        'inline-flex items-center gap-1 rounded-full border border-slate-200/80 bg-slate-100/90 pl-3 pr-1.5 py-1 text-[11px] font-medium text-slate-700',
-        'dark:border-slate-600/55 dark:bg-slate-800/55 dark:text-slate-200',
-        isDragging ? 'opacity-60 shadow-md' : '',
+        'inline-flex items-center gap-1 rounded-full border border-line bg-surface-muted/90 pl-3 pr-1.5 py-1 text-[11px] font-medium text-ink-muted',
+        '',
+        isDragging ? 'opacity-60 shadow-raised' : '',
         'cursor-grab active:cursor-grabbing select-none',
       ]
         .filter(Boolean)
@@ -41,7 +41,7 @@ function SortableChip({
         onPointerDown={(e) => e.stopPropagation()}
         onClick={onRemove}
         aria-label={`Remove ${label}`}
-        className="rounded-full p-0.5 text-slate-400 hover:bg-slate-200/80 hover:text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:text-slate-500 dark:hover:bg-slate-700/60 dark:hover:text-slate-200"
+        className="rounded-full p-0.5 text-ink-subtle hover:bg-surface-muted hover:text-ink-muted"
       >
         <X className="h-3 w-3" aria-hidden="true" />
       </button>
@@ -146,19 +146,19 @@ export function ChipListEditor({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-describedby={errorId}
-          className="min-w-0 flex-1 rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          className="min-w-0 flex-1 vc-field placeholder:text-ink-subtle"
         />
         <button
           type="button"
           onClick={handleAdd}
           disabled={!inputValue.trim()}
-          className="rounded-lg border border-slate-300/70 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+          className="rounded-field border border-line px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-muted disabled:opacity-50"
         >
           Add
         </button>
       </div>
       {error ? (
-        <div id={errorId} role="alert" className="text-[11px] text-red-700 dark:text-red-300">
+        <div id={errorId} role="alert" className="text-[11px] text-critical-soft-ink">
           {error}
         </div>
       ) : null}

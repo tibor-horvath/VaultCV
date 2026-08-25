@@ -58,26 +58,26 @@ export function BasicsSection(props: {
   } = props
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-white/60 p-5 dark:border-slate-800 dark:bg-slate-950/30">
-      <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-5 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
-        <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+    <section className="space-y-4 rounded-card border border-line bg-surface p-5">
+      <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between border-b border-line bg-surface px-5 py-2 backdrop-blur md:static md:mx-0 md:border-b-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0">
+        <div className="inline-flex items-center gap-2 text-sm font-semibold text-ink">
           <IdCard className="h-4 w-4 shrink-0" /> {t('adminBasics')}
         </div>
-        <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-300">{t('adminPerFieldPublicToggle')}</div>
+        <div className="text-[11px] font-semibold text-ink-subtle">{t('adminPerFieldPublicToggle')}</div>
       </div>
       <div className="grid grid-cols-1 gap-3">
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-          <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-ink-muted">
             {t('adminName')}
             <input
               id="basics-name"
               value={basicsName}
               onChange={(e) => setBasicsName(e.target.value)}
               aria-invalid={Boolean(publicBasicsErrors?.name)}
-              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full vc-field"
             />
             {publicBasicsErrors?.name ? (
-              <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.name}</div>
+              <div className="text-[11px] text-critical-soft-ink">{publicBasicsErrors.name}</div>
             ) : null}
           </label>
           <div className="pt-5">
@@ -86,17 +86,17 @@ export function BasicsSection(props: {
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-          <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-ink-muted">
             {t('adminHeadline')}
             <input
               id="basics-headline"
               value={basicsHeadline}
               onChange={(e) => setBasicsHeadline(e.target.value)}
               aria-invalid={Boolean(publicBasicsErrors?.headline)}
-              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full vc-field"
             />
             {publicBasicsErrors?.headline ? (
-              <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.headline}</div>
+              <div className="text-[11px] text-critical-soft-ink">{publicBasicsErrors.headline}</div>
             ) : null}
           </label>
           <div className="pt-5">
@@ -108,41 +108,41 @@ export function BasicsSection(props: {
         </div>
 
         <div className="grid grid-cols-1 items-start gap-2">
-          <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-ink-muted">
             {t('adminEmail')}
             <input
               id="basics-email"
               value={basicsEmail}
               onChange={(e) => setBasicsEmail(e.target.value)}
-              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full vc-field"
             />
           </label>
         </div>
 
         <div className="grid grid-cols-1 items-start gap-2">
-          <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-ink-muted">
             {t('adminMobile')}
             <input
               id="basics-mobile"
               value={basicsMobile}
               onChange={(e) => setBasicsMobile(e.target.value)}
-              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full vc-field"
             />
           </label>
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-          <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-ink-muted">
             {t('location')}
             <input
               id="basics-location"
               value={basicsLocation}
               onChange={(e) => setBasicsLocation(e.target.value)}
               aria-invalid={Boolean(publicBasicsErrors?.location)}
-              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full vc-field"
             />
             {publicBasicsErrors?.location ? (
-              <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.location}</div>
+              <div className="text-[11px] text-critical-soft-ink">{publicBasicsErrors.location}</div>
             ) : null}
           </label>
           <div className="pt-5">
@@ -154,7 +154,7 @@ export function BasicsSection(props: {
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-          <label className="flex w-full flex-col gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-ink-muted">
             {t('adminSummary')}
             <textarea
               id="basics-summary"
@@ -162,10 +162,10 @@ export function BasicsSection(props: {
               value={basicsSummary}
               onChange={(e) => setBasicsSummary(e.target.value)}
               aria-invalid={Boolean(publicBasicsErrors?.summary)}
-              className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full vc-field"
             />
             {publicBasicsErrors?.summary ? (
-              <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.summary}</div>
+              <div className="text-[11px] text-critical-soft-ink">{publicBasicsErrors.summary}</div>
             ) : null}
           </label>
           <div className="pt-5">
@@ -177,7 +177,7 @@ export function BasicsSection(props: {
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-          <div className="flex flex-col gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <div className="flex flex-col gap-2 text-xs font-medium text-ink-muted">
             {t('adminProfilePhoto')}
             <ProfileImageUpload hasProfileImage={hasProfileImage} onChange={onProfileImageChange} />
             <label className="flex flex-col gap-1">
@@ -188,10 +188,10 @@ export function BasicsSection(props: {
                 onChange={(e) => setBasicsPhotoAlt(e.target.value)}
                 aria-invalid={Boolean(publicBasicsErrors?.photo)}
                 placeholder={t('adminPhotoAltPlaceholder')}
-                className="w-full rounded-lg border border-slate-300/70 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                className="w-full vc-field"
               />
               {publicBasicsErrors?.photo ? (
-                <div className="text-[11px] text-red-700 dark:text-red-300">{publicBasicsErrors.photo}</div>
+                <div className="text-[11px] text-critical-soft-ink">{publicBasicsErrors.photo}</div>
               ) : null}
             </label>
           </div>

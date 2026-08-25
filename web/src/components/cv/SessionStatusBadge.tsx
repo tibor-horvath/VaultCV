@@ -1,6 +1,13 @@
 import { Lock, ShieldCheck } from 'lucide-react'
 import { useI18n } from '../../lib/i18n'
+import { Badge } from '../ui/Badge'
 
+/**
+ * State of the reader's access, as a single pill.
+ *
+ * Tone does the talking: green while the session is comfortable, amber inside the last hour so an
+ * expiry is not a surprise, red once it is gone.
+ */
 export function SessionStatusBadge({
   isLocked,
   lockedText,
@@ -8,7 +15,7 @@ export function SessionStatusBadge({
   activeTooltipText,
   expiresInSeconds,
   size = 'sm',
-  minWidthClass = 'min-w-[13.5rem]',
+  minWidthClass = '',
 }: {
   isLocked: boolean
   lockedText: string
@@ -19,8 +26,6 @@ export function SessionStatusBadge({
   minWidthClass?: string
 }) {
   const { t } = useI18n()
-  const sizeClasses = size === 'xs' ? 'text-xs px-3 py-1' : 'text-sm px-3 py-1'
-  const iconClass = size === 'xs' ? 'h-3.5 w-3.5' : 'h-4 w-4'
 
   const derivedIsLocked = isLocked || (expiresInSeconds !== undefined && expiresInSeconds <= 0)
   const isExpiringSoon = !derivedIsLocked && expiresInSeconds !== undefined && expiresInSeconds < 60 * 60
@@ -41,27 +46,29 @@ export function SessionStatusBadge({
 
   const activeLabel =
     !derivedIsLocked && expiresInSeconds !== undefined
-      ? `${t('accessActive')} • ${formatTimeRemaining(expiresInSeconds)}`
+      ? `${t('accessActive')} · ${formatTimeRemaining(expiresInSeconds)}`
       : unlockedText
 
+  const iconClass = size === 'xs' ? 'h-3 w-3' : 'h-3.5 w-3.5'
+
   return (
-    <div
+    <Badge
+      tone={derivedIsLocked ? 'critical' : isExpiringSoon ? 'caution' : 'positive'}
       title={derivedIsLocked ? undefined : activeTooltipText}
-      className={`inline-flex ${minWidthClass} items-center justify-center gap-1.5 rounded-full border font-semibold ${sizeClasses} ${
-        derivedIsLocked
-          ? 'border-rose-200/80 bg-rose-50/90 text-rose-700 dark:border-rose-800/70 dark:bg-rose-950/40 dark:text-rose-300'
-          : isExpiringSoon
-            ? 'border-amber-200/80 bg-amber-50/90 text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/35 dark:text-amber-200'
-            : 'border-emerald-200/80 bg-emerald-50/90 text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-300'
-      }`}
+      className={minWidthClass}
+      icon={
+        derivedIsLocked ? (
+          <Lock className={iconClass} aria-hidden="true" />
+        ) : (
+          <ShieldCheck className={iconClass} aria-hidden="true" />
+        )
+      }
     >
-      {derivedIsLocked ? (
-        <Lock className={`${iconClass} opacity-80`} aria-hidden="true" />
-      ) : (
-        <ShieldCheck className={`${iconClass} opacity-80`} aria-hidden="true" />
-      )}
-      <span className="whitespace-nowrap">{derivedIsLocked ? lockedText : activeLabel}</span>
-    </div>
+      {/*
+        Fixed-width digits: the countdown ticks every second, and proportional figures would make
+        the pill twitch as the numbers change width.
+      */}
+      <span className="whitespace-nowrap tabular-nums">{derivedIsLocked ? lockedText : activeLabel}</span>
+    </Badge>
   )
 }
-

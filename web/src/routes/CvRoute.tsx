@@ -9,9 +9,7 @@ import {
   LayoutGrid,
   LibraryBig,
   Lock,
-  Moon,
   ShieldCheck,
-  Sun,
   TentTree,
 } from 'lucide-react'
 import { BasicsCard } from '../components/cv/BasicsCard'
@@ -31,10 +29,13 @@ import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
 import { useI18n } from '../lib/i18n'
 import { LanguageSelector } from '../components/LanguageSelector'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { CvLoadingScreen } from '../components/CvLoadingScreen'
 import { useLoadingIndicator } from '../lib/loadingIndicator'
 import type { MessageKey } from '../i18n/messages'
-import { useTheme } from '../lib/themeContext'
+import { Button } from '../components/ui/Button'
+import { IconButton } from '../components/ui/IconButton'
+import { useScrolledPast } from '../lib/useScrolledPast'
 import {
   clearStoredAccessCode,
   getStoredAccessCode,
@@ -168,34 +169,15 @@ function formatCountdown(totalSeconds: number) {
   return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`
 }
 
-function useBasicsVisibility(stateKind: CvRouteState['kind']) {
-  const basicsSentinelRef = useRef<HTMLDivElement | null>(null)
-  const [isBasicsInView, setIsBasicsInView] = useState(true)
-
-  useEffect(() => {
-    if (stateKind !== 'ready') return
-    const el = basicsSentinelRef.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsBasicsInView(entry.isIntersecting)
-    }, { threshold: 0.01 })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [stateKind])
-
-  return { basicsSentinelRef, isBasicsInView }
-}
-
 export function CvRoute() {
   const { locale, t } = useI18n()
   const { goHome } = useAppView()
-  const { theme, toggleTheme } = useTheme()
   const accessCode = getStoredAccessCode()
   const state = useCvState(accessCode, locale)
   const sessionExpiresAt = state.kind === 'ready' ? state.sessionExpiresAt : undefined
   const publicName = usePublicName(locale)
-  const { basicsSentinelRef, isBasicsInView } = useBasicsVisibility(state.kind)
+  // The top bar takes over exactly when the profile card has cleared the bar's own height.
+  const [heroRef, isHeroScrolledPast] = useScrolledPast(56)
   const orderedSections: SectionKey[] = state.kind === 'ready' ? normalizeSectionOrder(state.cv.sectionOrder) : []
   const [pdfBusy, setPdfBusy] = useState(false)
   const [pdfError, setPdfError] = useState(false)
@@ -262,17 +244,6 @@ export function CvRoute() {
     goHome()
   }, [state.kind, sessionExpiresAt, isSessionLocked, goHome])
 
-  const themeToggle = (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
-      aria-label={theme === 'dark' ? t('themeSwitchToLight') : t('themeSwitchToDark')}
-    >
-      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      {theme === 'dark' ? t('themeLight') : t('themeDark')}
-    </button>
-  )
   const profilePhotoSrc = state.kind === 'ready' ? buildPhotoSrc(state.cv.basics) : undefined
 
   // Skips the loader entirely on fast loads, and holds it briefly once shown so it cannot strobe.
@@ -288,97 +259,89 @@ export function CvRoute() {
         activeTooltipText={t('accessActiveBadgeHint')}
         expiresInSeconds={remainingSeconds}
         size="xs"
-        minWidthClass="min-w-[13.5rem]"
       />
     ) : null
 
   return (
-    <div className="space-y-6 lg:pt-20">
+    <div className="space-y-5">
       {state.kind === 'locked' ? (
         <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
-          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+          <p className="text-sm leading-relaxed text-ink-muted">
             {t('lockedHintPrefix')}{' '}
-            <span className="font-mono">/?s=SHARE_ID</span>
-            <span className="text-slate-500 dark:text-slate-400"> ({t('lockedHintLangOptional')})</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              clearStoredAccessCode()
-            }}
-            className="mt-3 rounded-lg border border-slate-300/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
-          >
-            Clear stored access
-          </button>
+            <span className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs text-ink">/?s=SHARE_ID</span>
+            <span className="text-ink-subtle"> ({t('lockedHintLangOptional')})</span>
+          </p>
+          <Button size="sm" className="mt-4" onClick={() => clearStoredAccessCode()}>
+            {t('clearStoredAccess')}
+          </Button>
         </Section>
       ) : null}
 
       {showLoader ? <CvLoadingScreen label={t('loadingCv')} /> : null}
 
       {state.kind === 'error' && !showLoader ? (
-        <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4" />}>
-          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        <Section title={t('unableToLoad')} icon={<CircleAlert className="h-4 w-4 text-critical" />}>
+          <p className="text-sm leading-relaxed text-ink-muted">
             {t(state.messageKey)}
             {state.messageKey === 'requestFailed' && state.status ? ` (${state.status})` : ''}
             {state.details ? ` ${state.details}` : ''}
-          </div>
-          <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            {t('serverConfigHint')}
-          </div>
+          </p>
+          <p className="mt-3 text-xs text-ink-subtle">{t('serverConfigHint')}</p>
         </Section>
       ) : null}
 
       {state.kind === 'ready' && !showLoader ? (
-        <div className="space-y-6 motion-safe:animate-fade-in">
-          <div ref={basicsSentinelRef}>
-            <BasicsCard
-              basics={state.cv.basics}
-              links={state.cv.links}
-              topStatus={unlockedStatus}
-              headerRight={
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void handleDownloadPdf()}
-                    disabled={pdfBusy}
-                    className="hidden items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50 sm:inline-flex"
-                  >
-                    <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
-                  </button>
-                  <LanguageSelector allowedLocales={availablePrivateLocales ?? EMPTY_LOCALES} />
-                  {themeToggle}
-                </div>
-              }
-              belowLinks={
-                <>
-                  <button
-                    type="button"
-                    onClick={() => void handleDownloadPdf()}
-                    disabled={pdfBusy}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/50"
-                  >
-                    <FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
-                  </button>
-                  {pdfError ? (
-                    <p
-                      role="alert"
-                      className="mt-2 rounded-lg border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/40 dark:text-rose-100"
-                    >
-                      {t('pdfGenerationFailed')}
-                    </p>
-                  ) : null}
-                </>
-              }
-            />
+        <div className="space-y-5 motion-safe:animate-fade-in">
+          {/*
+            Page toolbar. Session state on the left, controls on the right — one row that owns
+            every page-level action, instead of scattering them through the profile card and
+            duplicating the PDF button for mobile.
+          */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">{unlockedStatus}</div>
+            <div className="flex items-center gap-2">
+              <LanguageSelector allowedLocales={availablePrivateLocales ?? EMPTY_LOCALES} />
+              <ThemeToggle />
+              <Button
+                variant="primary"
+                onClick={() => void handleDownloadPdf()}
+                busy={pdfBusy}
+                iconLeft={<FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />}
+              >
+                {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+              </Button>
+            </div>
+          </div>
+
+          {pdfError ? (
+            <p
+              role="alert"
+              className="rounded-field border border-critical/25 bg-critical-soft px-3 py-2 text-xs text-critical-soft-ink"
+            >
+              {t('pdfGenerationFailed')}
+            </p>
+          ) : null}
+
+          <div ref={heroRef}>
+            <BasicsCard basics={state.cv.basics} links={state.cv.links} />
           </div>
 
           <FloatingBasicsMenu
             basics={state.cv.basics}
             links={state.cv.links}
             profilePhotoSrc={profilePhotoSrc}
-            visible={!isBasicsInView}
+            visible={isHeroScrolledPast}
+            actions={
+              <IconButton
+                label={pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+                onClick={() => void handleDownloadPdf()}
+                disabled={pdfBusy}
+                size="sm"
+                tabIndex={isHeroScrolledPast ? undefined : -1}
+              >
+                <FileDown className="h-4 w-4" aria-hidden="true" />
+              </IconButton>
+            }
           />
 
           {orderedSections.map((key) => {
@@ -391,7 +354,7 @@ export function CvRoute() {
             }
             if (key === 'skillsLanguages') {
               return (
-                <div key="skillsLanguages">
+                <div key="skillsLanguages" className="space-y-5">
                   {state.cv.skills?.length ? (
                     <Section title={t('skills')} icon={<LibraryBig className="h-4 w-4" />}>
                       <SkillsChips items={state.cv.skills} />

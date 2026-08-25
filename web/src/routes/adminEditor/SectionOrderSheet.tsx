@@ -26,8 +26,8 @@ function SortableSheetItem({ sectionKey, label }: { sectionKey: string; label: s
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={[
-        'group flex items-center gap-3 rounded-xl border border-slate-100/80 bg-white/70 px-3 py-3 text-sm font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200',
-        isDragging ? 'opacity-50 shadow-md' : '',
+        'group flex items-center gap-3 rounded-field border border-line bg-surface px-3 py-3 text-sm font-medium text-ink-muted',
+        isDragging ? 'opacity-50 shadow-raised' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -37,7 +37,7 @@ function SortableSheetItem({ sectionKey, label }: { sectionKey: string; label: s
         aria-label={t('adminDragToReorder')}
         {...attributes}
         {...listeners}
-        className="touch-none cursor-grab text-slate-300 active:cursor-grabbing dark:text-slate-600"
+        className="touch-none cursor-grab text-ink-subtle active:cursor-grabbing"
       >
         <GripVertical className="h-5 w-5" />
       </button>
@@ -91,7 +91,7 @@ export function SectionOrderSheet({
         aria-hidden="true"
         onClick={onClose}
         className={[
-          'fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden',
+          'fixed inset-0 z-40 bg-ink/40 transition-opacity duration-300 lg:hidden',
           isOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
         ]
           .filter(Boolean)
@@ -105,29 +105,29 @@ export function SectionOrderSheet({
         aria-modal="true"
         aria-label={t('adminSectionOrder')}
         className={[
-          'fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t border-slate-200/70 bg-gradient-to-b from-white to-slate-50/90 px-4 pb-safe-area-bottom pt-3 shadow-2xl backdrop-blur transition-transform duration-300 lg:hidden dark:border-slate-800 dark:from-slate-950 dark:to-slate-900/95',
+          'fixed inset-x-0 bottom-0 z-50 rounded-t-card border-t border-line bg-surface px-4 pb-safe-area-bottom pt-3 shadow-overlay transition-transform duration-300 lg:hidden',
           isOpen ? 'translate-y-0' : 'translate-y-full',
         ]
           .filter(Boolean)
           .join(' ')}
       >
         <div className="mb-3 flex justify-center">
-          <span className="h-1 w-12 rounded-full bg-slate-300/80 dark:bg-slate-700/80" aria-hidden="true" />
+          <span className="h-1 w-12 rounded-full bg-line-strong" aria-hidden="true" />
         </div>
         <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm font-semibold text-slate-900 dark:text-white">{t('adminSectionOrder')}</div>
+          <div className="text-sm font-semibold text-ink">{t('adminSectionOrder')}</div>
           <button
             type="button"
             onClick={onClose}
             aria-label={t('adminQrClose')}
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+            className="rounded-field p-1.5 text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink-muted"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Locked Basics row */}
-        <div className="mb-2 flex items-center gap-3 rounded-xl border border-slate-200/70 bg-white/80 px-3 py-3 text-sm font-medium text-slate-400 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-600">
+        <div className="mb-2 flex items-center gap-3 rounded-field border border-line bg-surface px-3 py-3 text-sm font-medium text-ink-subtle">
           <Lock className="h-5 w-5 shrink-0" />
           <span>{t('adminBasicsPinned')}</span>
         </div>
