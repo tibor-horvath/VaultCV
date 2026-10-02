@@ -1,5 +1,9 @@
 name: CI
 
+# Built on the reusable workflows in tibor-horvath/ci-toolkit (pinned to the
+# moving `@v1` tag). Web and API run as separate jobs, and a newer push to a PR
+# cancels the run in flight.
+
 on:
   push:
     branches:
@@ -12,28 +16,33 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    name: Build and Test
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: |
-            web/package-lock.json
-            api/package-lock.json
-      - name: Install and test (web)
-        working-directory: web
-        run: |
-          npm ci
-          npm test
-          npm run build
-      - name: Install and test (api)
-        working-directory: api
-        run: |
-          npm ci
-          npm test
-          npm run build
+  web:
+    name: Web
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v1
+    with:
+      working-directory: web
+      # `build` already runs `tsc -b`, so there is no separate typecheck script.
+      typecheck-script: ""
+      # Lint has pre-existing issues in the admin routes (see AGENTS.md).
+      # Set this to "lint" once they are fixed.
+      lint-script: ""
+      build-artifact-name: web-dist
+    permissions:
+      contents: read
+
+  api:
+    name: API
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v1
+    with:
+      working-directory: api
+      typecheck-script: ""
+      lint-script: ""
+      build-artifact-name: api-dist
+    permissions:
+      contents: read
+
+  secret-scan:
+    name: Secrets
+    uses: tibor-horvath/ci-toolkit/.github/workflows/secret-scan.yml@v1
+    permissions:
+      contents: read

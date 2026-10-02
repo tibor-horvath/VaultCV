@@ -1,0 +1,69 @@
+version: 2
+
+# Based on the ci-toolkit Node template (docs/dependabot-node.md).
+#
+# PRs are squash-merged and their titles must be Conventional Commits (see
+# pr-title.yml), so every entry sets a `chore` prefix: Dependabot then titles
+# its PRs `chore(deps): bump ...`, which passes the check and stays out of the
+# release-please changelog.
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Frameworks that must move together, or the app breaks between PRs.
+      # A package joins the first group that matches, so keep these above
+      # `minor-and-patch`.
+      react:
+        patterns: ["react", "react-dom", "react-router-dom", "@types/react", "@types/react-dom"]
+      tooling:
+        patterns: ["vite", "@vitejs/*", "vitest", "@vitest/*", "typescript"]
+      lint:
+        patterns: ["eslint", "eslint-*", "@eslint/*", "typescript-eslint", "globals"]
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+        exclude-patterns: ["react", "react-dom", "vite", "vitest"]
+    ignore:
+      # Majors of these are migrations, not updates: schedule them deliberately.
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "npm"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      azure:
+        patterns: ["@azure/*"]
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]

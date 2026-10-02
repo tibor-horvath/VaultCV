@@ -1,0 +1,21 @@
+name: PR Title
+
+# PRs are squash-merged, so the title becomes the commit on main that
+# release-please reads. A non-conventional title means a missed or wrong release.
+#
+# `pull_request_target` never checks out PR code (only the title is read), so it
+# is safe and also covers fork PRs. `edited` re-runs the check on a title change.
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    name: PR title
+    uses: tibor-horvath/ci-toolkit/.github/workflows/pr-title-lint.yml@v1
+    permissions:
+      pull-requests: read

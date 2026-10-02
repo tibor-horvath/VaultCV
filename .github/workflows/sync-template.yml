@@ -140,11 +140,18 @@ jobs:
             echo "No net file changes after applying upstream diff."
           fi
 
-          # Keep this repository's workflow customizations instead of upstream versions.
-          git checkout origin/main -- .github/workflows
-          if ! git diff --quiet HEAD -- .github/workflows; then
-            git add .github/workflows
-            git commit -m "chore: keep repo-specific workflow overrides"
+          # Keep this repository's CI config exactly as it is on main. Restoring the paths alone
+          # would keep files upstream *added* (a new workflow, dependabot.yml), so remove each
+          # path first and then bring back only what this repository already had.
+          KEEP_PATHS=(.github/workflows .github/dependabot.yml)
+          for path in "${KEEP_PATHS[@]}"; do
+            run_git git rm -r -q --ignore-unmatch -- "$path"
+            if git cat-file -e "origin/main:$path" 2>/dev/null; then
+              run_git git checkout origin/main -- "$path"
+            fi
+          done
+          if ! git diff --cached --quiet HEAD -- "${KEEP_PATHS[@]}"; then
+            run_git git commit -m "chore: keep repo-specific workflow overrides"
           fi
 
           git push --force-with-lease origin "$BRANCH"
