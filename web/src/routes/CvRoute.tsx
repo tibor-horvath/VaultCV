@@ -250,7 +250,7 @@ export function CvRoute() {
   // Everything the loader replaces has to wait on `showLoader`, or the two would overlap.
   const showLoader = useLoadingIndicator(state.kind === 'loading')
 
-  const renderUnlockedStatus = (variant: 'pill' | 'stacked') =>
+  const unlockedStatus =
     unlockedCountdown ? (
       <SessionStatusBadge
         isLocked={isSessionLocked}
@@ -259,7 +259,7 @@ export function CvRoute() {
         activeTooltipText={t('accessActiveBadgeHint')}
         expiresInSeconds={remainingSeconds}
         size="xs"
-        variant={variant}
+        variant="stacked"
       />
     ) : null
   const pdfLabel = pdfBusy ? t('generatingPdf') : t('downloadPdf')
@@ -297,22 +297,22 @@ export function CvRoute() {
           {/*
             Page toolbar. Session state on the left, controls on the right — one row that owns
             every page-level action, instead of scattering them through the profile card and
-            duplicating the PDF button for mobile. On phones it closes into one bordered bar with
-            a stacked status and 44px targets; from `sm` up it opens back into a bare row.
+            duplicating the PDF button for mobile. One bordered bar at every width: a stacked status
+            and 44px targets, with the PDF label shortened to fit phones.
           */}
-          <div className="flex items-center gap-1.5 rounded-card border border-line bg-surface p-1.5 pl-2 shadow-card sm:flex-wrap sm:justify-between sm:gap-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
-            <div className="min-w-0 flex-1 sm:hidden">{renderUnlockedStatus('stacked')}</div>
-            <div className="hidden min-w-0 sm:block">{renderUnlockedStatus('pill')}</div>
-            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1.5 rounded-card border border-line bg-surface p-1.5 pl-2 shadow-card sm:gap-2 sm:p-2 sm:pl-2.5">
+            <div className="min-w-0 flex-1">{unlockedStatus}</div>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               <LanguageSelector allowedLocales={availablePrivateLocales ?? EMPTY_LOCALES} />
-              <ThemeToggle className="max-sm:h-11 max-sm:w-11 max-sm:border-transparent max-sm:bg-transparent max-sm:shadow-none" />
+              <ThemeToggle variant="ghost" className="h-11 w-11" />
               <Button
                 variant="primary"
+                size="lg"
                 onClick={() => void handleDownloadPdf()}
                 busy={pdfBusy}
                 iconLeft={<FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />}
                 aria-label={pdfLabel}
-                className="max-sm:h-11 max-sm:px-4"
+                className="max-sm:px-4"
               >
                 <span className="sm:hidden" aria-hidden="true">
                   PDF
