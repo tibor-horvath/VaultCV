@@ -86,6 +86,17 @@ These links are stored in Azure Table Storage and support:
 
 See [share-links.md](share-links.md) for full details on creating, revoking, rotating share links, and the QR code / share actions available on each link.
 
+## Branding
+
+The branding page (`/admin/branding`) sets two things shown on every page, with a live light/dark preview:
+
+- **Browser tab icon** — the CV owner's initials (default) or an uploaded PNG, SVG, ICO or JPG (up to 64 KB).
+- **Footer brandmark** — shown above the footer links. Either an image (PNG, JPG or SVG, up to 256 KB, with an optional dark-theme variant, alt text and link) or an HTML snippet such as a one-paste inline-SVG badge (up to 32 KB, with an optional dark-theme snippet).
+
+Branding is stored as `<slug>-branding.json` in the profile container (images as base64 data URLs) and served publicly by `GET /api/branding` (cached for 60 seconds). Admins edit it through `GET`/`PUT /api/manage/branding`, which validates file types against their bytes, sizes and link schemes.
+
+HTML snippets are sanitized in the browser with DOMPurify right before display: scripts, event handlers, `<style>`, forms, frames, and `style`/`class` attributes are removed, links always open in a new tab with `rel="noopener noreferrer"`, and SVG `<animate>`/`<set>` may not target `href` or event attributes. The site's CSP still applies, so images from other hosts will not load — inline the SVG instead.
+
 ## Public visibility model
 
 The editor (`/admin/editor`) supports per-field visibility controls for fields that can be shown on the public landing page. Some blocks use a **section-level** public toggle (entire section on or off), including skills, languages, hobbies & interests, and honors & awards—mirroring how you can expose or hide those arrays in the public profile JSON.

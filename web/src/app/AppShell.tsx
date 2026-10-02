@@ -1,9 +1,11 @@
-import { SiGithubIcon, SiLinkedinIcon } from '../components/icons/SimpleBrandIcons'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
 import { useAppView } from '../lib/appView'
 import { useIsPageLoading } from '../lib/pageLoading'
-import { getBrand } from '../lib/brand'
 import { useI18n } from '../lib/i18n'
+import { SiteFooter } from '../components/SiteFooter'
+import { useCustomFavicon } from '../lib/favicon'
+import { useSiteBranding } from '../lib/siteBrandingContext'
+import { useThemeOrDefault } from '../lib/themeContext'
 
 /** Anchor the skip link jumps to, and the landmark screen readers land in. */
 const MAIN_ID = 'main-content'
@@ -17,7 +19,8 @@ export function AppShell() {
   const isAdminEditor = pathname === '/admin/editor' || pathname.startsWith('/admin/editor/')
   const isAdminDashboard = pathname === '/admin'
   const isAdminShare = pathname === '/admin/share' || pathname.startsWith('/admin/share/')
-  const isCompactAdmin = isAdminDashboard || isAdminShare
+  const isAdminBranding = pathname === '/admin/branding'
+  const isCompactAdmin = isAdminDashboard || isAdminShare || isAdminBranding
   const contentMaxClass = isPdfExport
     ? 'max-w-6xl'
     : isAdminEditor
@@ -27,8 +30,9 @@ export function AppShell() {
         : view === 'landing'
           ? 'max-w-3xl'
           : 'max-w-5xl'
-  const currentYear = new Date().getFullYear()
-  const brand = getBrand()
+  const { branding } = useSiteBranding()
+  const theme = useThemeOrDefault()
+  useCustomFavicon()
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-canvas">
@@ -62,36 +66,11 @@ export function AppShell() {
       </main>
 
       {isPdfExport || isPageLoading ? null : (
-        <footer className={`relative mx-auto w-full px-4 pb-6 sm:px-6 lg:px-8 ${contentMaxClass}`}>
-          <div className="flex flex-col items-center gap-3 pt-6 text-center">
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-              <a
-                className="vc-focusable inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink"
-                href={brand.repoUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <SiGithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{brand.displayName}</span>
-              </a>
-              <span className="h-3 w-px bg-line" aria-hidden="true" />
-              <a
-                className="vc-focusable inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink"
-                href={brand.linkedInUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <SiLinkedinIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>LinkedIn</span>
-              </a>
-              <span className="h-3 w-px bg-line" aria-hidden="true" />
-              <p className="text-xs text-ink-subtle">
-                &copy; {currentYear} {brand.copyrightName}. {t('footerRights')}
-              </p>
-            </div>
-            <p className="max-w-2xl text-2xs leading-relaxed text-ink-subtle">{t('cookieDisclosure')}</p>
-          </div>
-        </footer>
+        <SiteFooter
+          brandmark={branding.brandmark}
+          theme={theme}
+          className={`relative mx-auto w-full px-4 pb-6 sm:px-6 lg:px-8 ${contentMaxClass}`}
+        />
       )}
 
       <ScrollRestoration />

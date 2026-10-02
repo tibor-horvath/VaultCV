@@ -130,6 +130,20 @@ export async function writeSettingsJson(args: { slugFromName: string; jsonText: 
   return writeBlobText(getBlobClientByName(name), args.jsonText)
 }
 
+function brandingBlobName(slugFromName: string) {
+  const slug = safeSlugFromName(slugFromName)
+  if (!slug) throw new Error('Profile slug is empty (basics.name is required).')
+  return `${slug}-branding.json`
+}
+
+export async function readBrandingJson(args: { slugFromName: string }) {
+  return readBlobText(getBlobClientByName(brandingBlobName(args.slugFromName)))
+}
+
+export async function writeBrandingJson(args: { slugFromName: string; jsonText: string }) {
+  return writeBlobText(getBlobClientByName(brandingBlobName(args.slugFromName)), args.jsonText)
+}
+
 async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
   const chunks: Buffer[] = []
   for await (const chunk of stream) {

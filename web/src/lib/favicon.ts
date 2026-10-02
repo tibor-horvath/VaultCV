@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { dataUrlMimeType } from './siteBranding'
+import { useSiteBranding } from './siteBrandingContext'
 
 /** First + last word initials, or first two letters of a single word. Empty when no usable name. */
 export function initialsFromName(name: string): string {
@@ -48,18 +50,37 @@ export function faviconHrefFromName(name: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-export function useDocumentFavicon(displayName: string) {
-  useEffect(() => {
-    const link =
-      document.querySelector<HTMLLinkElement>('link[rel="icon"]') ??
-      (() => {
-        const el = document.createElement('link')
-        el.rel = 'icon'
-        el.type = 'image/svg+xml'
-        document.head.appendChild(el)
-        return el
-      })()
+function setDocumentFavicon(href: string, type: string) {
+  const link =
+    document.querySelector<HTMLLinkElement>('link[rel="icon"]') ??
+    (() => {
+      const el = document.createElement('link')
+      el.rel = 'icon'
+      document.head.appendChild(el)
+      return el
+    })()
+  link.type = type
+  link.href = href
+}
 
-    link.href = faviconHrefFromName(displayName)
-  }, [displayName])
+/** Sets the tab icon: the admin's custom favicon when there is one, else the name's initials. */
+export function useDocumentFavicon(displayName: string) {
+  const customFavicon = useSiteBranding().branding.favicon
+
+  useEffect(() => {
+    if (customFavicon) setDocumentFavicon(customFavicon, dataUrlMimeType(customFavicon))
+    else setDocumentFavicon(faviconHrefFromName(displayName), 'image/svg+xml')
+  }, [customFavicon, displayName])
+}
+
+/**
+ * App-wide: applies the custom favicon on pages that never call `useDocumentFavicon` (admin), and
+ * as early as the shell mounts. Leaves the tab icon alone when there is no custom one.
+ */
+export function useCustomFavicon() {
+  const customFavicon = useSiteBranding().branding.favicon
+
+  useEffect(() => {
+    if (customFavicon) setDocumentFavicon(customFavicon, dataUrlMimeType(customFavicon))
+  }, [customFavicon])
 }

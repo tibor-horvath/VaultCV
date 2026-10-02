@@ -12,7 +12,9 @@
  * Dark mode redefines only the variables; no component carries a `dark:` twin for colour.
  */
 @layer base {
-  :root {
+  /* `.vc-theme-*` pin a subtree to one theme, e.g. the admin branding preview. */
+  :root,
+  .vc-theme-light {
     color-scheme: light;
 
     --vc-canvas: 247 248 251;
@@ -54,7 +56,8 @@
     --vc-topbar-height: 3.25rem;
   }
 
-  html.dark {
+  html.dark,
+  .vc-theme-dark {
     color-scheme: dark;
 
     --vc-canvas: 9 11 16;

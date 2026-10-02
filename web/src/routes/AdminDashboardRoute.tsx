@@ -1,4 +1,4 @@
-import { ArrowRight, ExternalLink, KeyRound, Link2, Shield, SquarePen } from 'lucide-react'
+import { ArrowRight, ExternalLink, KeyRound, Link2, Palette, Shield, SquarePen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -12,7 +12,7 @@ import { fetchAuthMe, extractEmailFromPrincipal, type ClientPrincipal } from '..
 import { useI18n } from '../lib/i18n'
 import { AdminPageHeader } from './AdminPageHeader'
 
-/** One of the two things an admin can do. Whole card is the link, so the hit target is generous. */
+/** One of the things an admin can do. Whole card is the link, so the hit target is generous. */
 function AdminTile({
   to,
   icon,
@@ -165,7 +165,7 @@ export function AdminDashboardRoute() {
 
       <p className="text-sm text-ink-muted">{t('adminChooseManage')}</p>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <AdminTile
           to="/admin/editor"
           icon={<SquarePen className="h-4 w-4" />}
@@ -178,6 +178,13 @@ export function AdminDashboardRoute() {
           icon={<Link2 className="h-4 w-4" />}
           title={t('adminShareCv')}
           description={t('adminShareCvTileDescription')}
+          openLabel={t('adminOpen')}
+        />
+        <AdminTile
+          to="/admin/branding"
+          icon={<Palette className="h-4 w-4" />}
+          title={t('adminBranding')}
+          description={t('adminBrandingTileDescription')}
           openLabel={t('adminOpen')}
         />
       </div>
