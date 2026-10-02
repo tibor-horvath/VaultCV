@@ -20,6 +20,7 @@ export const huMessages: Partial<MessageCatalog> = {
   accessActiveBadgeHint: 'A hozzáférés jelenleg aktív. Ha lejár, nyissa meg újra ugyanazzal a linkkel vagy QR-kóddal.',
   durationHoursMinutes: '{hours} ó {minutes} p',
   durationMinutesSeconds: '{minutes} p {seconds} mp',
+  timeLeft: 'még {time}',
   lockedUntilCode: 'Zárolva a kód megadásáig.',
   themeSwitchToLight: 'Váltás világos témára',
   themeSwitchToDark: 'Váltás sötét témára',
