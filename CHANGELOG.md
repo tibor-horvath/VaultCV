@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/tibor-horvath/VaultCV/compare/v1.9.0...v1.10.0) (2026-10-02)
+
+
+### Features
+
+* add Modern PDF layout with a preview-based style chooser ([ae9bc2b](https://github.com/tibor-horvath/VaultCV/commit/ae9bc2b0192fb4ba60de6ebee24d89449871f2cd))
+
 ## [1.9.0](https://github.com/tibor-horvath/VaultCV/compare/v1.8.0...v1.9.0) (2026-10-02)
 
 
