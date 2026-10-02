@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/social-preview.png">
+  <img alt="VaultCV — Your CV. Your keys. A self-hosted CV site where private data never ships in the bundle." src="docs/brand/social-preview-light.png">
+</picture>
+
 # VaultCV
 
 A modern React CV SPA where **personal CV data is never bundled into the public site**.
@@ -27,6 +32,7 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 | Mock CV for local UI testing | [docs/mock-data.md](docs/mock-data.md) |
 | Syncing with the upstream template | [docs/template-sync.md](docs/template-sync.md) |
 | PDF export (basics card; html2canvas + jsPDF) | [docs/pdf-export.md](docs/pdf-export.md) |
+| Brand assets (logo, social preview) | [docs/brand/](docs/brand/README.md) |
 | Contributing guide | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | License | [LICENSE](LICENSE) |
 

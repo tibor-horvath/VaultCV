@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VaultCV social preview (dark)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&amp;family=Geist:wght@400;600&amp;family=Geist+Mono:wght@400&amp;display=block">
+<style>
+  html, body { margin: 0; }
+  .card {
+    width: 1280px; height: 640px; box-sizing: border-box; padding: 72px 80px;
+    display: flex; gap: 64px; align-items: center; overflow: hidden;
+    color: #EDF1F7; font-family: 'Geist', system-ui, sans-serif;
+    background-color: #0B1020;
+  }
+  .copy { flex-grow: 1; display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .wordmark { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -0.035em; }
+  .accent { color: #818CF8; }
+  h1 { margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 84px; letter-spacing: -0.04em; line-height: 0.98; }
+  p { margin: 0; font-size: 22px; line-height: 1.45; color: #A3AEBF; max-width: 560px; }
+  .chips { display: flex; gap: 10px; font-family: 'Geist Mono', monospace; font-size: 15px; color: #C7D2FE; }
+  .chips span { padding: 8px 14px; border: 1px solid #373F4F; border-radius: 999px; background: #12151D; }
+  .art { width: 440px; height: 470px; flex-shrink: 0; position: relative; }
+  .art > svg { position: absolute; top: 0; left: 0; }
+  .qr { position: absolute; right: 0; bottom: 0; width: 112px; height: 112px; box-sizing: border-box; padding: 12px; border-radius: 18px; background: #FFFFFF; border: 4px solid #0B1020; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .qr i { border-radius: 2px; }
+  .qr i.on { background: #0B1020; }
+  .granted { position: absolute; right: 96px; bottom: 44px; display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; background: #34D399; color: #06281D; font-weight: 600; font-size: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.35); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="copy">
+    <div class="brand">
+      <svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#818CF8"/><rect x="10" y="10" width="44" height="44" rx="9" fill="#0B1020"/><rect x="13" y="19" width="3" height="8" rx="1.5" fill="#818CF8"/><rect x="13" y="37" width="3" height="8" rx="1.5" fill="#818CF8"/><circle cx="35" cy="32" r="14" fill="none" stroke="#818CF8" stroke-width="3"/><path d="M35 32V23M35 32l-7.8 4.5M35 32l7.8 4.5" stroke="#818CF8" stroke-width="2.6" stroke-linecap="round"/><circle cx="35" cy="32" r="3.6" fill="#818CF8"/></svg>
+      <div class="wordmark">Vault<span class="accent">CV</span></div>
+    </div>
+    <h1>Your CV.<br><span class="accent">Your keys.</span></h1>
+    <p>A self-hosted CV site where private data never ships in the bundle. Unlock it with a signed link or QR code.</p>
+    <div class="chips"><span>React 19</span><span>Azure Functions</span><span>TypeScript</span></div>
+  </div>
+  <div class="art">
+    <svg width="440" height="440" viewBox="0 0 420 420" aria-hidden="true"><rect x="22" y="22" width="376" height="376" rx="52" fill="#12151D" stroke="#2A3140" stroke-width="2"/><rect x="8" y="108" width="28" height="64" rx="10" fill="#2A3140"/><rect x="8" y="248" width="28" height="64" rx="10" fill="#2A3140"/><circle cx="218" cy="210" r="156" fill="#161A24" stroke="#818CF8" stroke-width="7"/><circle cx="218" cy="210" r="122" fill="none" stroke="#2A3140" stroke-width="2"/><circle cx="356" cy="210" r="7" fill="#373F4F"/><circle cx="315.6" cy="307.6" r="7" fill="#373F4F"/><circle cx="218" cy="348" r="7" fill="#373F4F"/><circle cx="120.4" cy="307.6" r="7" fill="#373F4F"/><circle cx="80" cy="210" r="7" fill="#373F4F"/><circle cx="120.4" cy="112.4" r="7" fill="#373F4F"/><circle cx="218" cy="72" r="7" fill="#373F4F"/><circle cx="315.6" cy="112.4" r="7" fill="#373F4F"/><path d="M218 210V124M218 210l-74.5 43M218 210l74.5 43" stroke="#818CF8" stroke-width="14" stroke-linecap="round"/><circle cx="218" cy="124" r="15" fill="#818CF8"/><circle cx="143.5" cy="253" r="15" fill="#818CF8"/><circle cx="292.5" cy="253" r="15" fill="#818CF8"/><circle cx="218" cy="210" r="40" fill="#818CF8"/><text x="218" y="219" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="27" letter-spacing="-1" fill="#0B1020">CV</text></svg>
+    <div class="qr" id="qr"></div>
+    <div class="granted"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06281D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Access granted</div>
+  </div>
+</div>
+<script>
+  // Decorative 7x7 QR-style pattern, not a scannable code.
+  document.getElementById('qr').innerHTML = '1110111100100110111011010110000101111100011100111'
+    .split('').map((b) => `<i class="${b === '1' ? 'on' : ''}"></i>`).join('');
+</script>
+</body>
+</html>
