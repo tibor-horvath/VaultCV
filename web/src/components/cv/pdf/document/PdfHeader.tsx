@@ -1,72 +1,62 @@
 import { Image, Text, View } from '@react-pdf/renderer'
 import type { CvData } from '../../../../types/cv'
-import { inferLinkKind } from '../../../../lib/cvPresentation'
-import { hasPdfUrl } from '../../../../lib/pdfLinks'
-import { s } from '../../../../lib/pdf/styles'
-import { color, pt } from '../../../../lib/pdf/tokens'
 import { parseBasicsHeadline } from '../../../../lib/cvPresentation'
 import type { PdfProfilePhoto } from '../../../../lib/pdf/pdfImage'
-import { PdfIcon } from '../icons/PdfIcon'
-import type { PdfIconName } from '../icons/pdfIcons'
-import { PdfFallbackAvatar, PdfIconRow, PdfUrlLine } from './primitives'
+import { s } from '../../../../lib/pdf/styles'
+import { hasText, initialsOf, joinDot } from '../../../../lib/pdf/text'
 
-const PHOTO_SIZE = pt(160)
-
-const LINK_ICONS: Record<string, PdfIconName> = {
-  github: 'github',
-  linkedin: 'linkedin',
-  youtube: 'youtube',
-  email: 'atSign',
-  x: 'x',
-  mastodon: 'mastodon',
-}
-
+/**
+ * Contact details print as plain text: on paper a URL can't be clicked, and an employer only needs
+ * a way to reach the candidate. Profile links (GitHub, LinkedIn, …) stay on the web CV.
+ */
 export function PdfHeader({ cv, photo }: { cv: CvData; photo: PdfProfilePhoto }) {
   const basics = cv.basics
-  const { role, chip } = parseBasicsHeadline(basics.headline)
-  const visibleLinks = (cv.links ?? []).filter((l) => hasPdfUrl(l.url) && inferLinkKind(l) !== 'other')
-  const hasEmail = hasPdfUrl(basics.email)
+  const contacts = [basics.email, basics.mobile, basics.location].filter(hasText).map((v) => v.trim())
 
   return (
     <View style={s.header}>
       {photo.kind === 'image' ? (
-        <Image src={photo.src} style={s.headerPhoto} />
+        <Image src={photo.src} style={s.photo} />
       ) : (
-        <PdfFallbackAvatar size={PHOTO_SIZE} />
+        <View style={s.monogram}>
+          <Text style={s.monogramText}>{initialsOf(basics.name)}</Text>
+        </View>
       )}
 
       <View style={s.headerBody}>
         <Text style={s.name}>{basics.name}</Text>
-        {role ? <Text style={s.role}>{role}</Text> : null}
-        {chip ? (
-          <View style={s.headlineChip}>
-            <PdfIcon name="sparkles" size={pt(13)} color={color.indigo500} />
-            <Text style={s.headlineChipText}>{chip}</Text>
-          </View>
-        ) : null}
-        {basics.location ? (
-          <View style={s.headerLocation}>
-            <PdfIconRow icon="mapPin" iconColor={color.indigo500}>
-              <Text style={s.headerLocationText}>{basics.location}</Text>
-            </PdfIconRow>
-          </View>
-        ) : null}
-
-        {hasEmail || visibleLinks.length ? (
-          <View style={s.headerContacts}>
-            {hasEmail ? (
-              <PdfIconRow icon="mail">
-                <PdfUrlLine href={`mailto:${String(basics.email).trim()}`} />
-              </PdfIconRow>
-            ) : null}
-            {visibleLinks.map((l) => (
-              <PdfIconRow key={`${l.label}:${l.url}`} icon={LINK_ICONS[inferLinkKind(l)] ?? 'globe'}>
-                <PdfUrlLine href={l.url} />
-              </PdfIconRow>
-            ))}
-          </View>
-        ) : null}
+        {hasText(basics.headline) ? <Text style={s.headline}>{basics.headline.trim()}</Text> : null}
       </View>
+
+      {contacts.length ? (
+        <View style={s.contacts}>
+          {contacts.map((line) => (
+            <Text key={line} style={s.contactLine}>
+              {line}
+            </Text>
+          ))}
+        </View>
+      ) : null}
     </View>
+  )
+}
+
+/** Name and one way to reach the candidate on every page after the first, in case pages separate. */
+export function PdfRunningHead({ cv }: { cv: CvData }) {
+  const { role } = parseBasicsHeadline(cv.basics.headline)
+  const meta = joinDot([role, cv.basics.email])
+  return (
+    <View
+      fixed
+      style={s.runningHead}
+      render={({ pageNumber }) =>
+        pageNumber === 1 ? null : (
+          <View style={s.runningHeadInner}>
+            <Text style={s.runningHeadName}>{cv.basics.name}</Text>
+            {meta ? <Text style={s.runningHeadMeta}>{meta}</Text> : null}
+          </View>
+        )
+      }
+    />
   )
 }

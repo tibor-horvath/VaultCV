@@ -2,7 +2,6 @@ import { Font } from '@react-pdf/renderer'
 import interRegular from '../../assets/fonts/Inter-Regular.ttf'
 import interSemiBold from '../../assets/fonts/Inter-SemiBold.ttf'
 import interBold from '../../assets/fonts/Inter-Bold.ttf'
-import robotoMonoRegular from '../../assets/fonts/RobotoMono-Regular.ttf'
 import { font } from './tokens'
 import { splitForPdfLineBreak } from './lineBreak'
 
@@ -27,13 +26,6 @@ export function registerPdfFonts(): void {
       { src: interSemiBold, fontWeight: 600 },
       { src: interBold, fontWeight: 700 },
     ],
-  })
-  // Roboto Mono deliberately, not JetBrains Mono: the latter's programming ligatures (`://`)
-  // crash react-pdf's bundled fontkit with "Offset is outside the bounds of the DataView".
-  // Ligature-free is also the right call for URLs, which must read literally.
-  Font.register({
-    family: font.mono,
-    fonts: [{ src: robotoMonoRegular, fontWeight: 400 }],
   })
 
   Font.registerHyphenationCallback(splitForPdfLineBreak)

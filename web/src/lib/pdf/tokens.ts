@@ -1,56 +1,57 @@
 /**
- * The print layout was authored at 794 CSS px wide (A4 content at ~96dpi) and mapped onto
- * 190mm of A4 content width. Keeping that exact scale means the react-pdf output has the same
- * proportions as the raster output it replaces.
- *
- * 190mm = 538.58pt over 794 authored px.
+ * The print layout is specified in CSS px against the full A4 sheet (794 × 1123 px at 96dpi), the
+ * same units as its design comp. `pt()` maps those px onto PDF points 1:1 with the paper.
  */
-export const PT_PER_AUTHORED_PX = 538.58 / 794
+export const PT_PER_CSS_PX = 0.75
 
-/** Convert an authored CSS px value (as used in the Tailwind print layout) to PDF points. */
+/** Convert a CSS px value from the print design to PDF points. */
 export function pt(px: number): number {
-  return Math.round(px * PT_PER_AUTHORED_PX * 100) / 100
+  return Math.round(px * PT_PER_CSS_PX * 100) / 100
 }
 
 export const A4 = {
-  /** 10mm margin, matching the previous `a4LayoutMm()`. */
-  marginPt: 28.35,
-  contentWidthPt: 538.58,
+  widthPt: 595.28,
+  heightPt: 841.89,
 } as const
 
-/** Tailwind palette values used by the print layout, resolved to hex (react-pdf has no class names). */
+/**
+ * Sheet margins. The top margin also clears the running head on continuation pages, and the
+ * bottom one the footer band, both of which are positioned absolutely inside it.
+ */
+export const margin = {
+  top: pt(72),
+  side: pt(64),
+  bottom: pt(96),
+  runningHeadTop: pt(30),
+  footerBottom: pt(40),
+  generatedBottom: pt(22),
+} as const
+
+/**
+ * Print palette: near-black text on white, one dark accent that still reads as solid ink in
+ * grayscale, and nothing lighter than #767676 for text.
+ */
 export const color = {
-  slate900: '#0f172a',
-  slate800: '#1e293b',
-  slate700: '#334155',
-  slate600: '#475569',
-  slate500: '#64748b',
-  slate400: '#94a3b8',
-  slate200: '#e2e8f0',
-  slate100: '#f1f5f9',
-  slate50: '#f8fafc',
-  indigo700: '#4338ca',
-  indigo500: '#6366f1',
-  indigo200: '#c7d2fe',
-  indigo100: '#e0e7ff',
-  indigo50: '#eef2ff',
-  violet50: '#f5f3ff',
+  ink: '#111111',
+  text: '#1a1a1a',
+  body: '#2a2a2a',
+  muted: '#555555',
+  contact: '#333333',
+  footer: '#5f5f5f',
+  rule: '#d4d4d4',
+  hairline: '#e2e2e2',
+  monogramFill: '#ececec',
+  accent: '#1f4a7a',
   white: '#ffffff',
-  footer: '#646464',
+  link: '#2563eb',
 } as const
 
 export const font = {
   sans: 'Inter',
-  mono: 'RobotoMono',
 } as const
 
-export const iconSize = {
-  base: pt(14),
-  sm: pt(12),
-} as const
-
-/** Tailwind line-height utilities used in the print layout, as unitless multipliers. */
-export const leading = {
-  none: 1,
-  relaxed: 1.625,
+/** Width of the label/date column that runs down the left of every section. */
+export const gutter = {
+  width: pt(124),
+  gap: pt(28),
 } as const

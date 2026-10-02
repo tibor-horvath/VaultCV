@@ -38,6 +38,7 @@ export const enMessages = {
   education: 'Education',
   hobbiesInterests: 'Hobbies & interests',
   honorsAwards: 'Honors & awards',
+  profile: 'Profile',
   educationThesis: 'Thesis',
   educationAdvisor: 'Advisor',
   earned: 'Earned',

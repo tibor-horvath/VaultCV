@@ -29,14 +29,25 @@ Font.register({
     { src: fontPath('Inter-Bold.ttf'), fontWeight: 700 },
   ],
 })
-Font.register({ family: 'RobotoMono', fonts: [{ src: fontPath('RobotoMono-Regular.ttf'), fontWeight: 400 }] })
 Font.registerHyphenationCallback((word) => [word])
+
+/**
+ * Pinned so credential expiry is deterministic: on this date the mock CV's "Certification
+ * transcript" (2026-03) and AWS (2026-06) credentials have expired, the rest are current.
+ */
+const GENERATED_AT = new Date(2026, 9, 2, 12, 0, 0)
 
 function render(locale: 'en' | 'hu') {
   const messages = locale === 'hu' ? huMessages : enMessages
   const t = (key: MessageKey) => messages[key] ?? enMessages[key]
   return renderToBuffer(
-    <CvPdfDocument cv={getMockCv(locale)} t={t} locale={locale} photo={{ kind: 'fallback' }} />,
+    <CvPdfDocument
+      cv={getMockCv(locale)}
+      t={t}
+      locale={locale}
+      photo={{ kind: 'fallback' }}
+      generatedAt={GENERATED_AT}
+    />,
   )
 }
 
@@ -193,7 +204,7 @@ function extractableCodepoints(decoded: string): Set<number> {
 }
 
 describe('CvPdfDocument', () => {
-  it('produces a valid multi-page PDF', async () => {
+  it('produces a valid PDF', async () => {
     const pdf = await render('en')
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
     expect(pdf.byteLength).toBeGreaterThan(5000)
@@ -207,14 +218,48 @@ describe('CvPdfDocument', () => {
     expect(latin).not.toMatch(/\/Subtype\s*\/Image/)
   })
 
-  it('emits real link annotations for every link kind', async () => {
-    const latin = (await render('en')).toString('latin1')
-    const uris = latin.match(/\/URI\s*\(([^)]*)\)/g) ?? []
-    expect(uris.length).toBeGreaterThan(5)
-    expect(uris.some((u) => u.includes('mailto:'))).toBe(true)
-    expect(uris.some((u) => u.includes('https://'))).toBe(true)
-    // Every emitted URI must carry a scheme, or viewers resolve it relative to nothing.
-    for (const uri of uris) expect(uri).toMatch(/\/URI\s*\((?:[a-z][a-z0-9+.-]*:|\/\/)/i)
+  it('prints no CV links: the only link is the generated-by footer', async () => {
+    const pdf = await render('en')
+    const uris = [...pdf.toString('latin1').matchAll(/\/URI\s*\(([^)]*)\)/g)].map((m) => m[1])
+    expect(uris).toEqual([getBrand().repoUrl])
+
+    const text = pageTexts(pdf).join('\n')
+    for (const url of ['github.com/your-handle', 'linkedin.com', 'learn.microsoft.com', 'example.edu']) {
+      expect(text).not.toContain(url)
+    }
+  })
+
+  it('prints contact details as plain text', async () => {
+    const text = pageTexts(await render('en')).join('\n')
+    expect(text).toContain('john.doe@example.com')
+    expect(text).toContain('+49 1512 3456789')
+    expect(text).toContain('City, Country')
+  })
+
+  it('hides expired credentials and keeps current ones', async () => {
+    const text = pageTexts(await render('en')).join('\n')
+    expect(text).toContain('Microsoft Learn profile')
+    expect(text).toContain('Cambridge English C1 Advanced')
+    expect(text).not.toContain('Certification transcript')
+    expect(text).not.toContain('AWS Certified Developer')
+  })
+
+  // Content streams are not emitted in page order, so pages are identified by their page number.
+  function pageNumbered(pages: string[], n: number): string | undefined {
+    return pages.find((p) => p.includes(`${n} / ${pages.length}`))
+  }
+
+  it('puts experience on page 1, ahead of credentials, when the profile has no section order', async () => {
+    const first = pageNumbered(pageTexts(await render('en')), 1)
+    expect(first).toContain('EXPERIENCE')
+    const credentials = first!.indexOf('CREDENTIALS')
+    if (credentials >= 0) expect(first!.indexOf('EXPERIENCE')).toBeLessThan(credentials)
+  })
+
+  it('numbers every page and repeats the name on continuation pages', async () => {
+    const pages = pageTexts(await render('en'))
+    for (let n = 1; n <= pages.length; n++) expect(pageNumbered(pages, n), `page ${n}`).toBeDefined()
+    for (let n = 2; n <= pages.length; n++) expect(pageNumbered(pages, n)).toContain('Full‑stack Developer · john.doe@example.com')
   })
 
   it('makes the Hungarian CV text extractable, not just visible', async () => {
@@ -284,7 +329,7 @@ describe('generated-at footer', () => {
    */
   it('lands inside the page box', async () => {
     const annotations = linkAnnotations(await render('en'))
-    expect(annotations.length).toBeGreaterThan(5)
+    expect(annotations.length).toBeGreaterThan(0)
 
     const strays = annotations.filter(({ rect: [left, bottom, right, top] }) => {
       return left! < 0 || bottom! < 0 || right! > A4_WIDTH_PT || top! > A4_HEIGHT_PT
@@ -297,14 +342,14 @@ describe('pagination', () => {
   /**
    * Each heading in the mock CV paired with the first entry that must stay with it.
    *
-   * Regression: "LANGUAGE EXAMS" rendered alone at the foot of a page while its first credential
-   * was pushed to the next one. Asserting co-location is precise; checking whether a page *ends*
-   * with a heading is not — "AWS" is both a credential issuer heading and a skill chip.
+   * Regression: a section heading rendered alone at the foot of a page while its first entry was
+   * pushed to the next one. Asserting co-location is precise; checking whether a page *ends* with
+   * a heading is not.
    */
   const HEADING_WITH_FIRST_ENTRY: Array<[heading: string, firstEntry: string]> = [
+    ['EXPERIENCE', 'Software Engineer'],
+    ['EDUCATION', 'Example University'],
     ['CREDENTIALS', 'Microsoft Learn profile'],
-    ['MICROSOFT', 'Microsoft Learn profile'],
-    ['LANGUAGE EXAMS', 'Cambridge English C1 Advanced'],
     ['PROJECTS', 'Private CV SPA'],
     ['HONORS & AWARDS', 'Employee of the Year'],
   ]
