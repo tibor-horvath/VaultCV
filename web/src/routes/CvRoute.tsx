@@ -259,8 +259,10 @@ export function CvRoute() {
         activeTooltipText={t('accessActiveBadgeHint')}
         expiresInSeconds={remainingSeconds}
         size="xs"
+        variant="stacked"
       />
     ) : null
+  const pdfLabel = pdfBusy ? t('generatingPdf') : t('downloadPdf')
 
   return (
     <div className="space-y-5">
@@ -295,20 +297,27 @@ export function CvRoute() {
           {/*
             Page toolbar. Session state on the left, controls on the right — one row that owns
             every page-level action, instead of scattering them through the profile card and
-            duplicating the PDF button for mobile.
+            duplicating the PDF button for mobile. One bordered bar at every width: a stacked status
+            and 44px targets, with the PDF label shortened to fit phones.
           */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">{unlockedStatus}</div>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 rounded-card border border-line bg-surface p-1.5 pl-2 shadow-card sm:gap-2 sm:p-2 sm:pl-2.5">
+            <div className="min-w-0 flex-1">{unlockedStatus}</div>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               <LanguageSelector allowedLocales={availablePrivateLocales ?? EMPTY_LOCALES} />
-              <ThemeToggle />
+              <ThemeToggle variant="ghost" className="h-11 w-11" />
               <Button
                 variant="primary"
+                size="lg"
                 onClick={() => void handleDownloadPdf()}
                 busy={pdfBusy}
                 iconLeft={<FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                aria-label={pdfLabel}
+                className="max-sm:px-4"
               >
-                {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+                <span className="sm:hidden" aria-hidden="true">
+                  PDF
+                </span>
+                <span className="hidden sm:inline">{pdfLabel}</span>
               </Button>
             </div>
           </div>
@@ -333,7 +342,7 @@ export function CvRoute() {
             visible={isHeroScrolledPast}
             actions={
               <IconButton
-                label={pdfBusy ? t('generatingPdf') : t('downloadPdf')}
+                label={pdfLabel}
                 onClick={() => void handleDownloadPdf()}
                 disabled={pdfBusy}
                 size="sm"

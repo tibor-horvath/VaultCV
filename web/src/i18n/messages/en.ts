@@ -18,6 +18,7 @@ export const enMessages = {
   accessActiveBadgeHint: 'Access is active now. If it expires, reopen with the same link or QR code.',
   durationHoursMinutes: '{hours}h {minutes}m',
   durationMinutesSeconds: '{minutes}m {seconds}s',
+  timeLeft: '{time} left',
   lockedUntilCode: 'Locked until code is provided.',
   themeSwitchToLight: 'Switch to light theme',
   themeSwitchToDark: 'Switch to dark theme',

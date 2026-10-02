@@ -20,6 +20,7 @@ export const deMessages: Partial<MessageCatalog> = {
   accessActiveBadgeHint: 'Der Zugriff ist jetzt aktiv. Wenn er abläuft, öffne ihn erneut mit demselben Link oder QR-Code.',
   durationHoursMinutes: '{hours} Std. {minutes} Min.',
   durationMinutesSeconds: '{minutes} Min. {seconds} Sek.',
+  timeLeft: 'noch {time}',
   lockedUntilCode: 'Gesperrt, bis ein Code eingegeben wird.',
   themeSwitchToLight: 'Zum hellen Design wechseln',
   themeSwitchToDark: 'Zum dunklen Design wechseln',

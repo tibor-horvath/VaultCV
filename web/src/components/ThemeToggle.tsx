@@ -7,7 +7,13 @@ import { IconButton } from './ui/IconButton'
  * Light/dark switch. Icon-only: the label was never information the reader needed, and dropping it
  * keeps the CV toolbar from turning into a row of competing words.
  */
-export function ThemeToggle({ variant = 'outline' }: { variant?: 'ghost' | 'outline' }) {
+export function ThemeToggle({
+  variant = 'outline',
+  className,
+}: {
+  variant?: 'ghost' | 'outline'
+  className?: string
+}) {
   const { t } = useI18n()
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
@@ -17,6 +23,7 @@ export function ThemeToggle({ variant = 'outline' }: { variant?: 'ghost' | 'outl
       label={isDark ? t('themeSwitchToLight') : t('themeSwitchToDark')}
       onClick={toggleTheme}
       variant={variant}
+      className={className}
       aria-pressed={isDark}
     >
       {isDark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
