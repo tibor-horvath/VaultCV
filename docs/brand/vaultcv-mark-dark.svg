@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="VaultCV">
+  <rect width="64" height="64" rx="16" fill="#818CF8"/>
+  <rect x="10" y="10" width="44" height="44" rx="9" fill="#0B1020"/>
+  <rect x="13" y="19" width="3" height="8" rx="1.5" fill="#818CF8"/>
+  <rect x="13" y="37" width="3" height="8" rx="1.5" fill="#818CF8"/>
+  <circle cx="35" cy="32" r="14" fill="none" stroke="#818CF8" stroke-width="3"/>
+  <path d="M35 32V23M35 32l-7.8 4.5M35 32l7.8 4.5" stroke="#818CF8" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="35" cy="32" r="3.6" fill="#818CF8"/>
+</svg>
