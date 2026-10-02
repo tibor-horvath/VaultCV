@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/tibor-horvath/VaultCV/compare/v1.6.0...v1.7.0) (2026-10-02)
+
+
+### Features
+
+* group theme and language into a settings menu on mobile ([#64](https://github.com/tibor-horvath/VaultCV/issues/64)) ([185e891](https://github.com/tibor-horvath/VaultCV/commit/185e8915fd38146a00f73a44e8c8a139ef2ecc14))
+
 ## [1.6.0](https://github.com/tibor-horvath/VaultCV/compare/v1.5.0...v1.6.0) (2026-08-25)
 
 
