@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/tibor-horvath/VaultCV/compare/v1.8.0...v1.9.0) (2026-10-02)
+
+
+### Features
+
+* implement CI workflows using ci-toolkit and add PR title validation ([62bec67](https://github.com/tibor-horvath/VaultCV/commit/62bec672ffb70bf21198f88a4921d3fbbf0ee09e))
+
 ## [1.8.0](https://github.com/tibor-horvath/VaultCV/compare/v1.7.0...v1.8.0) (2026-10-02)
 
 
