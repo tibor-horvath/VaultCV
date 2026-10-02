@@ -19,7 +19,7 @@
     "@emnapi/runtime": "^1.9.1",
     "@types/node": "^24.0.0",
     "esbuild": "^0.27.4",
-    "typescript": "^5.9.0",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.2"
   }
 }
