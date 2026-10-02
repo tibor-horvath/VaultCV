@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/tibor-horvath/VaultCV/compare/v1.7.0...v1.8.0) (2026-10-02)
+
+
+### Features
+
+* redesign PDF export for print ([#66](https://github.com/tibor-horvath/VaultCV/issues/66)) ([1e462d5](https://github.com/tibor-horvath/VaultCV/commit/1e462d5a375278d951e875d6dd619d147c2db3e4))
+
 ## [1.7.0](https://github.com/tibor-horvath/VaultCV/compare/v1.6.0...v1.7.0) (2026-10-02)
 
 
