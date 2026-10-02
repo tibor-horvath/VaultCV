@@ -40,6 +40,7 @@ export const huMessages: Partial<MessageCatalog> = {
   education: 'Tanulmányok',
   hobbiesInterests: 'Hobbik és érdeklődés',
   honorsAwards: 'Díjak és elismerések',
+  profile: 'Bemutatkozás',
   educationThesis: 'Szakdolgozat',
   educationAdvisor: 'Konzulens',
   earned: 'Megszerezve',

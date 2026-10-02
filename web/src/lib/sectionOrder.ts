@@ -37,3 +37,21 @@ export function normalizeSectionOrder(order: unknown): SectionKey[] {
 
   return result
 }
+
+/**
+ * Default order for the printed CV, which is read by employers: work history first, supporting
+ * detail after. Only used when the profile has no explicit `sectionOrder` of its own.
+ */
+export const PRINT_SECTION_ORDER: readonly SectionKey[] = [
+  'experience',
+  'skillsLanguages',
+  'projects',
+  'education',
+  'credentials',
+  'honorsAwards',
+  'hobbiesInterests',
+]
+
+export function normalizePrintSectionOrder(order: unknown): SectionKey[] {
+  return normalizeSectionOrder(Array.isArray(order) && order.length ? order : PRINT_SECTION_ORDER)
+}

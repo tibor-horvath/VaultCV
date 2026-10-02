@@ -40,6 +40,7 @@ export const deMessages: Partial<MessageCatalog> = {
   education: 'Ausbildung',
   hobbiesInterests: 'Hobbys & Interessen',
   honorsAwards: 'Auszeichnungen & Ehrungen',
+  profile: 'Profil',
   educationThesis: 'Abschlussarbeit',
   educationAdvisor: 'Betreuer',
   earned: 'Erworben',
