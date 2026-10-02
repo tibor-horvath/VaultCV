@@ -69,6 +69,8 @@ The site footer (and the generated PDF footer) can be customized via public Vite
 
 For local dev, set these in `web/.env.local` (gitignored). For Azure Static Web Apps, set them as application settings / environment variables for the Static Web App.
 
+The browser tab icon and a footer brandmark (an image or an HTML badge) are set at runtime from the admin branding page — see [docs/admin.md](docs/admin.md#branding).
+
 ## Acknowledgments
 
 Parts of this repository and its documentation were created with AI assistance, including AI-assisted editing and AI-generated documentation using [Cursor](https://cursor.com) and [GitHub Copilot](https://github.com/features/copilot).

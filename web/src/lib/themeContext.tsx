@@ -52,3 +52,8 @@ export function useTheme() {
   }
   return value
 }
+
+/** The active theme, or `light` outside the provider — for chrome that must render either way. */
+export function useThemeOrDefault(): ThemePreference {
+  return useContext(ThemeContext)?.theme ?? 'light'
+}

@@ -6,6 +6,7 @@ import { RootRoute } from './routes/RootRoute'
 import { AdminShareRoute } from './routes/AdminRoute'
 import { AdminDashboardRoute } from './routes/AdminDashboardRoute'
 import { AdminEditorRoute } from './routes/AdminEditorRoute'
+import { AdminBrandingRoute } from './routes/AdminBrandingRoute'
 
 /**
  * Lazy so the dev preview's eager `@react-pdf/renderer` import (for `PDFViewer`) cannot be pulled
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
           { index: true, element: <AdminDashboardRoute /> },
           { path: 'share', element: <AdminShareRoute /> },
           { path: 'editor', element: <AdminEditorRoute /> },
+          { path: 'branding', element: <AdminBrandingRoute /> },
         ],
       },
       { path: '*', element: <NotFoundRedirect /> },
