@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/tibor-horvath/VaultCV/compare/v1.10.0...v1.11.0) (2026-10-02)
+
+
+### Features
+
+* add configurable favicon and footer brandmark ([#82](https://github.com/tibor-horvath/VaultCV/issues/82)) ([4f8256a](https://github.com/tibor-horvath/VaultCV/commit/4f8256ac788fca6031d9b9f6d9cdbdc3741f3bd9))
+
 ## [1.10.0](https://github.com/tibor-horvath/VaultCV/compare/v1.9.0...v1.10.0) (2026-10-02)
 
 
