@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { A4, gutter, margin, pt } from './tokens'
+import { A4, gutter, margin, modernLayout, pt } from './tokens'
 
 describe('pt', () => {
   it('maps the 794px design width onto the A4 sheet', () => {
@@ -19,5 +19,12 @@ describe('layout', () => {
   it('leaves a usable main column beside the gutter', () => {
     const main = A4.widthPt - margin.side * 2 - gutter.width - gutter.gap
     expect(main).toBeGreaterThan(pt(480))
+  })
+})
+
+describe('modern layout', () => {
+  it('leaves a usable main column beside the sidebar', () => {
+    const main = A4.widthPt - modernLayout.sidebarWidth - modernLayout.mainPadLeft - modernLayout.mainPadRight
+    expect(main).toBeGreaterThan(pt(420))
   })
 })

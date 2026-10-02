@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, CircleAlert, FileDown, Lock } from 'lucide-react'
 import { PDFViewer } from '@react-pdf/renderer'
 import { CvPdfDocument } from '../components/cv/pdf/document/CvPdfDocument'
+import { ModernCvPdfDocument } from '../components/cv/pdf/modern/ModernCvPdfDocument'
 import { Section } from '../components/cv/Section'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { useLoadingIndicator } from '../lib/loadingIndicator'
@@ -14,6 +15,9 @@ import { getMockCv } from '../lib/mockCv'
 import { useI18n } from '../lib/i18n'
 import { clearStoredAccessCode, getStoredAccessCode } from '../lib/accessSession'
 import { useCvRouteState } from '../hooks/useCvRouteState'
+import { DEFAULT_PDF_VARIANT, isPdfVariant, PDF_VARIANTS, type PdfVariant } from '../lib/pdfVariant'
+
+const VARIANT_LABEL = { modern: 'pdfVariantModern', print: 'pdfVariantPrint' } as const
 
 /**
  * Dev-only preview. `App.tsx` lazy-loads this route and redirects it in production, which is what
@@ -21,7 +25,11 @@ import { useCvRouteState } from '../hooks/useCvRouteState'
  */
 export default function CvPdfRoute() {
   const { locale, t } = useI18n()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
+  /** `?variant=print|modern` picks the layout under preview. */
+  const variantParam = params.get('variant')
+  const variant: PdfVariant = isPdfVariant(variantParam) ? variantParam : DEFAULT_PDF_VARIANT
+  const PdfDocument = variant === 'modern' ? ModernCvPdfDocument : CvPdfDocument
   const accessCode = getStoredAccessCode()
   const state = useCvRouteState(accessCode, locale)
   const [busy, setBusy] = useState(false)
@@ -61,7 +69,7 @@ export default function CvPdfRoute() {
     setBusy(true)
     try {
       const name = cvData.basics.name?.trim().replace(/\s+/g, '-') || 'cv'
-      await downloadCvPdf({ cv: cvData, t, locale, fileBaseName: name })
+      await downloadCvPdf({ cv: cvData, t, locale, variant, fileBaseName: name })
     } finally {
       setBusy(false)
     }
@@ -82,6 +90,25 @@ export default function CvPdfRoute() {
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t('backToCv')}
         </Link>
+        {cvReady ? (
+          <div role="group" aria-label={t('pdfFormatMenuLabel')} className="inline-flex rounded-field border border-line bg-surface p-0.5 shadow-card">
+            {PDF_VARIANTS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={v === variant}
+                onClick={() => {
+                  const next = new URLSearchParams(params)
+                  next.set('variant', v)
+                  setParams(next, { replace: true })
+                }}
+                className={`vc-focusable h-8 rounded-[0.5rem] px-3 text-xs font-semibold ${v === variant ? 'bg-accent text-accent-ink' : 'text-ink-muted hover:bg-surface-muted'}`}
+              >
+                {t(VARIANT_LABEL[v])}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {cvReady ? (
           <button
             type="button"
@@ -139,8 +166,8 @@ export default function CvPdfRoute() {
       ) : null}
 
       {cvReady && cvData && photo ? (
-        <PDFViewer style={{ width: '100%', height: '90vh', border: 0 }} showToolbar>
-          <CvPdfDocument cv={cvData} t={t} locale={locale} photo={photo} />
+        <PDFViewer key={variant} style={{ width: '100%', height: '90vh', border: 0 }} showToolbar>
+          <PdfDocument cv={cvData} t={t} locale={locale} photo={photo} />
         </PDFViewer>
       ) : null}
     </div>

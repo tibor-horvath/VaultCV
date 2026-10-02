@@ -42,6 +42,8 @@ import {
 } from '../lib/accessSession'
 import { buildPhotoSrc } from '../lib/cvPresentation'
 import { downloadCvPdf } from '../lib/downloadCvPdf'
+import { readPdfVariantPreference, writePdfVariantPreference, type PdfVariant } from '../lib/pdfVariant'
+import { PdfDownloadMenu } from '../components/cv/PdfDownloadMenu'
 import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
 import { normalizeSectionOrder } from '../lib/sectionOrder'
 
@@ -181,6 +183,7 @@ export function CvRoute() {
   const orderedSections: SectionKey[] = state.kind === 'ready' ? normalizeSectionOrder(state.cv.sectionOrder) : []
   const [pdfBusy, setPdfBusy] = useState(false)
   const [pdfError, setPdfError] = useState(false)
+  const [pdfVariant, setPdfVariant] = useState<PdfVariant>(readPdfVariantPreference)
   const [availablePrivateLocales, setAvailablePrivateLocales] = useState<string[] | null>(null)
 
   useEffect(() => {
@@ -195,13 +198,18 @@ export function CvRoute() {
     }
   }, [])
 
-  async function handleDownloadPdf() {
+  function handleSelectPdfVariant(variant: PdfVariant) {
+    setPdfVariant(variant)
+    writePdfVariantPreference(variant)
+  }
+
+  async function handleDownloadPdf(variant: PdfVariant) {
     if (state.kind !== 'ready') return
     setPdfBusy(true)
     setPdfError(false)
     try {
       const name = state.cv.basics.name?.trim().replace(/\s+/g, '-') || 'cv'
-      await downloadCvPdf({ cv: state.cv, t, locale, fileBaseName: name })
+      await downloadCvPdf({ cv: state.cv, t, locale, variant, fileBaseName: name })
     } catch {
       // Previously this rejected unhandled and the button just reset, leaving no feedback.
       setPdfError(true)
@@ -305,20 +313,12 @@ export function CvRoute() {
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               <LanguageSelector allowedLocales={availablePrivateLocales ?? EMPTY_LOCALES} />
               <ThemeToggle variant="ghost" className="h-11 w-11" />
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => void handleDownloadPdf()}
+              <PdfDownloadMenu
                 busy={pdfBusy}
-                iconLeft={<FileDown className="h-4 w-4 shrink-0" aria-hidden="true" />}
-                aria-label={pdfLabel}
-                className="max-sm:px-4"
-              >
-                <span className="sm:hidden" aria-hidden="true">
-                  PDF
-                </span>
-                <span className="hidden sm:inline">{pdfLabel}</span>
-              </Button>
+                selected={pdfVariant}
+                onSelect={handleSelectPdfVariant}
+                onDownload={(variant) => void handleDownloadPdf(variant)}
+              />
             </div>
           </div>
 
@@ -343,7 +343,7 @@ export function CvRoute() {
             actions={
               <IconButton
                 label={pdfLabel}
-                onClick={() => void handleDownloadPdf()}
+                onClick={() => void handleDownloadPdf(pdfVariant)}
                 disabled={pdfBusy}
                 size="sm"
                 tabIndex={isHeroScrolledPast ? undefined : -1}

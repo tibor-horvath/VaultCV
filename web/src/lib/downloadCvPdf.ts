@@ -1,5 +1,6 @@
 import type { MessageKey } from '../i18n/messages'
 import type { CvData } from '../types/cv'
+import type { PdfVariant } from './pdfVariant'
 import { sanitizePdfFileBaseName } from './pdfFileName'
 import { withTimeout } from './withTimeout'
 
@@ -12,6 +13,8 @@ export type DownloadCvPdfOptions = {
   cv: CvData
   t: (key: MessageKey) => string
   locale: string
+  /** Screen (`modern`) or paper (`print`) layout. */
+  variant: PdfVariant
   fileBaseName?: string
 }
 
@@ -24,7 +27,7 @@ export type DownloadCvPdfOptions = {
 export async function downloadCvPdf(opts: DownloadCvPdfOptions): Promise<void> {
   const { renderCvPdfBlob } = await import('./pdf/renderCvPdfBlob')
   const blob = await withTimeout(
-    renderCvPdfBlob({ cv: opts.cv, t: opts.t, locale: opts.locale }),
+    renderCvPdfBlob({ cv: opts.cv, t: opts.t, locale: opts.locale, variant: opts.variant }),
     PDF_RENDER_TIMEOUT_MS,
     'rendering the PDF',
   )

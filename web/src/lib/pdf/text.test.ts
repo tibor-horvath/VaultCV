@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hasText, initialsOf, joinDot } from './text'
+import { hasText, initialsOf, joinDot, splitLanguageLevel } from './text'
 
 describe('hasText', () => {
   it('is false for nullish and blank values', () => {
@@ -23,5 +23,17 @@ describe('initialsOf', () => {
     expect(initialsOf('  Bíró   Győző Ödön ')).toBe('BG')
     expect(initialsOf('ödön')).toBe('Ö')
     expect(initialsOf('')).toBe('')
+  })
+})
+
+describe('splitLanguageLevel', () => {
+  it('splits a trailing level off the language name', () => {
+    expect(splitLanguageLevel('English (C1)')).toEqual({ name: 'English', level: 'C1' })
+    expect(splitLanguageLevel(' Magyar (Anyanyelvi) ')).toEqual({ name: 'Magyar', level: 'Anyanyelvi' })
+  })
+
+  it('keeps values without a level whole', () => {
+    expect(splitLanguageLevel('German')).toEqual({ name: 'German' })
+    expect(splitLanguageLevel('(C1)')).toEqual({ name: '(C1)' })
   })
 })

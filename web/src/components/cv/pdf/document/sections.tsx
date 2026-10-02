@@ -1,5 +1,5 @@
 import { Text, View } from '@react-pdf/renderer'
-import type { CvAward, CvCredential, CvCredentialIssuer, CvEducation, CvExperience, CvProject } from '../../../../types/cv'
+import type { CvAward, CvCredential, CvEducation, CvExperience, CvProject } from '../../../../types/cv'
 import { highlightChildKey, stableEducationKey, stableExperienceKey } from '../../../../lib/cvKeys'
 import { s } from '../../../../lib/pdf/styles'
 import {
@@ -11,47 +11,12 @@ import {
   type PdfT,
 } from './primitives'
 import { hasText, joinDot } from '../../../../lib/pdf/text'
+import { credentialDates, credentialKey, dateRange, issuerDetail, orderCredentials } from './format'
 
 /**
  * Links are deliberately absent from every section: the printed CV is read on paper, where a URL
  * is noise. They remain on the web CV.
  */
-
-/**
- * `cncf` was missing from the original print layout's issuer list, so CNCF credentials were
- * silently dropped from the PDF. Included here so no credential is lost.
- */
-const CREDENTIAL_ISSUER_ORDER: CvCredentialIssuer[] = [
-  'microsoft',
-  'aws',
-  'google',
-  'cncf',
-  'school',
-  'language',
-  'other',
-]
-
-/** Vendor names add context to a certificate title; generic groups ("Other") would only add noise. */
-function issuerDetail(issuer: CvCredentialIssuer): string | undefined {
-  if (issuer === 'microsoft') return 'Microsoft'
-  if (issuer === 'aws') return 'AWS'
-  if (issuer === 'google') return 'Google'
-  if (issuer === 'cncf') return 'CNCF'
-  return undefined
-}
-
-function dateRange(start: string | undefined, end: string | undefined, t: PdfT): string {
-  if (!hasText(start) && !hasText(end)) return ''
-  if (!hasText(start)) return end!.trim()
-  return `${start.trim()} – ${hasText(end) ? end.trim() : t('present')}`
-}
-
-function credentialDates(c: CvCredential, t: PdfT): string {
-  if (hasText(c.dateEarned) && hasText(c.dateExpires)) return `${c.dateEarned.trim()} – ${c.dateExpires.trim()}`
-  if (hasText(c.dateEarned)) return c.dateEarned.trim()
-  if (hasText(c.dateExpires)) return `${t('expires')} ${c.dateExpires.trim()}`
-  return ''
-}
 
 export function PdfSummary({ summary, t }: { summary: string; t: PdfT }) {
   return (
@@ -185,13 +150,9 @@ export function PdfEducation({ education, t }: { education: CvEducation[]; t: Pd
   )
 }
 
-function credentialKey(c: CvCredential, i: number): string {
-  return `${c.issuer}:${c.label}:${c.dateEarned ?? ''}:${c.dateExpires ?? ''}:${i}`
-}
-
 /** Expects already-filtered (unexpired) credentials; see `printableCredentials`. */
 export function PdfCredentials({ credentials, t }: { credentials: CvCredential[]; t: PdfT }) {
-  const ordered = CREDENTIAL_ISSUER_ORDER.flatMap((issuer) => credentials.filter((c) => c.issuer === issuer))
+  const ordered = orderCredentials(credentials)
   return (
     <View style={s.section}>
       <PdfGutterRow label={t('credentials')}>

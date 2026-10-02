@@ -55,3 +55,40 @@ export const gutter = {
   width: pt(124),
   gap: pt(28),
 } as const
+
+/**
+ * Modern (screen) layout. The sidebar runs the full height of every page; the main column sits
+ * beside it. Values are px from the design comp, like everything above.
+ */
+export const modernLayout = {
+  sidebarWidth: pt(262),
+  sidebarPadX: pt(28),
+  mainPadLeft: pt(40),
+  mainPadRight: pt(48),
+  top: pt(48),
+  bottom: pt(76),
+  footerBottom: pt(32),
+} as const
+
+/**
+ * Modern palette: VaultCV's Vault Ink sidebar and Key Indigo accent. Every text color clears
+ * 4.5:1 against the surface it sits on.
+ */
+export const modernColor = {
+  ink: '#0B1020',
+  body: '#343A4F',
+  muted: '#5A6178',
+  rule: '#E4E6F0',
+  chipBorder: '#D5D8E6',
+  surface: '#F7F8FB',
+  accent: '#4F46E5',
+  accentDeep: '#3730A3',
+  tint: '#EEF0FF',
+  white: '#FFFFFF',
+  sidebar: '#0B1020',
+  sidebarText: '#E8EAF3',
+  sidebarMuted: '#9AA3BD',
+  sidebarLabel: '#A5ACF8',
+  sidebarLink: '#A5B4FC',
+  sidebarChip: '#3A4160',
+} as const

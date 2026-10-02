@@ -20,3 +20,14 @@ export function initialsOf(name: string): string {
     .map((part) => part.charAt(0).toLocaleUpperCase())
     .join('')
 }
+
+/**
+ * `"English (C1)"` → `{ name: 'English', level: 'C1' }`. Languages are free text in the CV schema;
+ * the trailing parenthetical is the conventional place for a level. Anything else is all name.
+ */
+export function splitLanguageLevel(value: string): { name: string; level?: string } {
+  const trimmed = value.trim()
+  const m = /^(.+?)\s*\(([^()]+)\)$/.exec(trimmed)
+  if (!m) return { name: trimmed }
+  return { name: m[1]!.trim(), level: m[2]!.trim() }
+}
