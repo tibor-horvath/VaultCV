@@ -9,7 +9,7 @@ Before deploying, make sure you have:
 - **An Azure account** — [Create one free](https://azure.microsoft.com/free) if you don't have one. You'll need a credit card to verify identity, but you won't be charged for the free tier.
 - **A GitHub account** — Azure SWA deploys from GitHub automatically via GitHub Actions (a built-in CI/CD pipeline). [Sign up free](https://github.com/join).
 - **This repository on GitHub** — Either fork it or push your own copy. If you're new to this, see [GitHub's guide to creating a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
-- **Azure CLI** *(optional)* — Only needed if you prefer the command-line approach (Option B below). [Install guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
+- **Azure CLI** *(Option A only)* — Used to run the infrastructure template. [Install guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
 - **Node.js 20.19+** *(local only; Node.js 22 recommended)* — The build runs in GitHub Actions in the cloud (Node.js 22), so you only need local Node if you want to test before pushing.
 
 ## Step 1 — Fork or push the repo to GitHub
@@ -22,7 +22,40 @@ If you cloned this repo locally, push it to your own GitHub account before conti
 
 An **Azure Static Web App** is the cloud resource that hosts your website and API together. A **Resource Group** is just a folder in Azure to keep related resources organised.
 
-### Option A — Azure Portal (recommended for beginners)
+### Option A — Infrastructure template (recommended)
+
+[`infra/main.bicep`](../infra/main.bicep) creates everything in one command: the Static Web App (Free plan), a storage account with the `profiles` blob container and the `sharelinks` table, and all application settings from Step 4, including the storage connection string and a random session signing key.
+
+1. Sign in and create a resource group:
+
+   ```bash
+   az login
+   az group create --name cv-rg --location westeurope
+   ```
+
+2. Deploy the template. Replace `my-cv` with a name for your site and `john-doe` with your profile slug:
+
+   ```bash
+   az deployment group create      --resource-group cv-rg      --template-file infra/main.bicep      --parameters appName=my-cv profileSlug=john-doe
+   ```
+
+   When it finishes, the `siteUrl` output is your site's address. Other optional parameters (regions, container and table names, `allowedOrigins`, `sessionTtlSeconds`) are described at the top of the template.
+
+3. Give GitHub Actions the deployment token so it can publish the site. With the [GitHub CLI](https://cli.github.com/), run this from your repository folder:
+
+   ```bash
+   az staticwebapp secrets list --name my-cv --resource-group cv-rg --query properties.apiKey -o tsv      | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN
+   ```
+
+   Without the GitHub CLI, print the token with the `az staticwebapp secrets list` part of the command and paste it into your repo under **Settings** → **Secrets and variables** → **Actions** → **New repository secret**, named `AZURE_STATIC_WEB_APPS_API_TOKEN`.
+
+4. Push to `main`, or run the **Deploy to Azure** workflow from the **Actions** tab. [`.github/workflows/deploy-azure.yml`](../.github/workflows/deploy-azure.yml) builds `web/` and `api/` and uploads them. Until the secret exists, the workflow skips instead of failing.
+
+With this option, Step 4 is already done; continue with Step 3 and Step 5.
+
+> **Re-running the template** replaces *all* application settings with the values in the template, so settings you added by hand in the Portal are removed; pass them as parameters instead. It also generates a new session signing key, which signs out anyone currently signed in. To keep the key stable, pass your own with `sessionSigningKey=<secret>`.
+
+### Option B — Azure Portal
 
 1. Go to the [Azure Portal](https://portal.azure.com) and sign in.
 2. In the search bar at the top, type **Static Web Apps** and select it.
@@ -54,22 +87,9 @@ If any of these are wrong, edit the file (directly or via a follow-up commit/PR)
 
 Before your first production deploy, verify `api/.funcignore` exists and excludes `node_modules/`. Azure SWA zips the `api/` folder for deployment; without `.funcignore`, the package can exceed the size limit. In this repository the Functions’ `scriptFile` values point at bundled output under `api/dist/`, so dependencies are already included in the bundle and the `node_modules/` tree is not needed at runtime. If you adapt this setup without bundling, make sure you do not exclude any runtime dependencies your Functions need.
 
-> **Using this template?** This repository does not include a pre-configured deployment workflow. When you link your new repository to an Azure SWA resource, Azure adds a workflow file at `.github/workflows/azure-static-web-apps-<name>.yml` containing your app-specific secret name and resource identifier. Check and correct the build settings in that file (see table above) before or immediately after the first deployment runs.
-
-### Option B — Azure CLI
-
-```bash
-az staticwebapp create \
-  --name <your-app-name> \
-  --resource-group <your-rg> \
-  --location "westeurope" \
-  --source https://github.com/<you>/<repo> \
-  --branch main \
-  --app-location "web" \
-  --api-location "api" \
-  --output-location "dist" \
-  --login-with-github
-```
+> **Portal-created workflow:** Azure's workflow uses its own secret (`AZURE_STATIC_WEB_APPS_API_TOKEN_<NAME>`), so the repository's `deploy-azure.yml` keeps skipping and the site is not deployed twice. You can delete `deploy-azure.yml` if you want only one deploy workflow.
+>
+> The Portal does not create storage. Create a storage account with a private blob container (for example `profiles`) and a table named `sharelinks`, then use its connection string in Step 4.
 
 ## Step 3 — Upload a profile photo (optional)
 
@@ -87,6 +107,8 @@ Once your site is deployed and you have admin access (see Step 5 and the [admin 
 The photo is stored in the same Azure Blob Storage container as your profile JSON (configured in Step 4 via `CV_PROFILE_CONTAINER`). No separate storage account or SAS token setup is needed.
 
 ## Step 4 — Configure Application settings
+
+> Skip this step if you used the infrastructure template (Option A); it already set these values.
 
 Application settings are the secure, server-side environment variables Azure injects into your API at runtime. **These never appear in your code or git history.**
 

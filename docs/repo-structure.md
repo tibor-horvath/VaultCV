@@ -2,6 +2,7 @@
 
 - `web/`: React + TypeScript SPA (Vite) — the website visitors see
 - `api/`: Azure Functions (TypeScript) — the server-side API that guards your CV data. Deployment packaging is controlled by `api/.funcignore`; because this repo bundles runtime dependencies into `api/dist/*/index.js`, build artifacts (including `node_modules/`) are excluded from SWA uploads.
+- `infra/`: Bicep template that provisions the Static Web App, storage and app settings (see [Deployment](deployment-azure.md))
 - `scripts/`: build helpers (for example `sync-swa-config.mjs`)
 - `staticwebapp.config.json`: routing and security headers config
 

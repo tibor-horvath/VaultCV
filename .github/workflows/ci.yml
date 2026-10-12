@@ -41,6 +41,14 @@ jobs:
     permissions:
       contents: read
 
+  infra:
+    name: Infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Bicep template
+        run: az bicep build --file infra/main.bicep --stdout > /dev/null
+
   secret-scan:
     name: Secrets
     uses: tibor-horvath/ci-toolkit/.github/workflows/secret-scan.yml@v1
