@@ -18,7 +18,7 @@ permissions:
 jobs:
   web:
     name: Web
-    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v1
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v2
     with:
       working-directory: web
       # `build` already runs `tsc -b`, so there is no separate typecheck script.
@@ -32,7 +32,7 @@ jobs:
 
   api:
     name: API
-    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v1
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v2
     with:
       working-directory: api
       typecheck-script: ""
