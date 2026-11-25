@@ -1,0 +1,55 @@
+name: PR Labels
+
+# Labels PRs from two sources, using reusable workflows from
+# tibor-horvath/ci-toolkit (docs/pr-title-labels.md, docs/pr-path-labels.md):
+#   - type:  the Conventional Commit title (`feat:` -> `type: feat`, `!` or a
+#            `BREAKING CHANGE:` footer -> `breaking-change`). Retitling swaps it.
+#   - area:  the files the PR changes (rules below).
+# The two jobs manage different labels, and neither touches other labels such
+# as `dependencies` or release-please's `autorelease: *`.
+#
+# `pull_request_target` never checks out PR code (only the event payload and
+# the changed-file list are read), so it is safe and gives fork PRs a token that
+# can write labels. It runs the workflow from main, so changes here take effect
+# once merged. `edited` re-labels on a title change, `synchronize` on new commits.
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  title-labels:
+    name: Title labels
+    uses: tibor-horvath/ci-toolkit/.github/workflows/pr-title-labels.yml@v2
+    permissions:
+      pull-requests: write
+
+  path-labels:
+    name: Path labels
+    uses: tibor-horvath/ci-toolkit/.github/workflows/pr-path-labels.yml@v2
+    with:
+      # Drop an area label once the PR no longer touches that area.
+      sync-labels: true
+      configuration: |
+        "area: web":
+          - changed-files:
+              - any-glob-to-any-file: "web/**"
+        "area: api":
+          - changed-files:
+              - any-glob-to-any-file: "api/**"
+        "area: infra":
+          - changed-files:
+              - any-glob-to-any-file: ["infra/**", "staticwebapp.config.json"]
+        "area: ci":
+          - changed-files:
+              - any-glob-to-any-file: ".github/**"
+        # Named files rather than `**/*.md`, so release PRs (CHANGELOG.md) stay out.
+        documentation:
+          - changed-files:
+              - any-glob-to-any-file: ["docs/**", "README.md", "CONTRIBUTING.md", "AGENTS.md"]
+    permissions:
+      contents: read
+      pull-requests: write

@@ -1,0 +1,60 @@
+name: Security
+
+# Dependency and code security checks, built on reusable workflows from
+# tibor-horvath/ci-toolkit (docs/dependency-review.md, docs/codeql.md,
+# docs/node-audit.md):
+#   - Dependency review: fails a PR that adds or bumps a dependency to a
+#     vulnerable version. Judges only what the PR changes. Skipped off PRs.
+#   - CodeQL: static analysis of web/ and api/; alerts land in Code scanning.
+#   - npm audit: checks each lockfile against the advisory database, so
+#     advisories published after a dependency landed are caught too.
+# The weekly run picks up new advisories and new CodeQL queries without a push.
+#
+# Make Dependency review and npm audit required checks on main, so Dependabot
+# auto-merge (dependabot-automerge.yml) waits for them.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "0 6 * * 1" # Mondays, after Dependabot's weekly run is queued
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    uses: tibor-horvath/ci-toolkit/.github/workflows/dependency-review.yml@v2
+    permissions:
+      contents: read
+      pull-requests: write
+
+  codeql:
+    name: CodeQL
+    uses: tibor-horvath/ci-toolkit/.github/workflows/codeql.yml@v2
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+  audit-web:
+    name: npm audit (web)
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-audit.yml@v2
+    with:
+      working-directory: web
+    permissions:
+      contents: read
+
+  audit-api:
+    name: npm audit (api)
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-audit.yml@v2
+    with:
+      working-directory: api
+    permissions:
+      contents: read

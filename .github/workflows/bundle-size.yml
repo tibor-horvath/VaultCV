@@ -1,0 +1,29 @@
+name: Bundle Size
+
+# Builds the web app for the PR and for its base commit, and posts the size
+# difference as a PR comment (updated in place), using
+# tibor-horvath/ci-toolkit's bundle-size.yml (docs/bundle-size.md).
+#
+# Report-only for now: add `max-gzip-increase-kb` to fail PRs that grow the
+# gzipped bundle by more than that. It builds twice, so it runs on PRs only.
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - ".github/workflows/bundle-size.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  size:
+    name: Bundle size (web)
+    uses: tibor-horvath/ci-toolkit/.github/workflows/bundle-size.yml@v2
+    with:
+      working-directory: web
+    permissions:
+      contents: read
+      pull-requests: write
