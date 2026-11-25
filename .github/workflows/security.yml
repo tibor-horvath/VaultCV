@@ -1,14 +1,17 @@
 name: Security
 
-# Dependency and code security checks, built on reusable workflows from
-# tibor-horvath/ci-toolkit (docs/dependency-review.md, docs/codeql.md,
-# docs/node-audit.md):
+# Dependency security checks, built on reusable workflows from
+# tibor-horvath/ci-toolkit (docs/dependency-review.md, docs/node-audit.md):
 #   - Dependency review: fails a PR that adds or bumps a dependency to a
 #     vulnerable version. Judges only what the PR changes. Skipped off PRs.
-#   - CodeQL: static analysis of web/ and api/; alerts land in Code scanning.
 #   - npm audit: checks each lockfile against the advisory database, so
 #     advisories published after a dependency landed are caught too.
-# The weekly run picks up new advisories and new CodeQL queries without a push.
+# The weekly run picks up new advisories without a push.
+#
+# CodeQL is not here: the repo uses GitHub's CodeQL *default setup*
+# (Settings > Advanced Security), and GitHub rejects results from a workflow
+# while default setup is on. To run ci-toolkit's codeql.yml instead, switch
+# default setup to advanced or disable it first.
 #
 # Make Dependency review and npm audit required checks on main, so Dependabot
 # auto-merge (dependabot-automerge.yml) waits for them.
@@ -34,14 +37,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-
-  codeql:
-    name: CodeQL
-    uses: tibor-horvath/ci-toolkit/.github/workflows/codeql.yml@v2
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
 
   audit-web:
     name: npm audit (web)
