@@ -28,7 +28,7 @@ jobs:
         if: env.HAS_DEPLOY_TOKEN != 'true'
         run: echo "::notice::AZURE_STATIC_WEB_APPS_API_TOKEN is not set; skipping deployment."
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.HAS_DEPLOY_TOKEN == 'true'
 
       - name: Build and deploy
