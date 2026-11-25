@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  ArrowRight,
   Award,
   BriefcaseBusiness,
-  Eye,
-  EyeOff,
   GraduationCap,
-  KeyRound,
   Languages,
   LayoutGrid,
   LibraryBig,
@@ -22,7 +18,6 @@ import { ProjectsGrid } from '../components/cv/ProjectsGrid'
 import { SkillsChips } from '../components/cv/SkillsChips'
 import { GroupedCredentials } from '../components/cv/GroupedCredentials'
 import { Section } from '../components/cv/Section'
-import { SessionStatusBadge } from '../components/cv/SessionStatusBadge'
 import { fetchPublicCvProfile } from '../lib/publicProfile'
 import { useDocumentFavicon } from '../lib/favicon'
 import { useAppView } from '../lib/appView'
@@ -32,8 +27,7 @@ import { CvLoadingScreen } from '../components/CvLoadingScreen'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { useLoadingIndicator } from '../lib/loadingIndicator'
 import { ThemeToggle } from '../components/ThemeToggle'
-import { Button } from '../components/ui/Button'
-import { IconButton } from '../components/ui/IconButton'
+import { AccessCard } from '../components/AccessCard'
 import { setStoredAccessCode } from '../lib/accessSession'
 import { fetchCv } from '../lib/api'
 import { fetchProfileScopedLocales } from '../lib/profileLocaleAvailability'
@@ -59,7 +53,7 @@ function sanitizePublicBasicsForLanding(input: CvData['basics'] | undefined): Cv
 
 export function LandingRoute() {
   const { locale, t } = useI18n()
-  const { openCv } = useAppView()
+  const { openCv, lockReason } = useAppView()
   const [params, setSearchParams] = useSearchParams()
   const urlShare = params.get('s') ?? ''
   const initialUrlAccess = urlShare.trim()
@@ -67,8 +61,6 @@ export function LandingRoute() {
   const urlTokenValidating = shareLinkAccessLoading
   const setUrlTokenValidating = setShareLinkAccessLoading
   const [sessionProbePending, setSessionProbePending] = useState(() => !initialUrlAccess)
-  const [tokenInput, setTokenInput] = useState('')
-  const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [availablePublicLocales, setAvailablePublicLocales] = useState<string[] | null>(null)
   const [publicCv, setPublicCv] = useState<Partial<CvData>>(() => ({
     basics: { name: '', headline: '' },
@@ -111,9 +103,6 @@ export function LandingRoute() {
 
   useDocumentFavicon(publicName)
 
-  const effectiveToken = urlShare.trim() || tokenInput.trim()
-  const isUnlocked = Boolean(effectiveToken)
-
   useEffect(() => {
     const trimmed = initialUrlAccess
     queueMicrotask(() => {
@@ -139,15 +128,7 @@ export function LandingRoute() {
   }, [initialUrlAccess, openCv, setSearchParams])
 
   useEffect(() => {
-    if (!tokenInput.trim()) return
-    queueMicrotask(() => {
-      setSessionProbePending(false)
-    })
-  }, [tokenInput])
-
-  useEffect(() => {
     if (initialUrlAccess) return
-    if (tokenInput.trim()) return
     let cancelled = false
     queueMicrotask(() => {
       setSessionProbePending(true)
@@ -165,7 +146,7 @@ export function LandingRoute() {
     return () => {
       cancelled = true
     }
-  }, [locale, openCv, tokenInput])
+  }, [initialUrlAccess, locale, openCv])
 
   // A warm session resolves in a few ms; without this the probe would flash a loader every visit.
   const showAccessLoader = useLoadingIndicator(urlTokenValidating || sessionProbePending)
@@ -215,104 +196,27 @@ export function LandingRoute() {
       </div>
 
       {/*
-        On a phone the access panel comes first — a visitor arriving with a code should not have to
-        scroll past the whole public preview to use it. From `sm` up both fit above the fold, so the
-        profile leads and the panel sits under it.
+        The public profile is always on screen; the access card sits beside it from `lg` up and
+        under the profile header on narrower screens, so a visitor sees whose CV it is before the
+        form. The card itself says why the full CV is closed (first visit, expired, refused code).
       */}
-      <div className="flex flex-col gap-5">
-        <section
-          aria-labelledby="access-heading"
-          className={`vc-card p-4 sm:p-5 ${!isUnlocked ? 'order-1 sm:order-2' : 'order-2'}`}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="access-heading" className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <KeyRound className="h-4 w-4 text-ink-subtle" aria-hidden="true" />
-              {t('accessCode')}
-            </h2>
-            <SessionStatusBadge
-              isLocked={!isUnlocked}
-              lockedText={t('lockedUntilCode')}
-              unlockedText={t('accessDetected')}
-              activeTooltipText={t('accessActiveBadgeHint')}
-              size="sm"
-            />
-          </div>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        <AccessCard
+          reason={lockReason ?? 'locked'}
+          onSubmit={(code) => {
+            setStoredAccessCode(code)
+            openCv()
+          }}
+          className="row-start-2 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1"
+        />
 
-          {/*
-            A real form, so pasting a code and pressing Enter opens the CV — previously the only
-            way through was to reach for the button.
-          */}
-          <form
-            className="mt-4 flex flex-col gap-2 sm:flex-row"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (!isUnlocked) return
-              setStoredAccessCode(effectiveToken)
-              openCv()
-            }}
-          >
-            <label className="sr-only" htmlFor="token">
-              {t('accessCode')}
-            </label>
-            <div className="relative min-w-0 flex-1">
-              <input
-                id="token"
-                type={isTokenVisible ? 'text' : 'password'}
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-                placeholder={t('pasteAccessCode')}
-                inputMode="text"
-                autoComplete="off"
-                aria-describedby={!isUnlocked ? 'token-hint' : undefined}
-                className="vc-field h-11 pr-11"
-              />
-              {tokenInput.trim().length ? (
-                <IconButton
-                  label={isTokenVisible ? t('accessCodeHide') : t('accessCodeShow')}
-                  onClick={() => setIsTokenVisible((v) => !v)}
-                  aria-pressed={isTokenVisible}
-                  size="sm"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2"
-                >
-                  {isTokenVisible ? (
-                    <EyeOff className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <Eye className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </IconButton>
-              ) : null}
+        {!publicLoading ? (
+          <>
+            <div className="row-start-1 min-w-0 motion-safe:animate-fade-in lg:col-start-1">
+              <BasicsCard basics={basics} links={links} showPhoto={showPublicPhoto} />
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              disabled={!isUnlocked}
-              aria-describedby={!isUnlocked ? 'token-hint' : undefined}
-              className="group sm:w-auto"
-              iconRight={
-                <ArrowRight
-                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-                  aria-hidden="true"
-                />
-              }
-            >
-              {t('openCv')}
-            </Button>
-          </form>
-
-          {!isUnlocked ? (
-            <p className="mt-3 text-xs leading-relaxed text-ink-subtle" id="token-hint">
-              {t('accessCodeHint')}
-            </p>
-          ) : null}
-        </section>
-
-        <div className={`min-w-0 ${!isUnlocked ? 'order-2 sm:order-1' : 'order-1'}`}>
-          {!publicLoading ? (
-            <div className="space-y-5 motion-safe:animate-fade-in">
-              <BasicsCard basics={basics} links={links} showPhoto={showPublicPhoto} />
-
+            <div className="row-start-3 min-w-0 space-y-5 motion-safe:animate-fade-in lg:col-start-1 lg:row-start-2">
               {orderedSections.map((key) => {
                 if (key === 'credentials' && publicCredentials.length) {
                   return (
@@ -375,10 +279,12 @@ export function LandingRoute() {
                 return null
               })}
             </div>
-          ) : (
+          </>
+        ) : (
+          <div className="row-start-1 min-w-0 lg:col-start-1 lg:row-span-2">
             <CvLoadingScreen label={t('loadingPublicPreview')} fullPage={false} />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )
