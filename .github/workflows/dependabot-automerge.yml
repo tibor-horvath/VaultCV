@@ -1,0 +1,35 @@
+name: Dependabot Automerge
+
+# Approves and queues a squash auto-merge for Dependabot PRs whose every updated
+# dependency is a minor or patch bump. A major (alone or inside a group) is left
+# for a person, and any auto-merge an earlier run queued for that PR is switched
+# off. See tibor-horvath/ci-toolkit docs/dependabot-automerge.md.
+#
+# `--auto` only merges once the required status checks on main pass, so CI
+# stays the gate. One-time repo setup: "Allow auto-merge", "Allow GitHub Actions
+# to create and approve pull requests", and required CI checks on main.
+#
+# The job runs only when both the PR author and the triggering actor are
+# Dependabot, so a PR a person has pushed to is never merged unseen.
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  automerge:
+    name: Dependabot automerge
+    uses: tibor-horvath/ci-toolkit/.github/workflows/dependabot-automerge.yml@v2
+    with:
+      update-types: |
+        minor
+        patch
+      # Squash keeps Dependabot's `chore(deps): ...` title as the commit on main.
+      merge-method: squash
+    permissions:
+      contents: write
+      pull-requests: write
