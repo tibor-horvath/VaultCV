@@ -14,6 +14,17 @@ While mock mode is on, the dev server's `/api` proxy is disabled — the UI neve
 
 The mock data is defined in the web source and is only active when `VITE_USE_MOCK_CV=1` is set — it is never used in production.
 
+## Public page and access codes
+
+The landing page shows a mock public profile (the mock CV without contact details, projects, credentials or awards), so the page and its access card render without the API. Any access code unlocks the mock CV, and a few words in the code pick a state to look at:
+
+| Code contains | Result |
+|---------------|--------|
+| `invalid` | Refused: back on the landing page with "That code didn't work" |
+| `expired` | A session that has already ended: back on the landing page with "Your access has expired" |
+| `soon` | A 30-minute session, to see the countdown close to its end |
+| anything else | A 2-hour session |
+
 ## Seeing loading states
 
 The mock responds instantly, so loading states (the CV skeleton, the admin session spinner) are gone before you can look at them. Add an artificial delay to `web/.env.local`:

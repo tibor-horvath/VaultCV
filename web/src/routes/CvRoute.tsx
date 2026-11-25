@@ -8,7 +8,6 @@ import {
   Languages,
   LayoutGrid,
   LibraryBig,
-  Lock,
   ShieldCheck,
   TentTree,
 } from 'lucide-react'
@@ -33,7 +32,6 @@ import { ThemeToggle } from '../components/ThemeToggle'
 import { CvLoadingScreen } from '../components/CvLoadingScreen'
 import { useLoadingIndicator } from '../lib/loadingIndicator'
 import type { MessageKey } from '../i18n/messages'
-import { Button } from '../components/ui/Button'
 import { IconButton } from '../components/ui/IconButton'
 import { useScrolledPast } from '../lib/useScrolledPast'
 import {
@@ -51,8 +49,9 @@ const EMPTY_LOCALES: readonly string[] = []
 import type { SectionKey } from '../lib/sectionOrder'
 
 type CvRouteState =
-  | { kind: 'locked' }
   | { kind: 'expired' }
+  /** The server refused the access code; the landing page says so and offers the form again. */
+  | { kind: 'invalid' }
   | { kind: 'loading' }
   | { kind: 'error'; messageKey: MessageKey; details?: string; status?: number }
   | { kind: 'ready'; cv: CvData; sessionExpiresAt?: string }
@@ -118,6 +117,11 @@ function useCvState(accessCode: string, locale: string) {
         const exchangeRes = await exchangeAccessCode(accessCode)
         if (cancelled) return
         if (!exchangeRes.ok) {
+          if (exchangeRes.code === 'unauthorized' || exchangeRes.code === 'invalid_token_format') {
+            clearStoredAccessCode()
+            setState({ kind: 'invalid' })
+            return
+          }
           setState({
             kind: 'error',
             messageKey: mapApiErrorToMessage(exchangeRes.code),
@@ -223,8 +227,7 @@ export function CvRoute() {
   }, [publicName])
 
   useEffect(() => {
-    if (state.kind !== 'expired') return
-    goHome()
+    if (state.kind === 'expired' || state.kind === 'invalid') goHome(state.kind)
   }, [state.kind, goHome])
 
   const faviconName = state.kind === 'ready' ? (state.cv.basics.name?.trim() || publicName) : publicName
@@ -249,7 +252,7 @@ export function CvRoute() {
     if (!sessionExpiresAt) return
     if (!isSessionLocked) return
     clearStoredAccessCode()
-    goHome()
+    goHome('expired')
   }, [state.kind, sessionExpiresAt, isSessionLocked, goHome])
 
   const profilePhotoSrc = state.kind === 'ready' ? buildPhotoSrc(state.cv.basics) : undefined
@@ -274,19 +277,6 @@ export function CvRoute() {
 
   return (
     <div className="space-y-5">
-      {state.kind === 'locked' ? (
-        <Section title={t('locked')} icon={<Lock className="h-4 w-4" />}>
-          <p className="text-sm leading-relaxed text-ink-muted">
-            {t('lockedHintPrefix')}{' '}
-            <span className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs text-ink">/?s=SHARE_ID</span>
-            <span className="text-ink-subtle"> ({t('lockedHintLangOptional')})</span>
-          </p>
-          <Button size="sm" className="mt-4" onClick={() => clearStoredAccessCode()}>
-            {t('clearStoredAccess')}
-          </Button>
-        </Section>
-      ) : null}
-
       {showLoader ? <CvLoadingScreen label={t('loadingCv')} /> : null}
 
       {state.kind === 'error' && !showLoader ? (

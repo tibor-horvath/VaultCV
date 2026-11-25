@@ -1,5 +1,4 @@
 import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
-import { useAppView } from '../lib/appView'
 import { useIsPageLoading } from '../lib/pageLoading'
 import { useI18n } from '../lib/i18n'
 import { SiteFooter } from '../components/SiteFooter'
@@ -11,7 +10,6 @@ import { useThemeOrDefault } from '../lib/themeContext'
 const MAIN_ID = 'main-content'
 
 export function AppShell() {
-  const { view } = useAppView()
   const isPageLoading = useIsPageLoading()
   const { t } = useI18n()
   const { pathname } = useLocation()
@@ -27,9 +25,7 @@ export function AppShell() {
       ? 'max-w-[96rem]'
       : isCompactAdmin
         ? 'max-w-6xl'
-        : view === 'landing'
-          ? 'max-w-3xl'
-          : 'max-w-5xl'
+        : 'max-w-5xl'
   const { branding } = useSiteBranding()
   const theme = useThemeOrDefault()
   useCustomFavicon()

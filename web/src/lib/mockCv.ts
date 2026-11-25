@@ -1,3 +1,4 @@
+import type { CvData } from '../types/cv'
 import type { LocalizedCvData } from '../types/localization'
 import type { Locale } from './i18n'
 
@@ -390,4 +391,23 @@ export function getMockCv(locale: Locale): LocalizedCvData {
   if (base === 'hu') return getMockCvHu()
   if (base === 'de') return getMockCvDe()
   return getMockCvEn()
+}
+
+/**
+ * Mock mode's answer to `/api/public-profile`: the part of the CV an owner would publish, so the
+ * landing page and its access card can be designed without the API. Contact details stay private,
+ * and projects, credentials and awards are left for the full CV to show the difference.
+ */
+export function getMockPublicProfile(locale: Locale): Partial<CvData> {
+  const cv = getMockCv(locale)
+  return {
+    locale: cv.locale,
+    basics: { ...cv.basics, email: undefined, mobile: undefined },
+    links: cv.links,
+    skills: cv.skills,
+    languages: cv.languages,
+    experience: cv.experience,
+    education: cv.education,
+    hobbiesInterests: cv.hobbiesInterests,
+  }
 }

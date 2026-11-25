@@ -1,5 +1,6 @@
 import type { Locale } from './i18n.tsx'
 import type { CvAward, CvData, CvLink } from '../types/cv'
+import { getMockPublicProfile } from './mockCv'
 
 function isHttpUrl(value: string) {
   try {
@@ -91,6 +92,8 @@ export function normalizeCvDataFromPublicPayload(input: unknown): Partial<CvData
 }
 
 export async function fetchPublicCvProfile(locale: Locale): Promise<Partial<CvData>> {
+  // Mock mode has no API behind `/api`, so the landing page would otherwise stay empty.
+  if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CV === '1') return getMockPublicProfile(locale)
   try {
     const apiRes = await fetch('/api/public-profile', {
       method: 'GET',

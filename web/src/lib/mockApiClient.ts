@@ -42,6 +42,8 @@ export class MockApiClient implements ApiClient {
 
   async exchangeAccessCode(code: string): Promise<ApiResult<{ accessToken: string }>> {
     await simulateLatency()
+    // A code containing "invalid" is refused, so the landing page's "code not valid" state can be seen.
+    if (code.trim().toLowerCase().includes('invalid')) return { ok: false, status: 401, code: 'unauthorized' }
     const session = this.createSession(code || 'mock')
     return { ok: true, data: { accessToken: session.token } }
   }

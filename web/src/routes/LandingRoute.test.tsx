@@ -16,8 +16,15 @@ vi.mock('../lib/favicon', async (importOriginal) => ({
   useDocumentFavicon: vi.fn(),
 }))
 
+const appViewState = vi.hoisted(() => ({ lockReason: null as 'expired' | 'invalid' | null }))
+
 vi.mock('../lib/appView', () => ({
-  useAppView: () => ({ view: 'landing' as const, openCv: vi.fn(), goHome: vi.fn() }),
+  useAppView: () => ({
+    view: 'landing' as const,
+    lockReason: appViewState.lockReason,
+    openCv: vi.fn(),
+    goHome: vi.fn(),
+  }),
 }))
 
 vi.mock('../lib/publicProfile', () => ({
@@ -87,6 +94,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  appViewState.lockReason = null
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
   if (mountedRoot && mountedContainer) {
@@ -162,7 +170,7 @@ describe('LandingRoute', () => {
     expect(document.getElementById('token-hint')).toBeNull()
   })
 
-  it('places the access card before the preview on narrow breakpoints when locked', async () => {
+  it('keeps the public profile first and places the access card under its header on narrow screens', async () => {
     vi.mocked(fetchPublicCvProfile).mockResolvedValue({
       basics: { name: 'Test User', headline: 'Engineer' },
       sectionOrder: [],
@@ -172,18 +180,29 @@ describe('LandingRoute', () => {
 
     await flushUntil(() => document.body.textContent?.includes('Test User') ?? false)
 
-    const token = document.getElementById('token')
-    expect(token).not.toBeNull()
-    let el: HTMLElement | null = token
-    let found: HTMLElement | null = null
-    while (el) {
-      if (typeof el.className === 'string' && el.className.includes('order-1') && el.className.includes('sm:order-2')) {
-        found = el
-        break
-      }
-      el = el.parentElement
-    }
-    expect(found).not.toBeNull()
+    const card = document.querySelector('section[aria-labelledby="access-heading"]')
+    expect(card).not.toBeNull()
+    expect(card!.className).toContain('row-start-2')
+    expect(card!.className).toContain('lg:col-start-2')
+    expect(document.body.textContent).toContain(enMessages.accessCardLockedTitle)
+  })
+
+  it.each([
+    ['expired', enMessages.accessCardExpiredTitle],
+    ['invalid', enMessages.accessCardInvalidTitle],
+  ] as const)('explains a %s session on the access card', async (reason, title) => {
+    appViewState.lockReason = reason
+    vi.mocked(fetchPublicCvProfile).mockResolvedValue({
+      basics: { name: 'Test User', headline: 'Engineer' },
+      sectionOrder: [],
+    })
+
+    renderLanding('/')
+
+    await flushUntil(() => document.body.textContent?.includes('Test User') ?? false)
+
+    expect(document.getElementById('access-heading')?.textContent).toBe(title)
+    expect(document.body.textContent).toContain('Test User')
   })
 
   it('renders public credentials in a grouped two-column layout and omits earned dates', async () => {
