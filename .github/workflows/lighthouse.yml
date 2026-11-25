@@ -1,0 +1,37 @@
+name: Lighthouse
+
+# Audits the production web build with Lighthouse CI, using
+# tibor-horvath/ci-toolkit's lighthouse-ci.yml (docs/lighthouse-ci.md).
+# HTML reports are kept as the `lighthouse-reports` artifact (never uploaded
+# publicly).
+#
+# What gets audited: the static build served locally, at its entry page. There
+# is no API in CI and mock mode only exists in the dev server, so the page is
+# what a visitor without a valid share link sees (the access/lock screen).
+#
+# Only accessibility is asserted: it barely varies between runs. Performance
+# scores move from run to run on CI runners, so they are reported, not gated;
+# add `min-performance` (with margin) once a few runs show the usual range.
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - ".nvmrc"
+      - ".github/workflows/lighthouse.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse (web)
+    uses: tibor-horvath/ci-toolkit/.github/workflows/lighthouse-ci.yml@v2
+    with:
+      working-directory: web
+      node-version-file: ../.nvmrc
+      min-accessibility: "0.9"
+    permissions:
+      contents: read

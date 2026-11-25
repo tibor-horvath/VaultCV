@@ -1,6 +1,6 @@
 # Local development
 
-> **What you need installed:** [Node.js 20.19+](https://nodejs.org/) (includes `npm`). CI runs on Node.js 22, which is also recommended locally — a `.nvmrc` is committed, so `nvm use` picks it up. Confirm with `node -v` in a terminal. You don't need Azure tools just to run the site locally.
+> **What you need installed:** [Node.js 20.19+](https://nodejs.org/) (includes `npm`). CI runs the web app on Node.js 24, which is also recommended locally — a `.nvmrc` is committed, so `nvm use` picks it up. The API runs on Node.js 22 in Azure and in CI (`api/.nvmrc`). Confirm with `node -v` in a terminal. You don't need Azure tools just to run the site locally.
 
 ## Quickstart
 

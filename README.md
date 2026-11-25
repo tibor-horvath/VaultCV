@@ -38,7 +38,7 @@ Suggested order if you are setting up from scratch: [How it works](docs/how-it-w
 
 ## Developer quickstart
 
-Node.js **20.19+** is required locally (Node.js 22 is recommended and used in CI).
+Node.js **20.19+** is required locally (Node.js 24 is recommended; CI reads `.nvmrc`, and `api/.nvmrc` pins the API to Node.js 22 to match Azure).
 
 ```bash
 npm run setup

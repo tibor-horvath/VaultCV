@@ -1,7 +1,7 @@
 name: CI
 
 # Built on the reusable workflows in tibor-horvath/ci-toolkit (pinned to the
-# moving `@v1` tag). Web and API run as separate jobs, and a newer push to a PR
+# moving `@v2` tag). Web and API run as separate jobs, and a newer push to a PR
 # cancels the run in flight.
 
 on:
@@ -18,9 +18,11 @@ permissions:
 jobs:
   web:
     name: Web
-    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v1
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v2
     with:
       working-directory: web
+      # Repo-root .nvmrc (Node 24). Resolved relative to working-directory.
+      node-version-file: ../.nvmrc
       # `build` already runs `tsc -b`, so there is no separate typecheck script.
       typecheck-script: ""
       # Lint has pre-existing issues in the admin routes (see AGENTS.md).
@@ -32,9 +34,12 @@ jobs:
 
   api:
     name: API
-    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v1
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v2
     with:
       working-directory: api
+      # api/.nvmrc (Node 22): must match `apiRuntime` in staticwebapp.config.json,
+      # since Static Web Apps managed functions run Node 22 at most.
+      node-version-file: .nvmrc
       typecheck-script: ""
       lint-script: ""
       build-artifact-name: api-dist
@@ -51,6 +56,6 @@ jobs:
 
   secret-scan:
     name: Secrets
-    uses: tibor-horvath/ci-toolkit/.github/workflows/secret-scan.yml@v1
+    uses: tibor-horvath/ci-toolkit/.github/workflows/secret-scan.yml@v2
     permissions:
       contents: read

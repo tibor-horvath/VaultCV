@@ -1,0 +1,57 @@
+name: Security
+
+# Dependency security checks, built on reusable workflows from
+# tibor-horvath/ci-toolkit (docs/dependency-review.md, docs/node-audit.md):
+#   - Dependency review: fails a PR that adds or bumps a dependency to a
+#     vulnerable version. Judges only what the PR changes. Skipped off PRs.
+#   - npm audit: checks each lockfile against the advisory database, so
+#     advisories published after a dependency landed are caught too.
+# The weekly run picks up new advisories without a push.
+#
+# CodeQL is not here: the repo uses GitHub's CodeQL *default setup*
+# (Settings > Advanced Security), and GitHub rejects results from a workflow
+# while default setup is on. To run ci-toolkit's codeql.yml instead, switch
+# default setup to advanced or disable it first.
+#
+# Make Dependency review and npm audit required checks on main, so Dependabot
+# auto-merge (dependabot-automerge.yml) waits for them.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "0 6 * * 1" # Mondays, after Dependabot's weekly run is queued
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    uses: tibor-horvath/ci-toolkit/.github/workflows/dependency-review.yml@v2
+    permissions:
+      contents: read
+      pull-requests: write
+
+  audit-web:
+    name: npm audit (web)
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-audit.yml@v2
+    with:
+      working-directory: web
+      node-version-file: ../.nvmrc
+    permissions:
+      contents: read
+
+  audit-api:
+    name: npm audit (api)
+    uses: tibor-horvath/ci-toolkit/.github/workflows/node-audit.yml@v2
+    with:
+      working-directory: api
+      node-version-file: .nvmrc # api/.nvmrc
+    permissions:
+      contents: read
