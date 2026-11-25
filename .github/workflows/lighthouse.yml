@@ -19,6 +19,7 @@ on:
       - main
     paths:
       - "web/**"
+      - ".nvmrc"
       - ".github/workflows/lighthouse.yml"
 
 permissions:
@@ -30,6 +31,7 @@ jobs:
     uses: tibor-horvath/ci-toolkit/.github/workflows/lighthouse-ci.yml@v2
     with:
       working-directory: web
+      node-version-file: ../.nvmrc
       min-accessibility: "0.9"
     permissions:
       contents: read

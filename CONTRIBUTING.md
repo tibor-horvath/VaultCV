@@ -4,7 +4,7 @@ Thanks for contributing.
 
 ## Prerequisites
 
-- Node.js **20.19+** (Node.js 22 recommended; CI uses 22)
+- Node.js **20.19+** (Node.js 24 recommended; CI uses `.nvmrc`, and Node.js 22 for the API via `api/.nvmrc`)
 - npm
 - Azure Functions Core Tools v4 (`func`) only if you plan to run the API locally
 

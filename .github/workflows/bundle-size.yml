@@ -13,6 +13,7 @@ on:
       - main
     paths:
       - "web/**"
+      - ".nvmrc"
       - ".github/workflows/bundle-size.yml"
 
 permissions:
@@ -24,6 +25,9 @@ jobs:
     uses: tibor-horvath/ci-toolkit/.github/workflows/bundle-size.yml@v2
     with:
       working-directory: web
+      # Unlike the other ci-toolkit Node workflows, bundle-size resolves this
+      # from the repo root, not from working-directory.
+      node-version-file: .nvmrc
     permissions:
       contents: read
       pull-requests: write

@@ -21,6 +21,8 @@ jobs:
     uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v2
     with:
       working-directory: web
+      # Repo-root .nvmrc (Node 24). Resolved relative to working-directory.
+      node-version-file: ../.nvmrc
       # `build` already runs `tsc -b`, so there is no separate typecheck script.
       typecheck-script: ""
       # Lint has pre-existing issues in the admin routes (see AGENTS.md).
@@ -35,6 +37,9 @@ jobs:
     uses: tibor-horvath/ci-toolkit/.github/workflows/node-build-test.yml@v2
     with:
       working-directory: api
+      # api/.nvmrc (Node 22): must match `apiRuntime` in staticwebapp.config.json,
+      # since Static Web Apps managed functions run Node 22 at most.
+      node-version-file: .nvmrc
       typecheck-script: ""
       lint-script: ""
       build-artifact-name: api-dist

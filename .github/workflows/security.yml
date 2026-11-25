@@ -48,6 +48,7 @@ jobs:
     uses: tibor-horvath/ci-toolkit/.github/workflows/node-audit.yml@v2
     with:
       working-directory: web
+      node-version-file: ../.nvmrc
     permissions:
       contents: read
 
@@ -56,5 +57,6 @@ jobs:
     uses: tibor-horvath/ci-toolkit/.github/workflows/node-audit.yml@v2
     with:
       working-directory: api
+      node-version-file: .nvmrc # api/.nvmrc
     permissions:
       contents: read
