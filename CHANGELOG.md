@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/tibor-horvath/VaultCV/compare/v1.11.0...v1.12.0) (2026-11-25)
+
+
+### Features
+
+* implement access card for public CV with session handling and localization ([#89](https://github.com/tibor-horvath/VaultCV/issues/89)) ([bb01563](https://github.com/tibor-horvath/VaultCV/commit/bb01563cf5d1b5f1841b24b1ef45bf0526da6f04))
+
 ## [1.11.0](https://github.com/tibor-horvath/VaultCV/compare/v1.10.0...v1.11.0) (2026-10-02)
 
 
